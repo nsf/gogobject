@@ -113,41 +113,36 @@ func _SetBaseInfoFinalizer(bi *BaseInfo) *BaseInfo {
 
 type BaseInfoHierarchy interface {
 	Type() InfoType
-	BaseInfo() *BaseInfo
+	ToBaseInfo() *BaseInfo
 }
 
 func ToBaseInfo(bih BaseInfoHierarchy) *BaseInfo {
-	return bih.BaseInfo()
+	return bih.ToBaseInfo()
 }
 
 func ToArgInfo(bih BaseInfoHierarchy) *ArgInfo {
 	_ExpectBaseInfoType(bih, INFO_TYPE_ARG)
-	return (*ArgInfo)(unsafe.Pointer(bih.BaseInfo()))
+	return (*ArgInfo)(unsafe.Pointer(bih.ToBaseInfo()))
 }
 
 func ToConstantInfo(bih BaseInfoHierarchy) *ConstantInfo {
 	_ExpectBaseInfoType(bih, INFO_TYPE_CONSTANT)
-	return (*ConstantInfo)(unsafe.Pointer(bih.BaseInfo()))
-}
-
-func ToErrorDomainInfo(bih BaseInfoHierarchy) *ErrorDomainInfo {
-	_ExpectBaseInfoType(bih, INFO_TYPE_ERROR_DOMAIN)
-	return (*ErrorDomainInfo)(unsafe.Pointer(bih.BaseInfo()))
+	return (*ConstantInfo)(unsafe.Pointer(bih.ToBaseInfo()))
 }
 
 func ToFieldInfo(bih BaseInfoHierarchy) *FieldInfo {
 	_ExpectBaseInfoType(bih, INFO_TYPE_FIELD)
-	return (*FieldInfo)(unsafe.Pointer(bih.BaseInfo()))
+	return (*FieldInfo)(unsafe.Pointer(bih.ToBaseInfo()))
 }
 
 func ToPropertyInfo(bih BaseInfoHierarchy) *PropertyInfo {
 	_ExpectBaseInfoType(bih, INFO_TYPE_PROPERTY)
-	return (*PropertyInfo)(unsafe.Pointer(bih.BaseInfo()))
+	return (*PropertyInfo)(unsafe.Pointer(bih.ToBaseInfo()))
 }
 
 func ToTypeInfo(bih BaseInfoHierarchy) *TypeInfo {
 	_ExpectBaseInfoType(bih, INFO_TYPE_TYPE)
-	return (*TypeInfo)(unsafe.Pointer(bih.BaseInfo()))
+	return (*TypeInfo)(unsafe.Pointer(bih.ToBaseInfo()))
 }
 
 func ToCallableInfo(bih BaseInfoHierarchy) *CallableInfo {
@@ -156,22 +151,22 @@ func ToCallableInfo(bih BaseInfoHierarchy) *CallableInfo {
 		INFO_TYPE_CALLBACK,
 		INFO_TYPE_SIGNAL,
 		INFO_TYPE_VFUNC)
-	return (*CallableInfo)(unsafe.Pointer(bih.BaseInfo()))
+	return (*CallableInfo)(unsafe.Pointer(bih.ToBaseInfo()))
 }
 
 func ToFunctionInfo(bih BaseInfoHierarchy) *FunctionInfo {
 	_ExpectBaseInfoType(bih, INFO_TYPE_FUNCTION)
-	return (*FunctionInfo)(unsafe.Pointer(bih.BaseInfo()))
+	return (*FunctionInfo)(unsafe.Pointer(bih.ToBaseInfo()))
 }
 
 func ToSignalInfo(bih BaseInfoHierarchy) *SignalInfo {
 	_ExpectBaseInfoType(bih, INFO_TYPE_SIGNAL)
-	return (*SignalInfo)(unsafe.Pointer(bih.BaseInfo()))
+	return (*SignalInfo)(unsafe.Pointer(bih.ToBaseInfo()))
 }
 
 func ToVFuncInfo(bih BaseInfoHierarchy) *VFuncInfo {
 	_ExpectBaseInfoType(bih, INFO_TYPE_VFUNC)
-	return (*VFuncInfo)(unsafe.Pointer(bih.BaseInfo()))
+	return (*VFuncInfo)(unsafe.Pointer(bih.ToBaseInfo()))
 }
 
 func ToRegisteredType(bih BaseInfoHierarchy) *RegisteredType {
@@ -183,32 +178,32 @@ func ToRegisteredType(bih BaseInfoHierarchy) *RegisteredType {
 		INFO_TYPE_OBJECT,
 		INFO_TYPE_STRUCT,
 		INFO_TYPE_UNION)
-	return (*RegisteredType)(unsafe.Pointer(bih.BaseInfo()))
+	return (*RegisteredType)(unsafe.Pointer(bih.ToBaseInfo()))
 }
 
 func ToEnumInfo(bih BaseInfoHierarchy) *EnumInfo {
 	_ExpectBaseInfoType(bih, INFO_TYPE_ENUM, INFO_TYPE_FLAGS)
-	return (*EnumInfo)(unsafe.Pointer(bih.BaseInfo()))
+	return (*EnumInfo)(unsafe.Pointer(bih.ToBaseInfo()))
 }
 
 func ToInterfaceInfo(bih BaseInfoHierarchy) *InterfaceInfo {
 	_ExpectBaseInfoType(bih, INFO_TYPE_INTERFACE)
-	return (*InterfaceInfo)(unsafe.Pointer(bih.BaseInfo()))
+	return (*InterfaceInfo)(unsafe.Pointer(bih.ToBaseInfo()))
 }
 
 func ToObjectInfo(bih BaseInfoHierarchy) *ObjectInfo {
 	_ExpectBaseInfoType(bih, INFO_TYPE_OBJECT)
-	return (*ObjectInfo)(unsafe.Pointer(bih.BaseInfo()))
+	return (*ObjectInfo)(unsafe.Pointer(bih.ToBaseInfo()))
 }
 
 func ToStructInfo(bih BaseInfoHierarchy) *StructInfo {
 	_ExpectBaseInfoType(bih, INFO_TYPE_STRUCT)
-	return (*StructInfo)(unsafe.Pointer(bih.BaseInfo()))
+	return (*StructInfo)(unsafe.Pointer(bih.ToBaseInfo()))
 }
 
 func ToUnionInfo(bih BaseInfoHierarchy) *UnionInfo {
 	_ExpectBaseInfoType(bih, INFO_TYPE_UNION)
-	return (*UnionInfo)(unsafe.Pointer(bih.BaseInfo()))
+	return (*UnionInfo)(unsafe.Pointer(bih.ToBaseInfo()))
 }
 
 //------------------------------------------------------------------------------
@@ -228,7 +223,6 @@ const (
 	INFO_TYPE_OBJECT       InfoType = C.GI_INFO_TYPE_OBJECT
 	INFO_TYPE_INTERFACE    InfoType = C.GI_INFO_TYPE_INTERFACE
 	INFO_TYPE_CONSTANT     InfoType = C.GI_INFO_TYPE_CONSTANT
-	INFO_TYPE_ERROR_DOMAIN InfoType = C.GI_INFO_TYPE_ERROR_DOMAIN
 	INFO_TYPE_UNION        InfoType = C.GI_INFO_TYPE_UNION
 	INFO_TYPE_VALUE        InfoType = C.GI_INFO_TYPE_VALUE
 	INFO_TYPE_SIGNAL       InfoType = C.GI_INFO_TYPE_SIGNAL
@@ -435,7 +429,7 @@ type BaseInfo struct {
 	C *C.GIBaseInfo
 }
 
-func (bi *BaseInfo) BaseInfo() *BaseInfo {
+func (bi *BaseInfo) ToBaseInfo() *BaseInfo {
 	return bi
 }
 
@@ -604,30 +598,6 @@ func (ci *ConstantInfo) Type() *TypeInfo {
 //                                                         GIArgument *value);
 
 //------------------------------------------------------------------------------
-// ErrorDomainInfo
-//------------------------------------------------------------------------------
-
-type ErrorDomainInfo struct {
-	BaseInfo
-}
-
-// g_error_domain_info_get_quark
-func (edi *ErrorDomainInfo) Quark() string {
-	ret := C.g_error_domain_info_get_quark((*C.GIErrorDomainInfo)(edi.C))
-	return _GStringToGoString(ret)
-}
-
-// g_error_domain_info_get_codes
-func (edi *ErrorDomainInfo) Codes() *InterfaceInfo {
-	cptr := (*C.GIBaseInfo)(C.g_error_domain_info_get_codes((*C.GIErrorDomainInfo)(edi.C)))
-	if cptr == nil {
-		return nil
-	}
-	ptr := &BaseInfo{cptr}
-	return (*InterfaceInfo)(unsafe.Pointer(_SetBaseInfoFinalizer(ptr)))
-}
-
-//------------------------------------------------------------------------------
 // FieldInfo
 //------------------------------------------------------------------------------
 
@@ -779,21 +749,6 @@ func (ti *TypeInfo) ArrayFixedSize() int {
 // g_type_info_is_zero_terminated
 func (ti *TypeInfo) IsZeroTerminated() bool {
 	return C.g_type_info_is_zero_terminated((*C.GITypeInfo)(ti.C)) != 0
-}
-
-// g_type_info_get_n_error_domains
-func (ti *TypeInfo) NumErrorDomain() int {
-	return int(C.g_type_info_get_n_error_domains((*C.GITypeInfo)(ti.C)))
-}
-
-// g_type_info_get_error_domain
-func (ti *TypeInfo) ErrorDomain(n int) *ErrorDomainInfo {
-	cptr := (*C.GIBaseInfo)(C.g_type_info_get_error_domain((*C.GITypeInfo)(ti.C), C.gint(n)))
-	if cptr == nil {
-		return nil
-	}
-	ptr := &BaseInfo{cptr}
-	return (*ErrorDomainInfo)(unsafe.Pointer(_SetBaseInfoFinalizer(ptr)))
 }
 
 // g_type_info_get_array_type
