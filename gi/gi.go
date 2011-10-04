@@ -223,6 +223,7 @@ const (
 	INFO_TYPE_OBJECT       InfoType = C.GI_INFO_TYPE_OBJECT
 	INFO_TYPE_INTERFACE    InfoType = C.GI_INFO_TYPE_INTERFACE
 	INFO_TYPE_CONSTANT     InfoType = C.GI_INFO_TYPE_CONSTANT
+	INFO_TYPE_INVALID_0    InfoType = C.GI_INFO_TYPE_INVALID_0
 	INFO_TYPE_UNION        InfoType = C.GI_INFO_TYPE_UNION
 	INFO_TYPE_VALUE        InfoType = C.GI_INFO_TYPE_VALUE
 	INFO_TYPE_SIGNAL       InfoType = C.GI_INFO_TYPE_SIGNAL
@@ -991,6 +992,17 @@ func (ei *EnumInfo) Value(n int) *ValueInfo {
 	}
 	ptr := &BaseInfo{cptr}
 	return (*ValueInfo)(unsafe.Pointer(_SetBaseInfoFinalizer(ptr)))
+}
+
+// g_enum_info_get_n_methods
+func (ei *EnumInfo) NumMethod() int {
+	return int(C.g_enum_info_get_n_methods((*C.GIEnumInfo)(ei.C)))
+}
+
+// g_enum_info_get_method
+func (ii *EnumInfo) Method(n int) *FunctionInfo {
+	ptr := &BaseInfo{(*C.GIBaseInfo)(C.g_enum_info_get_method((*C.GIEnumInfo)(ii.C), C.gint(n)))}
+	return (*FunctionInfo)(unsafe.Pointer(_SetBaseInfoFinalizer(ptr)))
 }
 
 // g_enum_info_get_storage_type
