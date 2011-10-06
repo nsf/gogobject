@@ -1158,7 +1158,12 @@ func (oi *ObjectInfo) Fundamental() bool {
 
 // g_object_info_get_parent
 func (oi *ObjectInfo) Parent() *ObjectInfo {
-	ptr := &BaseInfo{(*C.GIBaseInfo)(C.g_object_info_get_parent((*C.GIObjectInfo)(oi.C)))}
+	cptr := (*C.GIBaseInfo)(C.g_object_info_get_parent((*C.GIObjectInfo)(oi.C)))
+	if cptr == nil {
+		return nil
+	}
+
+	ptr := &BaseInfo{cptr}
 	return (*ObjectInfo)(unsafe.Pointer(_SetBaseInfoFinalizer(ptr)))
 }
 
