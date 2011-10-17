@@ -976,7 +976,7 @@ type EnumInfo struct {
 }
 
 type ValueInfo struct {
-	C *C.GIValueInfo
+	BaseInfo
 }
 
 // g_enum_info_get_n_values
@@ -1012,7 +1012,7 @@ func (ei *EnumInfo) StorageType() TypeTag {
 
 // g_value_info_get_value
 func (vi *ValueInfo) Value() int64 {
-	return int64(C.g_value_info_get_value(vi.C))
+	return int64(C.g_value_info_get_value((*C.GIValueInfo)(vi.C)))
 }
 
 //------------------------------------------------------------------------------
