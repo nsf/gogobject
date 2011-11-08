@@ -12,11 +12,11 @@ static inline gchar **next_gcharptr(gchar **s) { return s+1; }
 // #cgo pkg-config: gobject-introspection-1.0
 import "C"
 import (
+	"errors"
 	"strings"
 	"runtime"
 	"unsafe"
 	"fmt"
-	"os"
 )
 
 func init() {
@@ -39,6 +39,10 @@ func _GStringGSListToGoStringSlice(list *C.GSList) []string {
 // Convert gchar** null-terminated glib string array to []string, frees "arr"
 func _GStringArrayToGoStringSlice(arr **C.gchar) []string {
 	var slice []string
+	if arr == nil {
+		return slice
+	}
+
 	iter := arr
 	for *iter != nil {
 		slice = append(slice, _GStringToGoString(*iter))
@@ -73,8 +77,8 @@ func _CStringToGoString(s *C.char) string {
 }
 
 // GError to os.Error, frees "err"
-func _GErrorToOSError(err *C.GError) (goerr os.Error) {
-	goerr = os.NewError(_GStringToGoString(err.message))
+func _GErrorToOSError(err *C.GError) (goerr error) {
+	goerr = errors.New(_GStringToGoString(err.message))
 	C.g_error_free(err)
 	return
 }
@@ -213,26 +217,26 @@ func ToUnionInfo(bih BaseInfoHierarchy) *UnionInfo {
 type InfoType int
 
 const (
-	INFO_TYPE_INVALID      InfoType = C.GI_INFO_TYPE_INVALID
-	INFO_TYPE_FUNCTION     InfoType = C.GI_INFO_TYPE_FUNCTION
-	INFO_TYPE_CALLBACK     InfoType = C.GI_INFO_TYPE_CALLBACK
-	INFO_TYPE_STRUCT       InfoType = C.GI_INFO_TYPE_STRUCT
-	INFO_TYPE_BOXED        InfoType = C.GI_INFO_TYPE_BOXED
-	INFO_TYPE_ENUM         InfoType = C.GI_INFO_TYPE_ENUM
-	INFO_TYPE_FLAGS        InfoType = C.GI_INFO_TYPE_FLAGS
-	INFO_TYPE_OBJECT       InfoType = C.GI_INFO_TYPE_OBJECT
-	INFO_TYPE_INTERFACE    InfoType = C.GI_INFO_TYPE_INTERFACE
-	INFO_TYPE_CONSTANT     InfoType = C.GI_INFO_TYPE_CONSTANT
-	INFO_TYPE_INVALID_0    InfoType = C.GI_INFO_TYPE_INVALID_0
-	INFO_TYPE_UNION        InfoType = C.GI_INFO_TYPE_UNION
-	INFO_TYPE_VALUE        InfoType = C.GI_INFO_TYPE_VALUE
-	INFO_TYPE_SIGNAL       InfoType = C.GI_INFO_TYPE_SIGNAL
-	INFO_TYPE_VFUNC        InfoType = C.GI_INFO_TYPE_VFUNC
-	INFO_TYPE_PROPERTY     InfoType = C.GI_INFO_TYPE_PROPERTY
-	INFO_TYPE_FIELD        InfoType = C.GI_INFO_TYPE_FIELD
-	INFO_TYPE_ARG          InfoType = C.GI_INFO_TYPE_ARG
-	INFO_TYPE_TYPE         InfoType = C.GI_INFO_TYPE_TYPE
-	INFO_TYPE_UNRESOLVED   InfoType = C.GI_INFO_TYPE_UNRESOLVED
+	INFO_TYPE_INVALID    InfoType = C.GI_INFO_TYPE_INVALID
+	INFO_TYPE_FUNCTION   InfoType = C.GI_INFO_TYPE_FUNCTION
+	INFO_TYPE_CALLBACK   InfoType = C.GI_INFO_TYPE_CALLBACK
+	INFO_TYPE_STRUCT     InfoType = C.GI_INFO_TYPE_STRUCT
+	INFO_TYPE_BOXED      InfoType = C.GI_INFO_TYPE_BOXED
+	INFO_TYPE_ENUM       InfoType = C.GI_INFO_TYPE_ENUM
+	INFO_TYPE_FLAGS      InfoType = C.GI_INFO_TYPE_FLAGS
+	INFO_TYPE_OBJECT     InfoType = C.GI_INFO_TYPE_OBJECT
+	INFO_TYPE_INTERFACE  InfoType = C.GI_INFO_TYPE_INTERFACE
+	INFO_TYPE_CONSTANT   InfoType = C.GI_INFO_TYPE_CONSTANT
+	INFO_TYPE_INVALID_0  InfoType = C.GI_INFO_TYPE_INVALID_0
+	INFO_TYPE_UNION      InfoType = C.GI_INFO_TYPE_UNION
+	INFO_TYPE_VALUE      InfoType = C.GI_INFO_TYPE_VALUE
+	INFO_TYPE_SIGNAL     InfoType = C.GI_INFO_TYPE_SIGNAL
+	INFO_TYPE_VFUNC      InfoType = C.GI_INFO_TYPE_VFUNC
+	INFO_TYPE_PROPERTY   InfoType = C.GI_INFO_TYPE_PROPERTY
+	INFO_TYPE_FIELD      InfoType = C.GI_INFO_TYPE_FIELD
+	INFO_TYPE_ARG        InfoType = C.GI_INFO_TYPE_ARG
+	INFO_TYPE_TYPE       InfoType = C.GI_INFO_TYPE_TYPE
+	INFO_TYPE_UNRESOLVED InfoType = C.GI_INFO_TYPE_UNRESOLVED
 )
 
 // g_info_type_to_string
@@ -301,7 +305,7 @@ func (r *Repository) FindByName(namespace, name string) *BaseInfo {
 }
 
 // g_irepository_require
-func (r *Repository) Require(namespace, version string, flags RepositoryLoadFlags) (*Typelib, os.Error) {
+func (r *Repository) Require(namespace, version string, flags RepositoryLoadFlags) (*Typelib, error) {
 	var err *C.GError
 	gnamespace := _GoStringToGString(namespace)
 	gversion := _GoStringToGString(version)
@@ -552,6 +556,11 @@ func (ai *ArgInfo) MayBeNil() bool {
 	return C.g_arg_info_may_be_null((*C.GIArgInfo)(ai.C)) != 0
 }
 
+// g_arg_info_is_skip
+func (ai *ArgInfo) IsSkip() bool {
+	return C.g_arg_info_is_skip((*C.GIArgInfo)(ai.C)) != 0
+}
+
 // g_arg_info_get_ownership_transfer
 func (ai *ArgInfo) OwnershipTransfer() Transfer {
 	return Transfer(C.g_arg_info_get_ownership_transfer((*C.GIArgInfo)(ai.C)))
@@ -593,6 +602,42 @@ type ConstantInfo struct {
 func (ci *ConstantInfo) Type() *TypeInfo {
 	ptr := &BaseInfo{(*C.GIBaseInfo)(C.g_constant_info_get_type((*C.GIConstantInfo)(ci.C)))}
 	return (*TypeInfo)(unsafe.Pointer(_SetBaseInfoFinalizer(ptr)))
+}
+
+// g_constant_info_get_value
+func (ci *ConstantInfo) Value() interface{} {
+	var arg C.GIArgument
+	C.g_constant_info_get_value((*C.GIConstantInfo)(ci.C), &arg)
+
+	ti := ci.Type()
+	switch ti.Tag() {
+	case TYPE_TAG_BOOLEAN:
+		return *(*C.gboolean)(unsafe.Pointer(&arg)) != 0
+	case TYPE_TAG_INT8:
+		return *(*int8)(unsafe.Pointer(&arg))
+	case TYPE_TAG_UINT8:
+		return *(*uint8)(unsafe.Pointer(&arg))
+	case TYPE_TAG_INT16:
+		return *(*int16)(unsafe.Pointer(&arg))
+	case TYPE_TAG_UINT16:
+		return *(*uint16)(unsafe.Pointer(&arg))
+	case TYPE_TAG_INT32:
+		return *(*int32)(unsafe.Pointer(&arg))
+	case TYPE_TAG_UINT32:
+		return *(*uint32)(unsafe.Pointer(&arg))
+	case TYPE_TAG_INT64:
+		return *(*int64)(unsafe.Pointer(&arg))
+	case TYPE_TAG_UINT64:
+		return *(*uint64)(unsafe.Pointer(&arg))
+	case TYPE_TAG_FLOAT:
+		return *(*float32)(unsafe.Pointer(&arg))
+	case TYPE_TAG_DOUBLE:
+		return *(*float64)(unsafe.Pointer(&arg))
+	case TYPE_TAG_UTF8, TYPE_TAG_FILENAME:
+		return C.GoString(*(**C.char)(unsafe.Pointer(&arg)))
+	}
+	panic("unsupported constant value")
+	return nil
 }
 
 //gint                g_constant_info_get_value           (GIConstantInfo *info,
