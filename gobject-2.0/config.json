@@ -1,0 +1,28 @@
+{
+	"namespace": "GObject",
+	"version": "2.0",
+	"whitelist": {
+		"deps": [],
+		"callbacks": [],
+		"functions": [],
+		"objects": [
+			"Object",
+			"InitiallyUnowned"
+		]
+	},
+	"method-whitelist": {
+		"Object": [],
+		"InitiallyUnowned": [],
+		"Value": []
+	},
+	"blacklist": {
+		"structs": [
+			"ParamSpecPool"
+		]
+	},
+	"method-blacklist": {
+		"ValueArray": [
+			"sort"
+		]
+	}
+}

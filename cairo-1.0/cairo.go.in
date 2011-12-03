@@ -1,0 +1,11 @@
+package cairo
+
+/*
+[<.CommonIncludes>]
+[<.CForwardDeclarations>]
+
+#cgo pkg-config: cairo
+*/
+import "C"
+
+[<.GoBindings>]

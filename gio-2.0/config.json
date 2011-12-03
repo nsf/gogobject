@@ -1,0 +1,13 @@
+{
+	"namespace": "Gio",
+	"version": "2.0",
+	"whitelist": {
+		"callbacks": [],
+		"functions": [],
+		"objects": [
+			"Icon"
+		],
+		"structs": [],
+		"unions": []
+	}
+}

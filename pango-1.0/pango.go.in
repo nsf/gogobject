@@ -1,0 +1,28 @@
+package pango
+
+/*
+[<.CommonIncludes>]
+
+[<.GType>]
+
+[<.CForwardDeclarations>]
+
+[<.GObjectRefUnref>]
+[<.GFree>]
+[<.GErrorFree>]
+
+#cgo pkg-config: pango
+*/
+import "C"
+import "unsafe"
+import "runtime"
+import "errors"
+
+// package dependencies
+import (
+	"gobject/gobject-2.0"
+)
+
+[<.GoUtils>]
+
+[<.GoBindings>]
