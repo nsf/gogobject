@@ -1,6 +1,4 @@
 {
-	"c-types": {
-	},
 	"disguised-types": [
 		"gdk.Atom"
 	]

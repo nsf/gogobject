@@ -89,12 +89,8 @@ func CgoTypeForInterface(bi *gi.BaseInfo, flags TypeFlags) string {
 	}
 
 	out.WriteString("C.")
-	if ctype, ok := GConfig.CTypes[ns+"."+nm]; ok {
-		out.WriteString(ctype)
-	} else {
-		out.WriteString(gi.DefaultRepository().CPrefix(ns))
-		out.WriteString(bi.Name())
-	}
+	out.WriteString(gi.DefaultRepository().CPrefix(ns))
+	out.WriteString(bi.Name())
 
 	return out.String()
 }
@@ -194,12 +190,9 @@ func CTypeForInterface(bi *gi.BaseInfo, flags TypeFlags) string {
 	ns := bi.Namespace()
 	nm := bi.Name()
 	fullnm := strings.ToLower(ns) + "." + nm
-	if ctype, ok := GConfig.CTypes[fullnm]; ok {
-		out.WriteString(ctype)
-	} else {
-		out.WriteString(gi.DefaultRepository().CPrefix(ns))
-		out.WriteString(bi.Name())
-	}
+	out.WriteString(gi.DefaultRepository().CPrefix(ns))
+	out.WriteString(bi.Name())
+
 	_, disguised := GConfig.Sys.DisguisedTypes[fullnm]
 	if flags&TypePointer != 0 && !disguised {
 		out.WriteString("*")

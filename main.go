@@ -37,8 +37,7 @@ var Config struct {
 
 // global config file
 var GConfig struct {
-	DisguisedTypes []string          `json:"disguised-types"`
-	CTypes         map[string]string `json:"c-types"`
+	DisguisedTypes []string `json:"disguised-types"`
 
 	Sys struct {
 		DisguisedTypes map[string]bool
