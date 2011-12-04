@@ -133,9 +133,6 @@ func main() {
 	Config.Sys.MethodWhitelist = MapListToMapMap(Config.MethodWhitelist)
 	Config.Sys.MethodBlacklist = MapListToMapMap(Config.MethodBlacklist)
 
-	// prepare dir
-	os.MkdirAll(Config.Sys.Outdir, 0755)
-
 	// prepare main output
 	filename := filepath.Join(Config.Sys.Outdir,
 		strings.ToLower(Config.Namespace)+".go")
