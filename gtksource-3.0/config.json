@@ -1,0 +1,20 @@
+{
+	"namespace": "GtkSource",
+	"version": "3.0",
+	"method-blacklist": {
+		"Gutter": [
+			"get_padding"
+		],
+		"GutterRendererText": [
+			"measure",
+			"measure_markup"
+		],
+		"PrintCompositor": [
+			"draw_page",
+			"paginate"
+		],
+		"View": [
+			"get_mark_attributes"
+		]
+	}
+}

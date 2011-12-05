@@ -1,0 +1,40 @@
+package gtksource
+
+/*
+[<.CommonIncludes>]
+
+[<.GType>]
+
+[<.CForwardDeclarations>]
+
+[<.GObjectRefUnref>]
+[<.GErrorFree>]
+[<.GFree>]
+
+extern void g_type_init();
+
+#cgo pkg-config: gtksourceview-3.0
+*/
+import "C"
+import "unsafe"
+import "runtime"
+import "errors"
+
+// package dependencies
+import (
+	"gobject/gobject-2.0"
+	"gobject/gdkpixbuf-2.0"
+	"gobject/gdk-3.0"
+	"gobject/gtk-3.0"
+	"gobject/cairo-1.0"
+	"gobject/gio-2.0"
+)
+
+func init() {
+	C.g_type_init()
+}
+
+[<.GoUtils>]
+
+[<.GoBindings>]
+
