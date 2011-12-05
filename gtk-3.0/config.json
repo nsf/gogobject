@@ -177,5 +177,16 @@
 			"request_text",
 			"request_uris"
 		]
+	},
+	"renames": {
+		"Dialog.AddButton": "_AddButton",
+		"Widget.SetHexpand": "SetHExpand",
+		"Widget.SetVexpand": "SetVExpand",
+		"Widget.SetHexpandSet": "SetHExpandSet",
+		"Widget.SetVexpandSet": "SetVExpandSet",
+		"Widget.GetHexpand": "GetHExpand",
+		"Widget.GetVexpand": "GetVExpand",
+		"Widget.GetHexpandSet": "GetHExpandSet",
+		"Widget.GetVexpandSet": "GetVExpandSet"
 	}
 }

@@ -477,6 +477,7 @@ func ProcessCallbackInfo(ci *gi.CallableInfo) {
 }
 
 func ProcessFunctionInfo(fi *gi.FunctionInfo, container *gi.BaseInfo) {
+	var fullnm string
 	flags := fi.Flags()
 	name := fi.Name()
 
@@ -487,16 +488,20 @@ func ProcessFunctionInfo(fi *gi.FunctionInfo, container *gi.BaseInfo) {
 		// add receiver if it's a method
 		printf("(this0 %s) ",
 			GoTypeForInterface(container, TypePointer|TypeReturn))
+		fullnm = container.Name() + "."
 	}
 	switch {
 	case flags&gi.FUNCTION_IS_CONSTRUCTOR != 0:
 		// special names for constructors
-		printf("New%s%s(", container.Name(), CtorSuffix(name))
+		name = fmt.Sprintf("New%s%s", container.Name(), CtorSuffix(name))
 	case flags&gi.FUNCTION_IS_METHOD == 0 && container != nil:
-		printf("%s%s(", container.Name(), LowerCaseToCamelCase(name))
+		name = fmt.Sprintf("%s%s", container.Name(), LowerCaseToCamelCase(name))
 	default:
-		printf("%s(", LowerCaseToCamelCase(name))
+		name = fmt.Sprintf("%s", LowerCaseToCamelCase(name))
 	}
+	fullnm += name
+	name = Rename(fullnm, name)
+	printf("%s(", name)
 	for i, arg := range fb.Args {
 		printf("%s0 %s", arg.ArgInfo.Name(), GoType(arg.TypeInfo, TypeNone))
 		if i != len(fb.Args)-1 {

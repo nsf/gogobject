@@ -22,6 +22,7 @@ var Config struct {
 	Whitelist       map[string][]string `json:"whitelist"`
 	MethodBlacklist map[string][]string `json:"method-blacklist"`
 	MethodWhitelist map[string][]string `json:"method-whitelist"`
+	Renames         map[string]string   `json:"renames"`
 
 	// variables that are calculated during the app execution
 	Sys struct {
@@ -42,6 +43,13 @@ var GConfig struct {
 	Sys struct {
 		DisguisedTypes map[string]bool
 	} `json:"-"`
+}
+
+func Rename(path, oldname string) string {
+	if newname, ok := Config.Renames[path]; ok {
+		return newname
+	}
+	return oldname
 }
 
 func IsBlacklisted(section, entry string) bool {

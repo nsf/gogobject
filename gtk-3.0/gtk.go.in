@@ -80,11 +80,15 @@ func NewDialogWithButtons(title string, parent *Window, flags DialogFlags, butto
 			if !ok {
 				panic("non-ResponseType button response")
 			}
-			dialog.AddButton(text, int(response))
+			dialog._AddButton(text, int(response))
 		}
 	}
 
 	return dialog
+}
+
+func (this *Dialog) AddButton(text string, response ResponseType) *Widget {
+	return this._AddButton(text, int(response))
 }
 
 //----------------------------------------------------------------------------
