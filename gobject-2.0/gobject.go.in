@@ -258,7 +258,7 @@ func ValueToGoValue(src *Value, t reflect.Type) reflect.Value {
 		if !ok {
 			panic("GValue is not transformable to bool")
 		}
-		out = reflect.New(t)
+		out = reflect.New(t).Elem()
 		out.SetBool(dst.GetBool())
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		dst.Init(GTypeInt64())
@@ -266,7 +266,7 @@ func ValueToGoValue(src *Value, t reflect.Type) reflect.Value {
 		if !ok {
 			panic("GValue is not transformable to int")
 		}
-		out = reflect.New(t)
+		out = reflect.New(t).Elem()
 		out.SetInt(dst.GetInt())
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		dst.Init(GTypeUInt64())
@@ -274,7 +274,7 @@ func ValueToGoValue(src *Value, t reflect.Type) reflect.Value {
 		if !ok {
 			panic("GValue is not transformable to uint")
 		}
-		out = reflect.New(t)
+		out = reflect.New(t).Elem()
 		out.SetUint(dst.GetUint())
 	case reflect.Float32, reflect.Float64:
 		dst.Init(GTypeDouble())
@@ -282,7 +282,7 @@ func ValueToGoValue(src *Value, t reflect.Type) reflect.Value {
 		if !ok {
 			panic("GValue is not transformable to float")
 		}
-		out = reflect.New(t)
+		out = reflect.New(t).Elem()
 		out.SetFloat(dst.GetFloat())
 	case reflect.String:
 		dst.Init(GTypeString())
@@ -290,7 +290,7 @@ func ValueToGoValue(src *Value, t reflect.Type) reflect.Value {
 		if !ok {
 			panic("GValue is not transformable to string")
 		}
-		out = reflect.New(t)
+		out = reflect.New(t).Elem()
 		out.SetString(dst.GetString())
 		dst.Unset() // need to clean up in this case
 	case reflect.Ptr:
