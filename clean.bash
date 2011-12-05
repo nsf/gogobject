@@ -1,7 +1,7 @@
 #!/bin/bash
 
 clean_in_dir() {
-    make -C $1 clean
+	make -C $1 clean
 }
 
 make clean

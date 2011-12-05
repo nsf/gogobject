@@ -1,8 +1,13 @@
 #!/bin/bash
 
+error_exit() {
+	echo -e "\033[1;31m!!!!!!!!! ERROR !!!!!!!!!!\033[0m"
+	exit $?
+}
+
 build() {
-    ./go-gobject-gen -config config.json $1
-    make -C $1 install
+	./go-gobject-gen -config config.json $1
+	make -C $1 install || error_exit
 }
 
 ./clean.bash
