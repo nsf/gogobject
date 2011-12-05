@@ -11,12 +11,15 @@ package gtk
 [<.GFree>]
 [<.GErrorFree>]
 
+extern GtkWidget *gtk_message_dialog_new(GtkWindow*, GtkDialogFlags, GtkMessageType, GtkButtonsType, const char *msg);
+
 #cgo pkg-config: gtk+-3.0
 */
 import "C"
 import "unsafe"
 import "runtime"
 import "errors"
+import "fmt"
 
 // package dependencies
 import (
@@ -82,4 +85,27 @@ func NewDialogWithButtons(title string, parent *Window, flags DialogFlags, butto
 	}
 
 	return dialog
+}
+
+//----------------------------------------------------------------------------
+// MessageDialog
+//----------------------------------------------------------------------------
+
+func NewMessageDialogWithMarkup(parent0 WindowLike, flags0 DialogFlags, type0 MessageType,
+		buttons0 ButtonsType, format string, args ...interface{}) *MessageDialog {
+	var parent1 *C.GtkWindow
+	var flags1 C.GtkDialogFlags
+	var type1 C.GtkMessageType
+	var buttons1 C.GtkButtonsType
+	if parent0 != nil {
+		parent1 = parent0.InheritedFromGtkWindow()
+	}
+	flags1 = C.GtkDialogFlags(flags0)
+	type1 = C.GtkMessageType(type0)
+	buttons1 = C.GtkButtonsType(buttons0)
+	ret1 := C.gtk_message_dialog_new(parent1, flags1, type1, buttons1, nil)
+	var ret2 *MessageDialog
+	ret2 = (*MessageDialog)(_GObjectGrab(unsafe.Pointer(ret1)))
+	ret2.SetMarkup(fmt.Sprintf(format, args...))
+	return ret2
 }
