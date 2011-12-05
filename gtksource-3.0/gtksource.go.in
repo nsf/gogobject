@@ -11,8 +11,6 @@ package gtksource
 [<.GErrorFree>]
 [<.GFree>]
 
-extern void g_type_init();
-
 #cgo pkg-config: gtksourceview-3.0
 */
 import "C"
@@ -29,10 +27,6 @@ import (
 	"gobject/cairo-1.0"
 	"gobject/gio-2.0"
 )
-
-func init() {
-	C.g_type_init()
-}
 
 [<.GoUtils>]
 

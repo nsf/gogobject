@@ -10,8 +10,6 @@ package gdk
 [<.GObjectRefUnref>]
 [<.GFree>]
 
-extern void g_type_init();
-
 #cgo pkg-config: gdk-3.0
 */
 import "C"
@@ -23,10 +21,6 @@ import (
 	"gobject/cairo-1.0"
 	"gobject/gdkpixbuf-2.0"
 )
-
-func init() {
-	C.g_type_init()
-}
 
 [<.GoUtils>]
 

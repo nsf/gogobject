@@ -11,8 +11,6 @@ package gdkpixbuf
 [<.GErrorFree>]
 [<.GFree>]
 
-extern void g_type_init();
-
 #cgo pkg-config: gdk-pixbuf-2.0
 */
 import "C"
@@ -24,10 +22,6 @@ import "errors"
 import (
 	"gobject/gobject-2.0"
 )
-
-func init() {
-	C.g_type_init()
-}
 
 [<.GoUtils>]
 
