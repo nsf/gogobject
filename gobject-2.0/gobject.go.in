@@ -374,3 +374,24 @@ func (this *Value) SetGo(v reflect.Value) {
 		panic("GValue cannot be created from " + v.Kind().String())
 	}
 }
+
+func (this *Value) InitWithInterface(vi interface{}) {
+	v := reflect.ValueOf(vi)
+	switch v.Kind() {
+	case reflect.Bool:
+		this.Init(Boolean)
+		this.SetBool(v.Bool())
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		this.Init(Int64)
+		this.SetInt(v.Int())
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		this.Init(UInt64)
+		this.SetUint(v.Uint())
+	case reflect.Float32, reflect.Float64:
+		this.Init(Double)
+		this.SetFloat(v.Float())
+	case reflect.String:
+		this.Init(String)
+		this.SetString(v.String())
+	}
+}

@@ -187,6 +187,9 @@
 		"Widget.GetHexpand": "GetHExpand",
 		"Widget.GetVexpand": "GetVExpand",
 		"Widget.GetHexpandSet": "GetHExpandSet",
-		"Widget.GetVexpandSet": "GetVExpandSet"
+		"Widget.GetVexpandSet": "GetVExpandSet",
+
+		"NewTreeStore": "_NewTreeStore",
+		"TreeStore.Append": "_Append"
 	}
 }

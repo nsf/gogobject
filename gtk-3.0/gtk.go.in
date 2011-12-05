@@ -113,3 +113,22 @@ func NewMessageDialogWithMarkup(parent0 WindowLike, flags0 DialogFlags, type0 Me
 	ret2.SetMarkup(fmt.Sprintf(format, args...))
 	return ret2
 }
+
+//----------------------------------------------------------------------------
+// TreeStore
+//----------------------------------------------------------------------------
+
+func NewTreeStore(types ...gobject.Type) *TreeStore {
+	return _NewTreeStore(types)
+}
+
+func (this *TreeStore) Append(parent *TreeIter, values ...interface{}) TreeIter {
+	iter := this._Append(parent)
+	for i, v := range values {
+		var gvalue gobject.Value
+		gvalue.InitWithInterface(v)
+		this.SetValue(&iter, i, &gvalue)
+		gvalue.Unset()
+	}
+	return iter
+}
