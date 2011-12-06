@@ -459,11 +459,25 @@ func ProcessConstantInfo(ci *gi.ConstantInfo) {
 }
 
 func ProcessCallbackInfo(ci *gi.CallableInfo) {
-	// TODO: filter out non-closure kinds (we can't handle them anyway)
+	userdata := false
+	for i, n := 0, ci.NumArg(); i < n; i++ {
+		arg := ci.Arg(i)
+		if arg.Closure() != -1 {
+			userdata = true
+			break
+		}
+	}
+	if !userdata {
+		printf("// blacklisted (no userdata): ")
+	}
+
 	printf("type %s func(", ci.Name())
 	for i, n := 0, ci.NumArg(); i < n; i++ {
 		arg := ci.Arg(i)
-		printf("%s %s", arg.Name(), GoType(arg.Type(), TypeNone))
+		// I use here TypeReturn because for closures it's inverted
+		// C code calls closure and it has to be concrete and Go code
+		// returns stuff to C (like calling a C function)
+		printf("%s %s", arg.Name(), GoType(arg.Type(), TypeReturn))
 		if i != n-1 {
 			printf(", ")
 		}

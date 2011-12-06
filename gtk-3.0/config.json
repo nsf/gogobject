@@ -110,7 +110,8 @@
 			"set"
 		],
 		"Menu": [
-			"popup_for_device"
+			"popup_for_device",
+			"attach_to_widget"
 		],
 		"MenuItem": [
 			"toggle_size_request"
