@@ -132,3 +132,22 @@ func (this *TreeStore) Append(parent *TreeIter, values ...interface{}) TreeIter 
 	}
 	return iter
 }
+
+//----------------------------------------------------------------------------
+// ListStore
+//----------------------------------------------------------------------------
+
+func NewListStore(types ...gobject.Type) *ListStore {
+	return _NewListStore(types)
+}
+
+func (this *ListStore) Append(values ...interface{}) TreeIter {
+	iter := this._Append()
+	for i, v := range values {
+		var gvalue gobject.Value
+		gvalue.InitWithInterface(v)
+		this.SetValue(&iter, i, &gvalue)
+		gvalue.Unset()
+	}
+	return iter
+}
