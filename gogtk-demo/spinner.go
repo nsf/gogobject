@@ -12,11 +12,7 @@ func Spinner() *gtk.Dialog {
 		window.Destroy()
 	})
 
-	content_area, ok := gtk.ToBox(window.GetContentArea())
-	if !ok {
-		panic("bad type")
-	}
-
+	content_area := gtk.ToBox(window.GetContentArea())
 	vbox := gtk.NewBox(gtk.OrientationVertical, 5)
 	content_area.PackStart(vbox, true, true, 0)
 	vbox.SetBorderWidth(5)

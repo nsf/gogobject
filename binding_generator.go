@@ -358,14 +358,14 @@ func ProcessObjectInfo(oi *gi.ObjectInfo) {
 	}
 
 	// type casting function
-	printf("func To%s(objlike %sLike) (*%s, bool) {\n", name, object, name)
+	printf("func To%s(objlike %sLike) *%s {\n", name, object, name)
 	printf("\tt := ((*%s)(nil)).GetStaticType()\n", name)
 	printf("\tc := objlike.InheritedFromGObject()\n")
 	printf("\tobj := _GObjectGrabIfType(unsafe.Pointer(c), t)\n")
 	printf("\tif obj != nil {\n")
-	printf("\t\treturn (*%s)(obj), true\n", name)
+	printf("\t\treturn (*%s)(obj)\n", name)
 	printf("\t}\n")
-	printf("\treturn nil, false\n")
+	printf("\tpanic(\"cannot cast to %s\")\n", name)
 	printf("}\n")
 
 	for i, n := 0, oi.NumMethod(); i < n; i++ {

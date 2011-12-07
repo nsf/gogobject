@@ -15,10 +15,7 @@ const dialogText =
 
 func ActivateLink(label *gtk.Label, uri string) bool {
 	if uri == "keynav" {
-		parent, ok := gtk.ToWindow(label.GetParent())
-		if !ok {
-			panic("bad type")
-		}
+		parent := gtk.ToWindow(label.GetParent())
 		dialog := gtk.NewMessageDialogWithMarkup(parent,
 			gtk.DialogFlagsDestroyWithParent,
 			gtk.MessageTypeInfo,
