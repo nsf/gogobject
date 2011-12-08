@@ -45,20 +45,20 @@ func GoToCgoForInterface(bi *gi.BaseInfo, arg0, arg1 string, flags ConvFlags) st
 
 	switch bi.Type() {
 	case gi.INFO_TYPE_OBJECT:
-		oi := gi.ToObjectInfo(bi)
-		prefix := gi.DefaultRepository().CPrefix(oi.Namespace())
+		prefix := gi.DefaultRepository().CPrefix(bi.Namespace())
 		printf("if %s != nil {\n", arg0)
 		printf("\t%s = %s.InheritedFrom%s%s()\n",
-			arg1, arg0, prefix, oi.Name())
+			arg1, arg0, prefix, bi.Name())
 		printf("}")
 	case gi.INFO_TYPE_ENUM, gi.INFO_TYPE_FLAGS:
 		ctype := CgoTypeForInterface(bi, TypeNone)
 		printf("%s = %s(%s)", arg1, ctype, arg0)
 	case gi.INFO_TYPE_INTERFACE:
-		ii := gi.ToInterfaceInfo(bi)
-		prefix := gi.DefaultRepository().CPrefix(ii.Namespace())
-		printf("%s = %s.Implements%s%s()",
-			arg1, arg0, prefix, ii.Name())
+		prefix := gi.DefaultRepository().CPrefix(bi.Namespace())
+		printf("if %s != nil {\n", arg0)
+		printf("\t%s = %s.Implements%s%s()",
+			arg1, arg0, prefix, bi.Name())
+		printf("}")
 	case gi.INFO_TYPE_STRUCT:
 		fullnm := strings.ToLower(bi.Namespace()) + "." + bi.Name()
 		if _, ok := GConfig.Sys.DisguisedTypes[fullnm]; ok {
@@ -181,22 +181,13 @@ func CgoToGoForInterface(bi *gi.BaseInfo, arg1, arg2 string, flags ConvFlags) st
 	printf := PrinterTo(&out)
 
 	switch bi.Type() {
-	case gi.INFO_TYPE_OBJECT:
+	case gi.INFO_TYPE_OBJECT, gi.INFO_TYPE_INTERFACE:
 		gotype := GoTypeForInterface(bi, TypeReturn)
 		if flags&ConvOwnEverything != 0 {
 			printf("%s = (*%s)(_GObjectWrap(unsafe.Pointer(%s)))",
 				arg2, gotype, arg1)
 		} else {
 			printf("%s = (*%s)(_GObjectGrab(unsafe.Pointer(%s)))",
-				arg2, gotype, arg1)
-		}
-	case gi.INFO_TYPE_INTERFACE:
-		gotype := GoTypeForInterface(bi, TypeReturn)
-		if flags&ConvOwnEverything != 0 {
-			printf("%s = (*%sDummy)(_GObjectWrap(unsafe.Pointer(%s)))",
-				arg2, gotype, arg1)
-		} else {
-			printf("%s = (*%sDummy)(_GObjectGrab(unsafe.Pointer(%s)))",
 				arg2, gotype, arg1)
 		}
 	case gi.INFO_TYPE_ENUM, gi.INFO_TYPE_FLAGS:

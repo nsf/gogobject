@@ -4,107 +4,10 @@ import (
 	"bytes"
 	"fmt"
 	"gobject/gi"
-	"io"
 	"strings"
 	"unsafe"
 )
 
-var printf func(string, ...interface{})
-
-func PrinterTo(w io.Writer) func(string, ...interface{}) {
-	return func(format string, args ...interface{}) {
-		fmt.Fprintf(w, format, args...)
-	}
-}
-
-const CommonIncludes = `#include <stdlib.h>
-#include <stdint.h>`
-
-const GType = `typedef size_t GType;`
-
-const GObjectRefUnref = `extern GObject *g_object_ref_sink(GObject*);
-extern void g_object_unref(GObject*);`
-
-const GErrorFree = `extern void g_error_free(GError*);`
-
-const GFree = `extern void g_free(void*);`
-
-var GoUtilsTemplate = MustTemplate(`
-const alot = 999999
-
-type _GSList struct {
-	data unsafe.Pointer
-	next *_GSList
-}
-
-type _GList struct {
-	data unsafe.Pointer
-	next *_GList
-	prev *_GList
-}
-
-type _GError struct {
-	domain uint32
-	code int32
-	message *C.char
-}
-
-func _GoBoolToCBool(x bool) C.int {
-	if x { return 1 }
-	return 0
-}
-
-func _GObjectFinalizer(obj *[<.gobject>]) {
-	C.g_object_unref((*C.GObject)(obj.C))
-}
-
-func _SetGObjectFinalizer(obj *[<.gobject>]) {
-	runtime.SetFinalizer(obj, _GObjectFinalizer)
-}
-
-// returns a new *gobject.Object casted to unsafe.Pointer, so that various
-// callers can cast it back to any inherited type, note that function sets
-// finalizer as well
-func _GObjectGrab(c unsafe.Pointer) unsafe.Pointer {
-	if c == nil {
-		return nil
-	}
-	obj := &[<.gobject>]{c}
-	C.g_object_ref_sink((*C.GObject)(obj.C))
-	_SetGObjectFinalizer(obj)
-	return unsafe.Pointer(obj)
-}
-
-// same as above, but doesn't increment reference count
-func _GObjectWrap(c unsafe.Pointer) unsafe.Pointer {
-	if c == nil {
-		return nil
-	}
-	obj := &[<.gobject>]{c}
-	_SetGObjectFinalizer(obj)
-	return unsafe.Pointer(obj)
-}
-
-func _CInterfaceToGoInterface(iface [2]unsafe.Pointer) interface{} {
-	return *(*interface{})(unsafe.Pointer(&iface))
-}
-
-func _GoInterfaceToCInterface(iface interface{}) *unsafe.Pointer {
-	return (*unsafe.Pointer)(unsafe.Pointer(&iface))
-}
-
-func _GObjectGrabIfType(c unsafe.Pointer, t [<.gtype>]) unsafe.Pointer {
-	if c == nil {
-		return nil
-	}
-	obj := &[<.gobject>]{c}
-	if obj.GetType().IsA(t) {
-		C.g_object_ref_sink((*C.GObject)(obj.C))
-		_SetGObjectFinalizer(obj)
-		return unsafe.Pointer(obj)
-	}
-	return nil
-}`)
 
 func CFuncForwardDeclaration(fi *gi.FunctionInfo, container *gi.BaseInfo) {
 	flags := fi.Flags()
@@ -177,6 +80,13 @@ func CForwardDeclaration20(bi *gi.BaseInfo) {
 			CFuncForwardDeclaration(meth, bi)
 		}
 		printf("extern GType %s();\n", oi.TypeInit())
+	case gi.INFO_TYPE_INTERFACE:
+		ii := gi.ToInterfaceInfo(bi)
+		for i, n := 0, ii.NumMethod(); i < n; i++ {
+			meth := ii.Method(i)
+			CFuncForwardDeclaration(meth, bi)
+		}
+		printf("extern GType %s();\n", ii.TypeInit())
 	case gi.INFO_TYPE_STRUCT:
 		si := gi.ToStructInfo(bi)
 		for i, n := 0, si.NumMethod(); i < n; i++ {
@@ -303,70 +213,54 @@ func ProcessTemplate(tplstr string) {
 //------------------------------------------------------------------------
 
 func ProcessObjectInfo(oi *gi.ObjectInfo) {
-	parentStr := "C unsafe.Pointer"
-	if parent := oi.Parent(); parent != nil {
-		parentStr = ""
-		if ns := parent.Namespace(); ns != Config.Namespace {
-			parentStr += strings.ToLower(ns) + "."
+	parent := "C unsafe.Pointer"
+	if p := oi.Parent(); p != nil {
+		parent = ""
+		if ns := p.Namespace(); ns != Config.Namespace {
+			parent += strings.ToLower(ns) + "."
 		}
-		parentStr += parent.Name()
+		parent += p.Name()
 	}
 
 	// interface that this class and its subclasses implement
 	cprefix := gi.DefaultRepository().CPrefix(Config.Namespace)
 	name := oi.Name()
 	cgotype := CgoTypeForInterface(gi.ToBaseInfo(oi), TypePointer)
-	printf("type %sLike interface {\n", name)
-	printf("\tInheritedFrom%s%s() %s\n", cprefix, name, cgotype)
-	printf("}\n")
-
-	// the struct itself, uses embedding to emulate inheritance
-	printf("type %s struct {\n", name)
-	printf("\t%s\n", parentStr)
-	printf("}\n")
-
-	// implementation of the above interface
-	printf("func (this0 *%s) InheritedFrom%s%s() %s {\n",
-		name, cprefix, name, cgotype)
-	printf("\treturn (%s)(this0.C)\n", cgotype)
-	printf("}\n")
 
 	gtype := "gobject.Type"
 	if Config.Namespace == "GObject" {
 		gtype = "Type"
 	}
 
-	// static type function for closure marshaler
-	printf("func (this0 *%s) GetStaticType() %s {\n", name, gtype)
-	printf("\treturn %s(C.%s())\n", gtype, oi.TypeInit())
-	printf("}\n")
+	gobject := "gobject.Object"
+	if Config.Namespace == "GObject" {
+		gobject = "Object"
+	}
 
-	// interfaces implementation methods
+	var interfaces bytes.Buffer
 	for i, n := 0, oi.NumInterface(); i < n; i++ {
 		ii := oi.Interface(i)
-		nm := ii.Name()
-		prefix := gi.DefaultRepository().CPrefix(ii.Namespace())
-		printf("func (this0 *%s) Implements%s%s() *C.%s%s {\n",
-			name, prefix, nm, prefix, nm)
-		printf("\treturn (*C.%s%s)(this0.C)\n", prefix, nm)
-		printf("}\n")
+		name := ii.Name()
+		ns := ii.Namespace()
+		if i != 0 {
+			interfaces.WriteString("\n\t")
+		}
+		if ns != Config.Namespace {
+			fmt.Fprintf(&interfaces, "%s.", strings.ToLower(ns))
+		}
+		fmt.Fprintf(&interfaces, "%sImpl", name)
 	}
 
-	object := "gobject.Object"
-	if Config.Namespace == "GObject" {
-		object = "Object"
-	}
-
-	// type casting function
-	printf("func To%s(objlike %sLike) *%s {\n", name, object, name)
-	printf("\tt := ((*%s)(nil)).GetStaticType()\n", name)
-	printf("\tc := objlike.InheritedFromGObject()\n")
-	printf("\tobj := _GObjectGrabIfType(unsafe.Pointer(c), t)\n")
-	printf("\tif obj != nil {\n")
-	printf("\t\treturn (*%s)(obj)\n", name)
-	printf("\t}\n")
-	printf("\tpanic(\"cannot cast to %s\")\n", name)
-	printf("}\n")
+	printf("%s\n", ExecuteTemplate(ObjectTemplate, map[string]string{
+		"name": name,
+		"cprefix": cprefix,
+		"cgotype": cgotype,
+		"parent": parent,
+		"gtype": gtype,
+		"typeinit": oi.TypeInit(),
+		"gobject": gobject,
+		"interfaces": interfaces.String(),
+	}))
 
 	for i, n := 0, oi.NumMethod(); i < n; i++ {
 		meth := oi.Method(i)
@@ -501,7 +395,7 @@ func ProcessFunctionInfo(fi *gi.FunctionInfo, container *gi.BaseInfo) {
 	if flags&gi.FUNCTION_IS_METHOD != 0 {
 		// add receiver if it's a method
 		printf("(this0 %s) ",
-			GoTypeForInterface(container, TypePointer|TypeReturn))
+			GoTypeForInterface(container, TypePointer|TypeReceiver))
 		fullnm = container.Name() + "."
 	}
 	switch {
@@ -740,23 +634,37 @@ func ProcessFunctionInfo(fi *gi.FunctionInfo, container *gi.BaseInfo) {
 }
 
 func ProcessInterfaceInfo(ii *gi.InterfaceInfo) {
-	nm := ii.Name()
-	prefix := gi.DefaultRepository().CPrefix(ii.Namespace())
+	name := ii.Name()
+	cprefix := gi.DefaultRepository().CPrefix(ii.Namespace())
+	cgotype := CgoTypeForInterface(gi.ToBaseInfo(ii), TypePointer)
 
-	printf("type %s interface {\n", nm)
-	printf("\tImplements%s%s() *C.%s%s\n", prefix, nm,
-		prefix, nm)
-	printf("}\n")
+	gtype := "gobject.Type"
+	if Config.Namespace == "GObject" {
+		gtype = "Type"
+	}
 
-	// plus dummy struct that implements that interface (for return values)
-	printf("type %sDummy struct {\n", nm)
-	printf("\tC unsafe.Pointer\n")
-	printf("}\n")
+	gobject := "gobject.Object"
+	if Config.Namespace == "GObject" {
+		gobject = "Object"
+	}
 
-	printf("func (this0 *%sDummy) Implements%s%s() *C.%s%s {\n",
-		nm, prefix, nm, prefix, nm)
-	printf("\treturn (*C.%s%s)(this0.C)\n", prefix, nm)
-	printf("}\n")
+	printf("%s\n", ExecuteTemplate(InterfaceTemplate, map[string]string{
+		"name": name,
+		"cprefix": cprefix,
+		"cgotype": cgotype,
+		"gtype": gtype,
+		"typeinit": ii.TypeInit(),
+		"gobject": gobject,
+	}))
+
+	for i, n := 0, ii.NumMethod(); i < n; i++ {
+		meth := ii.Method(i)
+		if IsMethodBlacklisted(name, meth.Name()) {
+			printf("// blacklisted: %s.%s (method)\n", name, meth.Name())
+			continue
+		}
+		ProcessFunctionInfo(meth, gi.ToBaseInfo(ii))
+	}
 }
 
 func ProcessBaseInfo(bi *gi.BaseInfo) {

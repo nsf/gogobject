@@ -1,0 +1,26 @@
+package atk
+
+/*
+[<.CommonIncludes>]
+
+[<.GType>]
+
+[<.CForwardDeclarations>]
+
+[<.GObjectRefUnref>]
+[<.GErrorFree>]
+[<.GFree>]
+
+#cgo pkg-config: atk
+*/
+import "C"
+import "unsafe"
+import "runtime"
+
+import (
+	"gobject/gobject-2.0"
+)
+
+[<.GoUtils>]
+
+[<.GoBindings>]

@@ -21,6 +21,7 @@ import "errors"
 // package dependencies
 import (
 	"gobject/gobject-2.0"
+	"gobject/gio-2.0"
 )
 
 [<.GoUtils>]

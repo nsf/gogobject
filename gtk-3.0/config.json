@@ -70,6 +70,9 @@
 			"value_from_string",
 			"connect_signals_full"
 		],
+		"Buildable": [
+			"custom_tag_start"
+		],
 		"Calendar": [
 			"set_detail_func"
 		],
@@ -85,11 +88,17 @@
 			"foreach",
 			"foreach_alloc"
 		],
+		"CellLayout": [
+			"set_cell_data_func"
+		],
 		"EntryCompletion": [
 			"set_match_func"
 		],
 		"FileFilter": [
 			"add_custom"
+		],
+		"FontChooser": [
+			"set_filter_func"
 		],
 		"IconView": [
 			"selected_foreach"
@@ -119,6 +128,9 @@
 		"RecentFilter": [
 			"add_custom"
 		],
+		"RecentChooser": [
+			"set_sort_func"
+		],
 		"TargetList": [
 			"find"
 		],
@@ -141,6 +153,10 @@
 			"selected_foreach",
 			"set_select_function"
 		],
+		"TreeSortable": [
+			"set_default_sort_func",
+			"set_sort_func"
+		],
 		"TreeView": [
 			"insert_column_with_data_func",
 			"map_expanded_rows",
@@ -155,6 +171,9 @@
 		"TreeViewColumn": [
 			"set_cell_data_func"
 		],
+		"TreeModel": [
+			"foreach"
+		],
 		"RcProperty": [
 			"parse_border",
 			"parse_color",
@@ -165,6 +184,9 @@
 		"Settings": [
 			"install_property",
 			"install_property_parser"
+		],
+		"StyleProvider": [
+			"get_style_property"
 		],
 		"Window": [
 			"get_application",
@@ -178,6 +200,9 @@
 			"request_text",
 			"request_uris"
 		]
+	},
+	"method-whitelist": {
+		"AppChooser": []
 	},
 	"renames": {
 		"Dialog.AddButton": "_AddButton",

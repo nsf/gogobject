@@ -2,10 +2,19 @@ package main
 
 import (
 	"bytes"
+	"io"
 	"fmt"
 	"strings"
 	"text/template"
 )
+
+var printf func(string, ...interface{})
+
+func PrinterTo(w io.Writer) func(string, ...interface{}) {
+	return func(format string, args ...interface{}) {
+		fmt.Fprintf(w, format, args...)
+	}
+}
 
 func LowerCaseToCamelCase(name string) string {
 	var out bytes.Buffer
@@ -28,6 +37,12 @@ func MustTemplate(tpl string) *template.Template {
 			Delims("[<", ">]").
 			Parse(tpl),
 	)
+}
+
+func ExecuteTemplate(tpl *template.Template, args interface{}) string {
+	var out bytes.Buffer
+	tpl.Execute(&out, args)
+	return out.String()
 }
 
 func CtorSuffix(name string) string {

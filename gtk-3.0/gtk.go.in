@@ -29,6 +29,7 @@ import (
 	"gobject/gio-2.0"
 	"gobject/cairo-1.0"
 	"gobject/pango-1.0"
+	"gobject/atk-1.0"
 )
 
 [<.GoUtils>]

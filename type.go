@@ -23,6 +23,7 @@ const (
 	TypePointer TypeFlags = 1 << iota
 	TypeReturn
 	TypeListMember
+	TypeReceiver
 )
 
 //------------------------------------------------------------------
@@ -213,34 +214,37 @@ func GoTypeForInterface(bi *gi.BaseInfo, flags TypeFlags) string {
 
 	if flags&TypeListMember != 0 {
 		switch bi.Type() {
-		case gi.INFO_TYPE_OBJECT:
+		case gi.INFO_TYPE_OBJECT, gi.INFO_TYPE_INTERFACE:
 			return GoTypeForInterface(bi, TypePointer|TypeReturn)
 		default:
 			return GoTypeForInterface(bi, TypeReturn)
 		}
 	}
 
-	switch {
-	case bi.Type() == gi.INFO_TYPE_OBJECT && flags&TypeReturn == 0:
-		oi := gi.ToObjectInfo(bi)
+	switch t := bi.Type(); t {
+	case gi.INFO_TYPE_OBJECT, gi.INFO_TYPE_INTERFACE:
+		if flags&(TypeReturn|TypeReceiver) != 0 && flags&TypePointer != 0 {
+			printf("*")
+		}
 		if ns != Config.Namespace {
 			printf("%s.", strings.ToLower(ns))
 		}
-		printf("%sLike", oi.Name())
-	case bi.Type() == gi.INFO_TYPE_INTERFACE:
-		if ns != Config.Namespace {
-			printf("%s.", strings.ToLower(ns))
+		printf(bi.Name())
+		if flags&(TypeReturn|TypeReceiver) == 0 {
+			printf("Like")
 		}
-		out.WriteString(bi.Name())
+		if flags&TypeReceiver != 0 && t == gi.INFO_TYPE_INTERFACE {
+			printf("Impl")
+		}
 	default:
 		_, disguised := GConfig.Sys.DisguisedTypes[fullnm]
 		if flags&TypePointer != 0 && !disguised {
-			out.WriteString("*")
+			printf("*")
 		}
 		if ns != Config.Namespace {
 			printf("%s.", strings.ToLower(ns))
 		}
-		out.WriteString(bi.Name())
+		printf(bi.Name())
 	}
 	return out.String()
 }

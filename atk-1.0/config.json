@@ -1,0 +1,14 @@
+{
+	"namespace": "Atk",
+	"version": "1.0",
+	"whitelist": {
+		"callbacks": [],
+		"functions": [],
+		"objects": [],
+		"structs": [],
+		"unions": [],
+		"interfaces": [
+			"ImplementorIface"
+		]
+	}
+}

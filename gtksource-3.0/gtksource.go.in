@@ -26,6 +26,7 @@ import (
 	"gobject/gtk-3.0"
 	"gobject/cairo-1.0"
 	"gobject/gio-2.0"
+	"gobject/atk-1.0"
 )
 
 [<.GoUtils>]
