@@ -143,7 +143,7 @@ func GoToCgoForTag(tag gi.TypeTag, arg0, arg1 string, flags ConvFlags) string {
 	case gi.TYPE_TAG_BOOLEAN:
 		return fmt.Sprintf("%s = _GoBoolToCBool(%s)", arg1, arg0)
 	case gi.TYPE_TAG_INT8:
-		return fmt.Sprintf("%s = C.int8_t_t(%s)", arg1, arg0)
+		return fmt.Sprintf("%s = C.int8_t(%s)", arg1, arg0)
 	case gi.TYPE_TAG_UINT8:
 		return fmt.Sprintf("%s = C.uint8_t(%s)", arg1, arg0)
 	case gi.TYPE_TAG_INT16:
