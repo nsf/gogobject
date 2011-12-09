@@ -30,10 +30,6 @@ func NewFunctionBuilder(fi *gi.FunctionInfo) *FunctionBuilder {
 	fb := new(FunctionBuilder)
 	fb.Function = fi
 
-	// first, add return value if it exists to 'rets'
-	if ret := fi.ReturnType(); ret != nil && ret.Tag() != gi.TYPE_TAG_VOID {
-		fb.Rets = append(fb.Rets, FunctionBuilderArg{-1, nil, ret})
-	}
 
 	// prepare an array of ArgInfos
 	for i, n := 0, fi.NumArg(); i < n; i++ {
@@ -81,6 +77,11 @@ func NewFunctionBuilder(fi *gi.FunctionInfo) *FunctionBuilder {
 		}
 	}
 
+	// add return value if it exists to 'rets'
+	if ret := fi.ReturnType(); ret != nil && ret.Tag() != gi.TYPE_TAG_VOID {
+		fb.Rets = append(fb.Rets, FunctionBuilderArg{-1, nil, ret})
+	}
+
 	// add GError special argument (if any)
 	if fi.Flags()&gi.FUNCTION_THROWS != 0 {
 		fb.Rets = append(fb.Rets, FunctionBuilderArg{-2, nil, nil})
@@ -90,5 +91,6 @@ func NewFunctionBuilder(fi *gi.FunctionInfo) *FunctionBuilder {
 }
 
 func (fb *FunctionBuilder) CHasReturnValue() bool {
-	return len(fb.Rets) > 0 && fb.Rets[0].Index == -1
+	return (len(fb.Rets) > 0 && fb.Rets[len(fb.Rets)-1].Index == -1) ||
+		(len(fb.Rets) > 1 && fb.Rets[len(fb.Rets)-2].Index == -1)
 }

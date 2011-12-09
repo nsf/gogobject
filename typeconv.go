@@ -208,7 +208,7 @@ func CgoToGoForInterface(bi *gi.BaseInfo, arg1, arg2 string, flags ConvFlags) st
 		}
 
 		if flags&ConvPointer != 0 {
-			printf("\t%s = (*%s)(unsafe.Pointer(%s))\n",
+			printf("%s = (*%s)(unsafe.Pointer(%s))",
 				arg2, gotype, arg1)
 		} else {
 			printf("%s = *(*%s)(unsafe.Pointer(&%s))",

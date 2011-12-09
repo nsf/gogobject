@@ -86,7 +86,7 @@ func AddColumns(treeview *gtk.TreeView, model *gtk.ListStore) {
 	toggle := gtk.NewCellRendererToggle()
 	toggle.Connect("toggled", func(cell *gtk.CellRendererToggle, path_str string) {
 		path := gtk.NewTreePathFromString(path_str)
-		_, iter := model.GetIter(path)
+		iter, _ := model.GetIter(path)
 		v := model.GetValue(&iter, ColumnFixed)
 		v.SetBool(!v.GetBool())
 		model.SetValue(&iter, ColumnFixed, &v)
