@@ -5,6 +5,7 @@ package gobject
 
 [<.GType>]
 
+[<.CUtils>]
 [<.CForwardDeclarations>]
 
 [<.GFree>]

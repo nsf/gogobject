@@ -80,19 +80,23 @@ func CgoType(ti *gi.TypeInfo, flags TypeFlags) string {
 func CgoTypeForInterface(bi *gi.BaseInfo, flags TypeFlags) string {
 	var out bytes.Buffer
 
-	ns := bi.Namespace()
-	nm := bi.Name()
-	fullnm := strings.ToLower(ns) + "." + nm
+	switch bi.Type() {
+	case gi.INFO_TYPE_CALLBACK:
+		out.WriteString("unsafe.Pointer")
+	default:
+		ns := bi.Namespace()
+		nm := bi.Name()
+		fullnm := strings.ToLower(ns) + "." + nm
 
-	_, disguised := GConfig.Sys.DisguisedTypes[fullnm]
-	if flags&TypePointer != 0 && !disguised {
-		out.WriteString("*")
+		_, disguised := GConfig.Sys.DisguisedTypes[fullnm]
+		if flags&TypePointer != 0 && !disguised {
+			out.WriteString("*")
+		}
+
+		out.WriteString("C.")
+		out.WriteString(gi.DefaultRepository().CPrefix(ns))
+		out.WriteString(bi.Name())
 	}
-
-	out.WriteString("C.")
-	out.WriteString(gi.DefaultRepository().CPrefix(ns))
-	out.WriteString(bi.Name())
-
 	return out.String()
 }
 
@@ -332,4 +336,64 @@ func GoTypeForTag(tag gi.TypeTag, flags TypeFlags) string {
 
 	panic("unreachable")
 	return ""
+}
+
+func GoTypeForTagExact(tag gi.TypeTag, flags TypeFlags) string {
+	switch tag {
+	case gi.TYPE_TAG_BOOLEAN:
+		return "int32"
+	case gi.TYPE_TAG_INT8:
+		return "int8"
+	case gi.TYPE_TAG_UINT8:
+		return "uint8"
+	case gi.TYPE_TAG_INT16:
+		return "int16"
+	case gi.TYPE_TAG_UINT16:
+		return "uint16"
+	case gi.TYPE_TAG_INT32:
+		return "int32"
+	case gi.TYPE_TAG_UINT32:
+		return "uint32"
+	case gi.TYPE_TAG_INT64:
+		return "int64"
+	case gi.TYPE_TAG_UINT64:
+		return "uint64"
+	case gi.TYPE_TAG_UNICHAR:
+		return "int32"
+	}
+
+	return GoTypeForTag(tag, flags)
+}
+
+//------------------------------------------------------------------
+// Simple Cgo Type (for exported functions)
+//------------------------------------------------------------------
+
+func SimpleCgoType(ti *gi.TypeInfo, flags TypeFlags) string {
+	tag := ti.Tag()
+	switch tag {
+	case gi.TYPE_TAG_VOID:
+		if ti.IsPointer() {
+			return "unsafe.Pointer"
+		}
+		panic("Non-pointer void type is not supported")
+	case gi.TYPE_TAG_INTERFACE:
+		bi := ti.Interface()
+		switch bi.Type() {
+		case gi.INFO_TYPE_ENUM, gi.INFO_TYPE_FLAGS:
+			ei := gi.ToEnumInfo(bi)
+			return GoTypeForTagExact(ei.StorageType(), flags)
+		case gi.INFO_TYPE_STRUCT:
+			ns := bi.Namespace()
+			nm := bi.Name()
+			fullnm := strings.ToLower(ns) + "." + nm
+			if _, ok := GConfig.Sys.DisguisedTypes[fullnm]; ok {
+				return "unsafe.Pointer"
+			}
+		}
+	}
+	if !strings.HasPrefix(CgoType(ti, flags), "*") {
+		return GoTypeForTagExact(tag, flags)
+	}
+	return "unsafe.Pointer"
 }

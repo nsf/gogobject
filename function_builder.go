@@ -90,7 +90,29 @@ func NewFunctionBuilder(fi *gi.FunctionInfo) *FunctionBuilder {
 	return fb
 }
 
-func (fb *FunctionBuilder) CHasReturnValue() bool {
+func (fb *FunctionBuilder) HasReturnValue() bool {
 	return (len(fb.Rets) > 0 && fb.Rets[len(fb.Rets)-1].Index == -1) ||
 		(len(fb.Rets) > 1 && fb.Rets[len(fb.Rets)-2].Index == -1)
+}
+
+func (fb *FunctionBuilder) HasClosureArgument() (int, int, gi.ScopeType) {
+	for _, arg := range fb.Args {
+		userdata := arg.ArgInfo.Closure()
+		if userdata == -1 {
+			continue
+		}
+
+		if arg.TypeInfo.Tag() != gi.TYPE_TAG_INTERFACE {
+			continue
+		}
+
+		if arg.TypeInfo.Interface().Type() != gi.INFO_TYPE_CALLBACK {
+			continue
+		}
+
+		destroy := arg.ArgInfo.Destroy()
+		scope := arg.ArgInfo.Scope()
+		return userdata, destroy, scope
+	}
+	return -1, -1, gi.SCOPE_TYPE_INVALID
 }

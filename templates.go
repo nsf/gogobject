@@ -32,6 +32,13 @@ type _GError struct {
 	message *C.char
 }
 
+func _GoStringToGString(x string) *C.char {
+	if x == "" {
+		return nil
+	}
+	return C.CString(x)
+}
+
 func _GoBoolToCBool(x bool) C.int {
 	if x { return 1 }
 	return 0
@@ -87,7 +94,15 @@ func _GObjectGrabIfType(c unsafe.Pointer, t [<.gtype>]) unsafe.Pointer {
 		return unsafe.Pointer(obj)
 	}
 	return nil
-}`)
+}
+
+var _cbcache = make(map[unsafe.Pointer]bool)
+
+//export _[<.namespace>]_go_callback_cleanup
+func _[<.namespace>]_go_callback_cleanup(gofunc unsafe.Pointer) {
+	delete(_cbcache, gofunc)
+}
+`)
 
 var ObjectTemplate = MustTemplate(`
 type [<.name>]Like interface {
@@ -151,4 +166,12 @@ func (this0 *[<.name>]Impl) GetStaticType() [<.gtype>] {
 	return [<.gtype>](C.[<.typeinit>]())
 }
 
+`)
+
+var CUtilsTemplate = MustTemplate(`
+extern void _[<.namespace>]_go_callback_cleanup(void *gofunc);
+static void _c_callback_cleanup(void *userdata)
+{
+	_[<.namespace>]_go_callback_cleanup(userdata);
+}
 `)

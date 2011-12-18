@@ -19,7 +19,10 @@
 		"callbacks": [
 			"AccelMapForeach",
 			"PageSetupDoneFunc",
-			"RcPropertyParser"
+			"RcPropertyParser",
+			"ClipboardRichTextReceivedFunc",
+			"TextBufferDeserializeFunc",
+			"TextBufferSerializeFunc"
 		],
 		"functions": [
 			"binding_entry_add_signal_from_string",
@@ -72,9 +75,6 @@
 		],
 		"Buildable": [
 			"custom_tag_start"
-		],
-		"Calendar": [
-			"set_detail_func"
 		],
 		"Container": [
 			"forall",

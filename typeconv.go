@@ -72,6 +72,8 @@ func GoToCgoForInterface(bi *gi.BaseInfo, arg0, arg1 string, flags ConvFlags) st
 			printf("%s = *(*%s)(unsafe.Pointer(&%s))",
 				arg1, ctype, arg0)
 		}
+	case gi.INFO_TYPE_CALLBACK:
+		printf("%s = unsafe.Pointer(&%s)", arg1, arg0)
 	}
 
 	return out.String()
@@ -89,8 +91,10 @@ func GoToCgo(ti *gi.TypeInfo, arg0, arg1 string, flags ConvFlags) string {
 		}
 		printf("<ERROR: void>")
 	case gi.TYPE_TAG_UTF8, gi.TYPE_TAG_FILENAME:
-		printf("%s = C.CString(%s)\n", arg1, arg0)
-		printf("defer C.free(unsafe.Pointer(%s))", arg1)
+		printf("%s = _GoStringToGString(%s)", arg1, arg0)
+		if flags&ConvOwnEverything == 0 {
+			printf("\ndefer C.free(unsafe.Pointer(%s))", arg1)
+		}
 	case gi.TYPE_TAG_ARRAY:
 		switch ti.ArrayType() {
 		case gi.ARRAY_TYPE_C:
@@ -204,7 +208,9 @@ func CgoToGoForInterface(bi *gi.BaseInfo, arg1, arg2 string, flags ConvFlags) st
 		}
 
 		if _, ok := GConfig.Sys.DisguisedTypes[fullnm]; ok {
-			flags &^= ConvPointer
+			printf("%s = %s{unsafe.Pointer(%s)}",
+				arg2, gotype, arg1)
+			break
 		}
 
 		if flags&ConvPointer != 0 {
@@ -321,4 +327,14 @@ func CgoToGoForTag(tag gi.TypeTag, arg1, arg2 string, flags ConvFlags) string {
 
 	panic("unreachable")
 	return ""
+}
+
+//------------------------------------------------------------------
+// Simple Cgo to Go Converter
+//------------------------------------------------------------------
+
+func SimpleCgoToGo(ti *gi.TypeInfo, arg0, arg1 string, flags ConvFlags) string {
+	cgotype := CgoType(ti, TypeNone)
+	arg0 = fmt.Sprintf("(%s)(%s)", cgotype, arg0)
+	return CgoToGo(ti, arg0, arg1, flags)
 }

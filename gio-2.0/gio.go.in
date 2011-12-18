@@ -5,6 +5,7 @@ package gio
 
 [<.GType>]
 
+[<.CUtils>]
 [<.CForwardDeclarations>]
 
 [<.GObjectRefUnref>]
