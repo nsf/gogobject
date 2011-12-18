@@ -80,10 +80,6 @@
 		"Box": [
 			"query_child_packing"
 		],
-		"ButtonBox": [
-			"get_child_ipadding",
-			"get_child_size"
-		],
 		"CList": [
 			"get_pixtext",
 			"get_selection_info",
@@ -117,9 +113,6 @@
 		],
 		"IMContextSimple": [
 			"add_table"
-		],
-		"IMContext": [
-			"get_surrounding"
 		],
 		"Widget": [
 			"get_accessible"

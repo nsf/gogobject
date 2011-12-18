@@ -146,30 +146,14 @@ func GoToCgoForTag(tag gi.TypeTag, arg0, arg1 string, flags ConvFlags) string {
 	switch tag {
 	case gi.TYPE_TAG_BOOLEAN:
 		return fmt.Sprintf("%s = _GoBoolToCBool(%s)", arg1, arg0)
-	case gi.TYPE_TAG_INT8:
-		return fmt.Sprintf("%s = C.int8_t(%s)", arg1, arg0)
-	case gi.TYPE_TAG_UINT8:
-		return fmt.Sprintf("%s = C.uint8_t(%s)", arg1, arg0)
-	case gi.TYPE_TAG_INT16:
-		return fmt.Sprintf("%s = C.int16_t(%s)", arg1, arg0)
-	case gi.TYPE_TAG_UINT16:
-		return fmt.Sprintf("%s = C.uint16_t(%s)", arg1, arg0)
-	case gi.TYPE_TAG_INT32:
-		return fmt.Sprintf("%s = C.int32_t(%s)", arg1, arg0)
-	case gi.TYPE_TAG_UINT32:
-		return fmt.Sprintf("%s = C.uint32_t(%s)", arg1, arg0)
-	case gi.TYPE_TAG_INT64:
-		return fmt.Sprintf("%s = C.int64_t(%s)", arg1, arg0)
-	case gi.TYPE_TAG_UINT64:
-		return fmt.Sprintf("%s = C.uint64_t(%s)", arg1, arg0)
-	case gi.TYPE_TAG_FLOAT:
-		return fmt.Sprintf("%s = C.float(%s)", arg1, arg0)
-	case gi.TYPE_TAG_DOUBLE:
-		return fmt.Sprintf("%s = C.double(%s)", arg1, arg0)
-	case gi.TYPE_TAG_GTYPE:
-		return fmt.Sprintf("%s = C.GType(%s)", arg1, arg0)
-	case gi.TYPE_TAG_UNICHAR:
-		return fmt.Sprintf("%s = C.uint32_t(%s)", arg1, arg0)
+	default:
+		if flags & ConvPointer == 0 {
+			return fmt.Sprintf("%s = %s(%s)", arg1,
+				CgoTypeForTag(tag, TypeNone), arg0)
+		} else {
+			return fmt.Sprintf("%s = (%s)(unsafe.Pointer(%s))", arg1,
+				CgoTypeForTag(tag, TypePointer), arg0)
+		}
 	}
 
 	panic("unreachable")

@@ -1,14 +1,32 @@
 {
 	"namespace": "Atk",
 	"version": "1.0",
-	"whitelist": {
-		"callbacks": [],
-		"functions": [],
-		"objects": [],
-		"structs": [],
-		"unions": [],
-		"interfaces": [
-			"ImplementorIface"
+	"blacklist": {
+		"functions": [
+			"attribute_set_free",
+			"text_free_ranges"
+		]
+	},
+	"method-blacklist": {
+		"Document": [
+			"get_attributes"
+		],
+		"Object": [
+			"get_attributes"
+		],
+		"StateSet": [
+			"add_states",
+			"contains_states"
+		],
+		"StreamableContent": [
+			"get_stream"
+		],
+		"Text": [
+			"get_default_attributes",
+			"get_run_attributes"
+		],
+		"Relation": [
+			"get_target"
 		]
 	}
 }

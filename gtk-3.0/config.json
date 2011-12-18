@@ -69,9 +69,6 @@
 		"ComboBox": [
 			"get_popup_accessible"
 		],
-		"IMContext": [
-			"get_surrounding"
-		],
 		"ListStore": [
 			"insert_with_valuesv",
 			"set"

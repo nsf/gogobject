@@ -23,8 +23,7 @@
 	},
 	"method-blacklist": {
 		"Keymap": [
-			"get_entries_for_keycode",
-			"get_direction"
+			"get_entries_for_keycode"
 		],
 		"Display": [
 			"get_app_launch_context"

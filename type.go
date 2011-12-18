@@ -101,37 +101,45 @@ func CgoTypeForInterface(bi *gi.BaseInfo, flags TypeFlags) string {
 }
 
 func CgoTypeForTag(tag gi.TypeTag, flags TypeFlags) string {
-	switch tag {
-	case gi.TYPE_TAG_BOOLEAN:
-		return "C.int"
-	case gi.TYPE_TAG_INT8:
-		return "C.int8_t"
-	case gi.TYPE_TAG_UINT8:
-		return "C.uint8_t"
-	case gi.TYPE_TAG_INT16:
-		return "C.int16_t"
-	case gi.TYPE_TAG_UINT16:
-		return "C.uint16_t"
-	case gi.TYPE_TAG_INT32:
-		return "C.int32_t"
-	case gi.TYPE_TAG_UINT32:
-		return "C.uint32_t"
-	case gi.TYPE_TAG_INT64:
-		return "C.int64_t"
-	case gi.TYPE_TAG_UINT64:
-		return "C.uint64_t"
-	case gi.TYPE_TAG_FLOAT:
-		return "C.float"
-	case gi.TYPE_TAG_DOUBLE:
-		return "C.double"
-	case gi.TYPE_TAG_GTYPE:
-		return "C.GType"
-	case gi.TYPE_TAG_UNICHAR:
-		return "C.uint32_t"
+	var out bytes.Buffer
+	p := PrinterTo(&out)
+
+	if flags & TypePointer != 0 {
+		p("*")
 	}
 
-	panic("unreachable")
-	return ""
+	switch tag {
+	case gi.TYPE_TAG_BOOLEAN:
+		p("C.int")
+	case gi.TYPE_TAG_INT8:
+		p("C.int8_t")
+	case gi.TYPE_TAG_UINT8:
+		p("C.uint8_t")
+	case gi.TYPE_TAG_INT16:
+		p("C.int16_t")
+	case gi.TYPE_TAG_UINT16:
+		p("C.uint16_t")
+	case gi.TYPE_TAG_INT32:
+		p("C.int32_t")
+	case gi.TYPE_TAG_UINT32:
+		p("C.uint32_t")
+	case gi.TYPE_TAG_INT64:
+		p("C.int64_t")
+	case gi.TYPE_TAG_UINT64:
+		p("C.uint64_t")
+	case gi.TYPE_TAG_FLOAT:
+		p("C.float")
+	case gi.TYPE_TAG_DOUBLE:
+		p("C.double")
+	case gi.TYPE_TAG_GTYPE:
+		p("C.GType")
+	case gi.TYPE_TAG_UNICHAR:
+		p("C.uint32_t")
+	default:
+		panic("unreachable")
+	}
+
+	return out.String()
 }
 
 //------------------------------------------------------------------
@@ -302,67 +310,85 @@ func GoType(ti *gi.TypeInfo, flags TypeFlags) string {
 }
 
 func GoTypeForTag(tag gi.TypeTag, flags TypeFlags) string {
-	switch tag {
-	case gi.TYPE_TAG_BOOLEAN:
-		return "bool"
-	case gi.TYPE_TAG_INT8:
-		return "int"
-	case gi.TYPE_TAG_UINT8:
-		return "int"
-	case gi.TYPE_TAG_INT16:
-		return "int"
-	case gi.TYPE_TAG_UINT16:
-		return "int"
-	case gi.TYPE_TAG_INT32:
-		return "int"
-	case gi.TYPE_TAG_UINT32:
-		return "int"
-	case gi.TYPE_TAG_INT64:
-		return "int64"
-	case gi.TYPE_TAG_UINT64:
-		return "uint64"
-	case gi.TYPE_TAG_FLOAT:
-		return "float64"
-	case gi.TYPE_TAG_DOUBLE:
-		return "float64"
-	case gi.TYPE_TAG_GTYPE:
-		if Config.Namespace != "GObject" {
-			return "gobject.Type"
-		}
-		return "Type"
-	case gi.TYPE_TAG_UNICHAR:
-		return "rune"
+	var out bytes.Buffer
+	p := PrinterTo(&out)
+
+	if flags & TypePointer != 0 {
+		p("*")
 	}
 
-	panic("unreachable")
-	return ""
+	switch tag {
+	case gi.TYPE_TAG_BOOLEAN:
+		p("bool")
+	case gi.TYPE_TAG_INT8:
+		p("int")
+	case gi.TYPE_TAG_UINT8:
+		p("int")
+	case gi.TYPE_TAG_INT16:
+		p("int")
+	case gi.TYPE_TAG_UINT16:
+		p("int")
+	case gi.TYPE_TAG_INT32:
+		p("int")
+	case gi.TYPE_TAG_UINT32:
+		p("int")
+	case gi.TYPE_TAG_INT64:
+		p("int64")
+	case gi.TYPE_TAG_UINT64:
+		p("uint64")
+	case gi.TYPE_TAG_FLOAT:
+		p("float64")
+	case gi.TYPE_TAG_DOUBLE:
+		p("float64")
+	case gi.TYPE_TAG_GTYPE:
+		if Config.Namespace != "GObject" {
+			p("gobject.Type")
+		} else {
+			p("Type")
+		}
+	case gi.TYPE_TAG_UNICHAR:
+		p("rune")
+	default:
+		panic("unreachable")
+	}
+
+	return out.String()
 }
 
 func GoTypeForTagExact(tag gi.TypeTag, flags TypeFlags) string {
-	switch tag {
-	case gi.TYPE_TAG_BOOLEAN:
-		return "int32"
-	case gi.TYPE_TAG_INT8:
-		return "int8"
-	case gi.TYPE_TAG_UINT8:
-		return "uint8"
-	case gi.TYPE_TAG_INT16:
-		return "int16"
-	case gi.TYPE_TAG_UINT16:
-		return "uint16"
-	case gi.TYPE_TAG_INT32:
-		return "int32"
-	case gi.TYPE_TAG_UINT32:
-		return "uint32"
-	case gi.TYPE_TAG_INT64:
-		return "int64"
-	case gi.TYPE_TAG_UINT64:
-		return "uint64"
-	case gi.TYPE_TAG_UNICHAR:
-		return "int32"
+	var out bytes.Buffer
+	p := PrinterTo(&out)
+
+	if flags & TypePointer != 0 {
+		p("*")
 	}
 
-	return GoTypeForTag(tag, flags)
+	switch tag {
+	case gi.TYPE_TAG_BOOLEAN:
+		p("int32")
+	case gi.TYPE_TAG_INT8:
+		p("int8")
+	case gi.TYPE_TAG_UINT8:
+		p("uint8")
+	case gi.TYPE_TAG_INT16:
+		p("int16")
+	case gi.TYPE_TAG_UINT16:
+		p("uint16")
+	case gi.TYPE_TAG_INT32:
+		p("int32")
+	case gi.TYPE_TAG_UINT32:
+		p("uint32")
+	case gi.TYPE_TAG_INT64:
+		p("int64")
+	case gi.TYPE_TAG_UINT64:
+		p("uint64")
+	case gi.TYPE_TAG_UNICHAR:
+		p("int32")
+	default:
+		return GoTypeForTag(tag, flags)
+	}
+
+	return out.String()
 }
 
 //------------------------------------------------------------------
