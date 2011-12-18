@@ -5,6 +5,7 @@ package gdk
 
 [<.GType>]
 
+[<.CUtils>]
 [<.CForwardDeclarations>]
 
 [<.GObjectRefUnref>]

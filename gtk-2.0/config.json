@@ -19,7 +19,12 @@
 		"callbacks": [
 			"AccelMapForeach",
 			"PageSetupDoneFunc",
-			"RcPropertyParser"
+			"RcPropertyParser",
+			"CTreeGNodeFunc",
+			"ClipboardRichTextReceivedFunc",
+			"MenuPositionFunc",
+			"TextBufferDeserializeFunc",
+			"TextBufferSerializeFunc"
 		],
 		"functions": [
 			"binding_entry_add_signal_from_string",
@@ -99,9 +104,6 @@
 			"get_node_info",
 			"node_get_pixtext",
 			"node_set_row_data_full"
-		],
-		"Calendar": [
-			"set_detail_func"
 		],
 		"Container": [
 			"forall",
