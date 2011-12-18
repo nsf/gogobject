@@ -59,19 +59,9 @@
 	},
 	"method-blacklist": {
 		"ActionGroup": [
-			"set_translate_func"
-		],
-		"Assistant": [
-			"set_forward_page_func"
-		],
-		"ActionGroup": [
 			"add_actions_full",
 			"add_radio_actions_full",
-			"add_toggle_actions_full",
-			"set_translate_func"
-		],
-		"AccelGroup": [
-			"find"
+			"add_toggle_actions_full"
 		],
 		"AccelMap": [
 			"foreach",
@@ -82,8 +72,7 @@
 			"add_signal_from_string"
 		],
 		"Builder": [
-			"value_from_string",
-			"connect_signals_full"
+			"value_from_string"
 		],
 		"Buildable": [
 			"custom_tag_start"
@@ -105,37 +94,15 @@
 			"node_get_pixtext",
 			"node_set_row_data_full"
 		],
-		"Container": [
-			"forall",
-			"foreach"
-		],
 		"ComboBox": [
 			"new_text",
-			"get_popup_accessible",
-			"set_row_separator_func"
-		],
-		"CellArea": [
-			"foreach",
-			"foreach_alloc"
-		],
-		"CellLayout": [
-			"set_cell_data_func"
+			"get_popup_accessible"
 		],
 		"ColorSelection": [
 			"get_color",
 			"set_color"
 		],
-		"EntryCompletion": [
-			"set_match_func"
-		],
-		"FileFilter": [
-			"add_custom"
-		],
-		"FontChooser": [
-			"set_filter_func"
-		],
 		"IconView": [
-			"selected_foreach",
 			"get_dest_item_at_pos",
 			"get_drag_dest_item"
 		],
@@ -146,8 +113,7 @@
 			"get_search_path"
 		],
 		"ItemFactory": [
-			"popup_with_data",
-			"set_translate_func"
+			"popup_with_data"
 		],
 		"IMContextSimple": [
 			"add_table"
@@ -182,12 +148,6 @@
 		"Preview": [
 			"draw_row"
 		],
-		"RecentFilter": [
-			"add_custom"
-		],
-		"RecentChooser": [
-			"set_sort_func"
-		],
 		"Ruler": [
 			"get_range"
 		],
@@ -205,13 +165,6 @@
 			"register_deserialize_format",
 			"register_serialize_format"
 		],
-		"TextIter": [
-			"backward_find_char",
-			"forward_find_char"
-		],
-		"TextTagTable": [
-			"foreach"
-		],
 		"TextLayout": [
 			"get_iter_at_position",
 			"get_line_at_y",
@@ -219,39 +172,20 @@
 			"get_lines",
 			"get_size"
 		],
-		"TreeModelFilter": [
-			"set_modify_func",
-			"set_visible_func"
-		],
-		"TreeSelection": [
-			"selected_foreach",
-			"set_select_function"
-		],
 		"TreeSortable": [
-			"set_default_sort_func",
-			"set_sort_func",
 			"get_sort_column_id"
 		],
 		"TreeView": [
-			"insert_column_with_data_func",
-			"map_expanded_rows",
-			"set_column_drag_function",
-			"set_destroy_count_func",
-			"set_row_separator_func",
-			"set_search_equal_func",
-			"set_search_position_func",
 			"set_hadjustment",
 			"set_vadjustment",
 			"tree_to_widget_coords",
 			"widget_to_tree_coords"
 		],
 		"TreeViewColumn": [
-			"set_cell_data_func",
 			"cell_get_position"
 		],
 		"TreeModel": [
-			"rows_reordered",
-			"foreach"
+			"rows_reordered"
 		],
 		"TreePath": [
 			"get_indices"
@@ -279,12 +213,7 @@
 			"get_default_size"
 		],
 		"Clipboard": [
-			"request_contents",
-			"request_image",
-			"request_rich_text",
-			"request_targets",
-			"request_text",
-			"request_uris"
+			"request_rich_text"
 		],
 		"Object": [
 			"set_data_by_id_full",

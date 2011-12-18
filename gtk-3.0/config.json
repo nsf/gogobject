@@ -52,15 +52,6 @@
 		]
 	},
 	"method-blacklist": {
-		"ActionGroup": [
-			"set_translate_func"
-		],
-		"Assistant": [
-			"set_forward_page_func"
-		],
-		"AccelGroup": [
-			"find"
-		],
 		"AccelMap": [
 			"foreach",
 			"foreach_unfiltered",
@@ -70,44 +61,16 @@
 			"add_signal_from_string"
 		],
 		"Builder": [
-			"value_from_string",
-			"connect_signals_full"
+			"value_from_string"
 		],
 		"Buildable": [
 			"custom_tag_start"
 		],
-		"Container": [
-			"forall",
-			"foreach"
-		],
 		"ComboBox": [
-			"get_popup_accessible",
-			"set_row_separator_func"
-		],
-		"CellArea": [
-			"foreach",
-			"foreach_alloc"
-		],
-		"CellLayout": [
-			"set_cell_data_func"
-		],
-		"EntryCompletion": [
-			"set_match_func"
-		],
-		"FileFilter": [
-			"add_custom"
-		],
-		"FontChooser": [
-			"set_filter_func"
-		],
-		"IconView": [
-			"selected_foreach"
+			"get_popup_accessible"
 		],
 		"IMContext": [
 			"get_surrounding"
-		],
-		"Widget": [
-			"get_accessible"
 		],
 		"ListStore": [
 			"insert_with_valuesv",
@@ -125,54 +88,16 @@
 		"MenuItem": [
 			"toggle_size_request"
 		],
-		"RecentFilter": [
-			"add_custom"
-		],
-		"RecentChooser": [
-			"set_sort_func"
-		],
-		"TargetList": [
-			"find"
-		],
 		"TextBuffer": [
 			"register_deserialize_format",
 			"register_serialize_format"
 		],
-		"TextIter": [
-			"backward_find_char",
-			"forward_find_char"
-		],
-		"TextTagTable": [
-			"foreach"
-		],
-		"TreeModelFilter": [
-			"set_modify_func",
-			"set_visible_func"
-		],
-		"TreeSelection": [
-			"selected_foreach",
-			"set_select_function"
-		],
-		"TreeSortable": [
-			"set_default_sort_func",
-			"set_sort_func"
-		],
 		"TreeView": [
-			"insert_column_with_data_func",
-			"map_expanded_rows",
-			"set_column_drag_function",
-			"set_destroy_count_func",
-			"set_row_separator_func",
-			"set_search_equal_func",
-			"set_search_position_func",
 			"set_hadjustment",
 			"set_vadjustment"
 		],
-		"TreeViewColumn": [
-			"set_cell_data_func"
-		],
-		"TreeModel": [
-			"foreach"
+		"TargetList": [
+			"find"
 		],
 		"RcProperty": [
 			"parse_border",
@@ -188,17 +113,15 @@
 		"StyleProvider": [
 			"get_style_property"
 		],
+		"Widget": [
+			"get_accessible"
+		],
 		"Window": [
 			"get_application",
 			"set_application"
 		],
 		"Clipboard": [
-			"request_contents",
-			"request_image",
-			"request_rich_text",
-			"request_targets",
-			"request_text",
-			"request_uris"
+			"request_rich_text"
 		]
 	},
 	"method-whitelist": {
