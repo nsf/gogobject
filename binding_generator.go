@@ -513,17 +513,20 @@ func ProcessCallbackInfo(ci *gi.CallableInfo) {
 
 	name := ci.Name()
 	printf("type %s func(", name)
-	for i, arg := range args {
+	for i, ri, n := 0, 0, len(args); i < n; i++ {
 		if i == userdata {
 			continue
 		}
+
 		// I use here TypeReturn because for closures it's inverted
 		// C code calls closure and it has to be concrete and Go code
 		// returns stuff to C (like calling a C function)
-		if i != 0 {
+		arg := args[i]
+		if ri != 0 {
 			printf(", ")
 		}
 		printf("%s %s", arg.Name(), GoType(arg.Type(), TypeReturn))
+		ri++
 	}
 	rt := ci.ReturnType()
 	if !rt.IsPointer() && rt.Tag() == gi.TYPE_TAG_VOID {
@@ -591,14 +594,15 @@ func ProcessCallbackInfo(ci *gi.CallableInfo) {
 		printf("ret1 := ")
 	}
 	printf("%s1(", args[userdata].Name())
-	for i, arg := range args {
+	for i, ri, n := 0, 0, len(args); i < n; i++ {
 		if i == userdata {
 			continue
 		}
-		if i != 0 {
+		if ri != 0 {
 			printf(", ")
 		}
-		printf("%s1", arg.Name())
+		printf("%s1", args[i].Name())
+		ri++
 	}
 	printf(")\n")
 
@@ -798,10 +802,12 @@ func ProcessFunctionInfo(fi *gi.FunctionInfo, container *gi.BaseInfo) {
 			printf(", ")
 		}
 	}
-	for i, oarg := range fb.OrigArgs {
+	for i, ri, n := 0, 0, len(fb.OrigArgs); i < n; i++ {
 		if i == userdata || i == destroy {
 			continue
 		}
+
+		oarg := fb.OrigArgs[i]
 
 		var arg string
 		dir := oarg.Direction()
@@ -811,10 +817,11 @@ func ProcessFunctionInfo(fi *gi.FunctionInfo, container *gi.BaseInfo) {
 			arg = fmt.Sprintf("%s1", oarg.Name())
 		}
 
-		if i != 0 {
+		if ri != 0 {
 			printf(", ")
 		}
 		printf("%s", arg)
+		ri++
 	}
 	if flags&gi.FUNCTION_THROWS != 0 {
 		printf(", &err1")
