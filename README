@@ -1,0 +1,7 @@
+GObject-introspection based bindings generator for Go. Work in progress.
+
+See 'documentation' dir for details.
+
+
+Try building a set of bindings for gtk+-2.0 using all-2.0.bash script or for
+gtk+-3.0 using all-3.0.bash script.
