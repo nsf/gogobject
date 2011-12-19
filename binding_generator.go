@@ -405,22 +405,16 @@ func ProcessObjectInfo(oi *gi.ObjectInfo) {
 
 func ProcessStructInfo(si *gi.StructInfo) {
 	name := si.Name()
+	size := si.Size()
+
+	if si.IsGTypeStruct() {
+		return
+	}
 	if strings.HasSuffix(name, "Private") {
 		return
 	}
-	if strings.HasSuffix(name, "Class") {
-		return
-	}
-	if strings.HasSuffix(name, "Iface") {
-		return
-	}
-	if strings.HasSuffix(name, "Interface") {
-		return
-	}
 
-	size := si.Size()
-
-	fullnm := strings.ToLower(si.Namespace()) + "." + si.Name()
+	fullnm := strings.ToLower(si.Namespace()) + "." + name
 	if _, ok := GConfig.Sys.DisguisedTypes[fullnm]; ok {
 		size = -1
 	}
