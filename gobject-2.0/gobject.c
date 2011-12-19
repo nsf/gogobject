@@ -38,6 +38,20 @@ GType _g_type_object()		{ return G_TYPE_OBJECT; }
 GType _g_type_gtype()		{ return G_TYPE_GTYPE; }
 GType _g_type_variant()		{ return G_TYPE_VARIANT; }
 
+extern void *g_go_interface_copy_go(void *boxed);
+extern void g_go_interface_free_go(void *boxed);
+
+GType _g_type_go_interface()
+{
+	static GType go_interface_type = G_TYPE_NONE;
+	if (go_interface_type == G_TYPE_NONE) {
+		go_interface_type = g_boxed_type_register_static("gointerface",
+								 g_go_interface_copy_go,
+								 g_go_interface_free_go);
+	}
+	return go_interface_type;
+}
+
 extern void g_goclosure_marshal_go(GGoClosure*, GValue*, int32_t, GValue*);
 extern void g_goclosure_finalize_go(GGoClosure*);
 

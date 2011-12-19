@@ -25,6 +25,7 @@ GType _g_type_param();
 GType _g_type_object();
 GType _g_type_gtype();
 GType _g_type_variant();
+GType _g_type_go_interface();
 
 GGoClosure *g_goclosure_new(int32_t id, void **iface);
 int32_t g_goclosure_get_id(GGoClosure *clo);
