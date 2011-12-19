@@ -451,8 +451,10 @@ func (this *Value) GetGoValue(t reflect.Type) reflect.Value {
 			C.g_object_ref_sink((*C.GObject)(obj.C))
 			_SetGObjectFinalizer(obj)
 		} else {
-			panic("unsupported pointer type (Go: " + t.String() +
-				", GType: " + this.GetType().String() + ")")
+			// must be a struct then
+			out = reflect.New(t)
+			*(*unsafe.Pointer)(unsafe.Pointer(out.Pointer())) = this.GetBoxed()
+			out = out.Elem()
 		}
 	}
 	return out
