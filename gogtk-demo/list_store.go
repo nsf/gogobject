@@ -45,10 +45,10 @@ var data = []Bug{
 
 func CreateModel() *gtk.ListStore {
 	store := gtk.NewListStore(gobject.Boolean,
-		gobject.Int64,
+		gobject.Int,
 		gobject.String,
 		gobject.String,
-		gobject.Int64,
+		gobject.Int,
 		gobject.String,
 		gobject.Boolean,
 		gobject.Boolean)

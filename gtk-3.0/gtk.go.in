@@ -128,7 +128,8 @@ func (this *TreeStore) Append(parent *TreeIter, values ...interface{}) TreeIter 
 	iter := this._Append(parent)
 	for i, v := range values {
 		var gvalue gobject.Value
-		gvalue.InitWithInterface(v)
+		gvalue.Init(this.GetColumnType(i))
+		gvalue.SetGoInterface(v)
 		this.SetValue(&iter, i, &gvalue)
 		gvalue.Unset()
 	}
@@ -147,7 +148,8 @@ func (this *ListStore) Append(values ...interface{}) TreeIter {
 	iter := this._Append()
 	for i, v := range values {
 		var gvalue gobject.Value
-		gvalue.InitWithInterface(v)
+		gvalue.Init(this.GetColumnType(i))
+		gvalue.SetGoInterface(v)
 		this.SetValue(&iter, i, &gvalue)
 		gvalue.Unset()
 	}

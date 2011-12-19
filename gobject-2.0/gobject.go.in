@@ -13,6 +13,7 @@ package gobject
 #include "gobject.h"
 
 extern void g_type_init();
+extern void g_value_take_object(GValue*, void*);
 
 #cgo pkg-config: gobject-2.0
 */
@@ -86,13 +87,13 @@ func g_goclosure_marshal_go(goclosure_up, ret_up unsafe.Pointer, nargs int32, ar
 			continue
 		}
 
-		v := ValueToGoValue(&args[i], in)
+		v := args[i].GetGoValue(in)
 		ccache.values = append(ccache.values, v)
 	}
 
 	out := f.Call(ccache.values)
 	if len(out) == 1 {
-		ret.SetGo(out[0])
+		ret.SetGoValue(out[0])
 	}
 }
 
@@ -104,6 +105,14 @@ type Type C.GType
 
 func (this Type) IsA(other Type) bool {
 	return C.g_type_is_a(C.GType(this), C.GType(other)) != 0
+}
+
+func (this Type) String() string {
+	cname := C.g_type_name(C.GType(this))
+	if cname == nil {
+		return ""
+	}
+	return C.GoString(cname)
 }
 
 func (this Type) asC() C.GType {
@@ -256,7 +265,7 @@ func (this *Value) SetFloat(v float64) {
 
 // g_value_get_string
 func (this *Value) GetString() string {
-	return C.GoString((*C.char)(unsafe.Pointer(C.g_value_get_string(this.asC()))))
+	return C.GoString(C.g_value_get_string(this.asC()))
 }
 
 // g_value_take_string
@@ -271,6 +280,11 @@ func (this *Value) GetObject() unsafe.Pointer {
 	return unsafe.Pointer(C.g_value_get_object(this.asC()))
 }
 
+// g_value_take_object
+func (this *Value) SetObject(x unsafe.Pointer) {
+	C.g_value_take_object(this.asC(), x)
+}
+
 //--------------------------------------------------------------
 // A giant glue for connecting GType and Go's reflection
 //--------------------------------------------------------------
@@ -278,49 +292,90 @@ func (this *Value) GetObject() unsafe.Pointer {
 var statictyper = reflect.TypeOf((*StaticTyper)(nil)).Elem()
 var objectlike = reflect.TypeOf((*ObjectLike)(nil)).Elem()
 
-func ValueToGoValue(src *Value, t reflect.Type) reflect.Value {
+func (this *Value) SetGoValue(v reflect.Value) {
+	valuetype := this.GetType()
+	var src Value
+
+	transform := func() {
+		ok := this.Transform(&src)
+		if !ok {
+			panic("Go value is not transformable to " + valuetype.String())
+		}
+	}
+
+	switch v.Kind() {
+	case reflect.Bool:
+		src.Init(Boolean)
+		src.SetBool(v.Bool())
+		transform()
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		src.Init(Int64)
+		src.SetInt(v.Int())
+		transform()
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		src.Init(UInt64)
+		src.SetUint(v.Uint())
+		transform()
+	case reflect.Float32, reflect.Float64:
+		src.Init(Double)
+		src.SetFloat(v.Float())
+		transform()
+	case reflect.String:
+		src.Init(String)
+		src.SetString(v.String())
+		transform()
+		src.Unset()
+	case reflect.Ptr:
+		gotype := v.Type()
+		src.Init(GObject)
+		if gotype.Implements(objectlike) {
+			obj, ok := v.Interface().(ObjectLike)
+			if !ok {
+				panic(gotype.String() + " is not transformable to GValue")
+			}
+
+			src.SetObject(unsafe.Pointer(obj.InheritedFromGObject()))
+			transform()
+		}
+		src.Unset()
+	}
+}
+
+func (this *Value) GetGoValue(t reflect.Type) reflect.Value {
 	var out reflect.Value
 	var dst Value
+
+	transform := func() {
+		ok := dst.Transform(this)
+		if !ok {
+			panic("GValue is not transformable to " + t.String())
+		}
+	}
 
 	switch t.Kind() {
 	case reflect.Bool:
 		dst.Init(Boolean)
-		ok := dst.Transform(src)
-		if !ok {
-			panic("GValue is not transformable to bool")
-		}
+		transform()
 		out = reflect.New(t).Elem()
 		out.SetBool(dst.GetBool())
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		dst.Init(Int64)
-		ok := dst.Transform(src)
-		if !ok {
-			panic("GValue is not transformable to int")
-		}
+		transform()
 		out = reflect.New(t).Elem()
 		out.SetInt(dst.GetInt())
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		dst.Init(UInt64)
-		ok := dst.Transform(src)
-		if !ok {
-			panic("GValue is not transformable to uint")
-		}
+		transform()
 		out = reflect.New(t).Elem()
 		out.SetUint(dst.GetUint())
 	case reflect.Float32, reflect.Float64:
 		dst.Init(Double)
-		ok := dst.Transform(src)
-		if !ok {
-			panic("GValue is not transformable to float")
-		}
+		transform()
 		out = reflect.New(t).Elem()
 		out.SetFloat(dst.GetFloat())
 	case reflect.String:
 		dst.Init(String)
-		ok := dst.Transform(src)
-		if !ok {
-			panic("GValue is not transformable to string")
-		}
+		transform()
 		out = reflect.New(t).Elem()
 		out.SetString(dst.GetString())
 		dst.Unset() // need to clean up in this case
@@ -333,10 +388,7 @@ func ValueToGoValue(src *Value, t reflect.Type) reflect.Value {
 				panic("ObjectLike type must implement StaticTyper as well")
 			}
 			dst.Init(st.GetStaticType())
-			ok = dst.Transform(src)
-			if !ok {
-				panic("GValue is not transformable to " + t.String())
-			}
+			transform()
 			obj := (*Object)(unsafe.Pointer(out.Pointer()))
 			obj.C = dst.GetObject()
 			C.g_object_ref_sink((*C.GObject)(obj.C))
@@ -346,53 +398,6 @@ func ValueToGoValue(src *Value, t reflect.Type) reflect.Value {
 	return out
 }
 
-func (this *Value) SetGo(v reflect.Value) {
-	var src Value
-
-	switch v.Kind() {
-	case reflect.Bool:
-		src.Init(Boolean)
-		src.SetBool(v.Bool())
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		src.Init(Int64)
-		src.SetInt(v.Int())
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		src.Init(UInt64)
-		src.SetUint(v.Uint())
-	case reflect.Float32, reflect.Float64:
-		src.Init(Double)
-		src.SetFloat(v.Float())
-	case reflect.String:
-		src.Init(String)
-		src.SetString(v.String())
-		defer src.Unset() // need to clean up in this case
-	case reflect.Ptr:
-		// TODO: implement various GObject types here?
-	}
-
-	ok := this.Transform(&src)
-	if !ok {
-		panic("GValue cannot be created from " + v.Kind().String())
-	}
-}
-
-func (this *Value) InitWithInterface(vi interface{}) {
-	v := reflect.ValueOf(vi)
-	switch v.Kind() {
-	case reflect.Bool:
-		this.Init(Boolean)
-		this.SetBool(v.Bool())
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		this.Init(Int64)
-		this.SetInt(v.Int())
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		this.Init(UInt64)
-		this.SetUint(v.Uint())
-	case reflect.Float32, reflect.Float64:
-		this.Init(Double)
-		this.SetFloat(v.Float())
-	case reflect.String:
-		this.Init(String)
-		this.SetString(v.String())
-	}
+func (this *Value) SetGoInterface(v interface{}) {
+	this.SetGoValue(reflect.ValueOf(v))
 }
