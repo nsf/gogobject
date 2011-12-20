@@ -19,6 +19,7 @@ extern GtkWidget *gtk_message_dialog_new(GtkWindow*, GtkDialogFlags, GtkMessageT
 import "C"
 import "unsafe"
 import "runtime"
+import "reflect"
 import "errors"
 import "fmt"
 
@@ -136,6 +137,29 @@ func (this *TreeStore) Append(parent *TreeIter, values ...interface{}) TreeIter 
 	return iter
 }
 
+func (this *TreeStore) Set(iter *TreeIter, columnspecs ...interface{}) {
+	if len(columnspecs) & 1 != 0 {
+		panic("the number of column specs should be even (column/value pairs)")
+	}
+
+	var ok bool
+	var column int
+	for i, spec := range columnspecs {
+		if i & 1 == 0 {
+			column, ok = spec.(int)
+			if !ok {
+				panic("non-integer column id")
+			}
+		} else {
+			var gvalue gobject.Value
+			gvalue.Init(this.GetColumnType(column))
+			gvalue.SetGoInterface(spec)
+			this.SetValue(iter, column, &gvalue)
+			gvalue.Unset()
+		}
+	}
+}
+
 //----------------------------------------------------------------------------
 // ListStore
 //----------------------------------------------------------------------------
@@ -154,4 +178,56 @@ func (this *ListStore) Append(values ...interface{}) TreeIter {
 		gvalue.Unset()
 	}
 	return iter
+}
+
+func (this *ListStore) Set(iter *TreeIter, columnspecs ...interface{}) {
+	if len(columnspecs) & 1 != 0 {
+		panic("the number of column specs should be even (column/value pairs)")
+	}
+
+	var ok bool
+	var column int
+	for i, spec := range columnspecs {
+		if i & 1 == 0 {
+			column, ok = spec.(int)
+			if !ok {
+				panic("non-integer column id")
+			}
+		} else {
+			var gvalue gobject.Value
+			gvalue.Init(this.GetColumnType(column))
+			gvalue.SetGoInterface(spec)
+			this.SetValue(iter, column, &gvalue)
+			gvalue.Unset()
+		}
+	}
+}
+
+//----------------------------------------------------------------------------
+// TreeModelImpl
+//----------------------------------------------------------------------------
+
+func (this *TreeModelImpl) Get(iter *TreeIter, columnspecs ...interface{}) {
+	if len(columnspecs) & 1 != 0 {
+		panic("the number of column specs should be even (column/value pairs)")
+	}
+
+	var ok bool
+	var column int
+	for i, spec := range columnspecs {
+		if i & 1 == 0 {
+			column, ok = spec.(int)
+			if !ok {
+				panic("non-integer column id")
+			}
+		} else {
+			gvalue := this.GetValue(iter, column)
+			valptr := reflect.ValueOf(spec)
+			if valptr.Kind() != reflect.Ptr {
+				panic("a pointer to value is expected for TreeModel.Get")
+			}
+			valptr.Elem().Set(gvalue.GetGoValue(valptr.Type().Elem()))
+			gvalue.Unset()
+		}
+	}
 }
