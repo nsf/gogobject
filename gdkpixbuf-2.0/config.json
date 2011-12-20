@@ -38,7 +38,8 @@
 		],
 		"Pixdata": [
 			"serialize",
-			"deserialize"
+			"deserialize",
+			"to_csource"
 		]
 	}
 }
