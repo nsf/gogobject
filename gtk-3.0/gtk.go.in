@@ -19,7 +19,6 @@ extern GtkWidget *gtk_message_dialog_new(GtkWindow*, GtkDialogFlags, GtkMessageT
 import "C"
 import "unsafe"
 import "runtime"
-import "reflect"
 import "errors"
 import "fmt"
 
@@ -222,11 +221,7 @@ func (this *TreeModelImpl) Get(iter *TreeIter, columnspecs ...interface{}) {
 			}
 		} else {
 			gvalue := this.GetValue(iter, column)
-			valptr := reflect.ValueOf(spec)
-			if valptr.Kind() != reflect.Ptr {
-				panic("a pointer to value is expected for TreeModel.Get")
-			}
-			valptr.Elem().Set(gvalue.GetGoValue(valptr.Type().Elem()))
+			gvalue.GetGoInterface(spec)
 			gvalue.Unset()
 		}
 	}
