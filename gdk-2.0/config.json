@@ -72,9 +72,6 @@
 		"Drawable": [
 			"set_data"
 		],
-		"Event": [
-			"handler_set"
-		],
 		"KeyboardGrabInfo": [
 			"libgtk_only"
 		],
@@ -88,10 +85,7 @@
 		],
 		"Window": [
 			"get_decorations",
-			"get_deskrelative_origin",
-			"get_geometry",
-			"get_origin",
-			"get_root_origin"
+			"get_deskrelative_origin"
 		]
 	}
 }

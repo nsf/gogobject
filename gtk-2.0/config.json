@@ -141,9 +141,6 @@
 		"Preview": [
 			"draw_row"
 		],
-		"Ruler": [
-			"get_range"
-		],
 		"SelectionData": [
 			"get_data",
 			"get_text"
