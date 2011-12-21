@@ -14,6 +14,7 @@ build() {
 
 make -C gi install
 make
+build glib-2.0
 build gobject-2.0
 build atk-1.0
 build cairo-1.0

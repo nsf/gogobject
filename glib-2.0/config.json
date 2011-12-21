@@ -1,0 +1,20 @@
+{
+	"namespace": "GLib",
+	"version": "2.0",
+	"whitelist": {
+		"objects": [],
+		"structs": [
+			"KeyFile"
+		],
+		"functions": [],
+		"callbacks": []
+	},
+	"blacklist": {
+		"constants": [
+			// two constants, automatic renaming facility fails to deal with them
+			// (produces redeclaration)
+			"CSET_A_2_Z",
+			"CSET_a_2_z"
+		]
+	}
+}

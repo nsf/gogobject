@@ -7,14 +7,7 @@
 			"Application",
 			"LockButton",
 			"MountOperation",
-			"NumerableIcon",
-			"PageSetup",
-			"PrintSettings",
-			"PrintContext",
-			"PrintOperation"
-		],
-		"structs": [
-			"PaperSize"
+			"NumerableIcon"
 		],
 		"callbacks": [
 			"AccelMapForeach",

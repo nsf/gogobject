@@ -299,6 +299,18 @@ func GoUtils() string {
 		"gobject": gobject,
 		"gtype":   gtype,
 		"namespace": Config.Namespace,
+		"add_object_utils": true,
+	})
+
+	return out.String()
+}
+
+func GoUtilsNoObject() string {
+	var out bytes.Buffer
+
+	GoUtilsTemplate.Execute(&out, map[string]interface{}{
+		"namespace": Config.Namespace,
+		"add_object_utils": false,
 	})
 
 	return out.String()
@@ -334,6 +346,7 @@ func ProcessTemplate(tplstr string) {
 		"CForwardDeclarations": CForwardDeclarations(),
 		"GObjectRefUnref":      GObjectRefUnref,
 		"GoUtils":              GoUtils(),
+		"GoUtilsNoObject":      GoUtilsNoObject(),
 		"GoBindings":           GoBindings(),
 		"GErrorFree":           GErrorFree,
 		"GFree":                GFree,

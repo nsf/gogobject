@@ -6,6 +6,7 @@ clean_in_dir() {
 
 make clean
 clean_in_dir gi
+clean_in_dir glib-2.0
 clean_in_dir gobject-2.0
 clean_in_dir atk-1.0
 clean_in_dir cairo-1.0
@@ -18,6 +19,7 @@ clean_in_dir gtksource-3.0
 clean_in_dir gtk-2.0
 clean_in_dir gdk-2.0
 
+rm -f glib-2.0/glib.go
 rm -f gobject-2.0/gobject.go
 rm -f atk-1.0/atk.go
 rm -f cairo-1.0/cairo.go

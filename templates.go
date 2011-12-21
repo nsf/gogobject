@@ -13,6 +13,52 @@ const GErrorFree = `extern void g_error_free(GError*);`
 const GFree = `extern void g_free(void*);`
 
 var GoUtilsTemplate = MustTemplate(`
+[<if .add_object_utils>]
+// returns a new *gobject.Object casted to unsafe.Pointer, so that various
+// callers can cast it back to any inherited type, note that function sets
+// finalizer as well
+func _GObjectGrab(c unsafe.Pointer) unsafe.Pointer {
+	if c == nil {
+		return nil
+	}
+	obj := &[<.gobject>]{c}
+	C.g_object_ref_sink((*C.GObject)(obj.C))
+	_SetGObjectFinalizer(obj)
+	return unsafe.Pointer(obj)
+}
+
+// same as above, but doesn't increment reference count
+func _GObjectWrap(c unsafe.Pointer) unsafe.Pointer {
+	if c == nil {
+		return nil
+	}
+	obj := &[<.gobject>]{c}
+	_SetGObjectFinalizer(obj)
+	return unsafe.Pointer(obj)
+}
+
+func _GObjectGrabIfType(c unsafe.Pointer, t [<.gtype>]) unsafe.Pointer {
+	if c == nil {
+		return nil
+	}
+	obj := &[<.gobject>]{c}
+	if obj.GetType().IsA(t) {
+		C.g_object_ref_sink((*C.GObject)(obj.C))
+		_SetGObjectFinalizer(obj)
+		return unsafe.Pointer(obj)
+	}
+	return nil
+}
+
+func _GObjectFinalizer(obj *[<.gobject>]) {
+	C.g_object_unref((*C.GObject)(obj.C))
+}
+
+func _SetGObjectFinalizer(obj *[<.gobject>]) {
+	runtime.SetFinalizer(obj, _GObjectFinalizer)
+}
+[<end>]
+
 const alot = 999999
 
 type _GSList struct {
@@ -44,56 +90,12 @@ func _GoBoolToCBool(x bool) C.int {
 	return 0
 }
 
-func _GObjectFinalizer(obj *[<.gobject>]) {
-	C.g_object_unref((*C.GObject)(obj.C))
-}
-
-func _SetGObjectFinalizer(obj *[<.gobject>]) {
-	runtime.SetFinalizer(obj, _GObjectFinalizer)
-}
-
-// returns a new *gobject.Object casted to unsafe.Pointer, so that various
-// callers can cast it back to any inherited type, note that function sets
-// finalizer as well
-func _GObjectGrab(c unsafe.Pointer) unsafe.Pointer {
-	if c == nil {
-		return nil
-	}
-	obj := &[<.gobject>]{c}
-	C.g_object_ref_sink((*C.GObject)(obj.C))
-	_SetGObjectFinalizer(obj)
-	return unsafe.Pointer(obj)
-}
-
-// same as above, but doesn't increment reference count
-func _GObjectWrap(c unsafe.Pointer) unsafe.Pointer {
-	if c == nil {
-		return nil
-	}
-	obj := &[<.gobject>]{c}
-	_SetGObjectFinalizer(obj)
-	return unsafe.Pointer(obj)
-}
-
 func _CInterfaceToGoInterface(iface [2]unsafe.Pointer) interface{} {
 	return *(*interface{})(unsafe.Pointer(&iface))
 }
 
 func _GoInterfaceToCInterface(iface interface{}) *unsafe.Pointer {
 	return (*unsafe.Pointer)(unsafe.Pointer(&iface))
-}
-
-func _GObjectGrabIfType(c unsafe.Pointer, t [<.gtype>]) unsafe.Pointer {
-	if c == nil {
-		return nil
-	}
-	obj := &[<.gobject>]{c}
-	if obj.GetType().IsA(t) {
-		C.g_object_ref_sink((*C.GObject)(obj.C))
-		_SetGObjectFinalizer(obj)
-		return unsafe.Pointer(obj)
-	}
-	return nil
 }
 
 var _cbcache = make(map[unsafe.Pointer]bool)

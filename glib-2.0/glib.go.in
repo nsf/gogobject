@@ -1,0 +1,18 @@
+package glib
+
+/*
+[<.CommonIncludes>]
+
+[<.GType>]
+
+[<.CUtils>]
+[<.CForwardDeclarations>]
+
+#cgo pkg-config: glib-2.0
+*/
+import "C"
+import "unsafe"
+import "errors"
+
+[<.GoUtilsNoObject>]
+[<.GoBindings>]
