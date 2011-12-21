@@ -39,6 +39,52 @@ import (
 [<.GoBindings>]
 
 //----------------------------------------------------------------------------
+// Custom utils
+//----------------------------------------------------------------------------
+
+func for_pairs(slice []interface{}, closure func(key, value interface{})) {
+	if len(slice) & 1 != 0 {
+		panic("the number of arguments must be even (key/value pairs)")
+	}
+
+	var key interface{}
+	for i, value := range slice {
+		if i & 1 == 0 {
+			key = value
+		} else {
+			closure(key, value)
+		}
+	}
+}
+
+func panic_if_type_is_not_ok(ok bool, expected_type string, value interface{}) {
+	if !ok {
+		msg := fmt.Sprintf("expected type for argument: %s, got: %T",
+			expected_type, value)
+		panic(msg)
+	}
+}
+
+//----------------------------------------------------------------------------
+// TreeViewColumn
+//----------------------------------------------------------------------------
+
+func NewTreeViewColumnWithAttributes(title string, renderer CellRendererLike, attrs ...interface{}) *TreeViewColumn {
+	c := NewTreeViewColumn()
+	c.SetTitle(title)
+	c.PackStart(renderer, true)
+	for_pairs(attrs, func(key, value interface{}) {
+		attr_name, ok := key.(string)
+		panic_if_type_is_not_ok(ok, "string", key)
+		attr_col, ok := value.(int)
+		panic_if_type_is_not_ok(ok, "int", value)
+
+		c.AddAttribute(renderer, attr_name, attr_col)
+	})
+	return c
+}
+
+//----------------------------------------------------------------------------
 // Dialog
 //----------------------------------------------------------------------------
 
@@ -61,31 +107,13 @@ func NewDialogWithButtons(title string, parent *Window, flags DialogFlags, butto
 		dialog.SetDestroyWithParent(true)
 	}
 
-	if len(buttons) == 0 {
-		return dialog
-	}
-
-	if len(buttons) & 1 != 0 {
-		panic("the number of button specs should be even (name/response pairs)")
-	}
-
-	var ok bool
-	var text string
-	var response ResponseType
-	for i, spec := range buttons {
-		if i & 1 == 0 {
-			text, ok = spec.(string)
-			if !ok {
-				panic("non-string button text")
-			}
-		} else {
-			response, ok = spec.(ResponseType)
-			if !ok {
-				panic("non-ResponseType button response")
-			}
-			dialog._AddButton(text, int(response))
-		}
-	}
+	for_pairs(buttons, func(key, value interface{}) {
+		text, ok := key.(string)
+		panic_if_type_is_not_ok(ok, "string", key)
+		response, ok := value.(ResponseType)
+		panic_if_type_is_not_ok(ok, "ResponseType", value)
+		dialog.AddButton(text, response)
+	})
 
 	return dialog
 }
@@ -138,26 +166,16 @@ func (this *TreeStore) Append(parent *TreeIter, values ...interface{}) TreeIter 
 }
 
 func (this *TreeStore) Set(iter *TreeIter, columnspecs ...interface{}) {
-	if len(columnspecs) & 1 != 0 {
-		panic("the number of column specs should be even (column/value pairs)")
-	}
+	for_pairs(columnspecs, func(key, value interface{}) {
+		column, ok := key.(int)
+		panic_if_type_is_not_ok(ok, "int", key)
 
-	var ok bool
-	var column int
-	for i, spec := range columnspecs {
-		if i & 1 == 0 {
-			column, ok = spec.(int)
-			if !ok {
-				panic("non-integer column id")
-			}
-		} else {
-			var gvalue gobject.Value
-			gvalue.Init(this.GetColumnType(column))
-			gvalue.SetGoInterface(spec)
-			this.SetValue(iter, column, &gvalue)
-			gvalue.Unset()
-		}
-	}
+		var gvalue gobject.Value
+		gvalue.Init(this.GetColumnType(column))
+		gvalue.SetGoInterface(value)
+		this.SetValue(iter, column, &gvalue)
+		gvalue.Unset()
+	})
 }
 
 //----------------------------------------------------------------------------
@@ -181,26 +199,16 @@ func (this *ListStore) Append(values ...interface{}) TreeIter {
 }
 
 func (this *ListStore) Set(iter *TreeIter, columnspecs ...interface{}) {
-	if len(columnspecs) & 1 != 0 {
-		panic("the number of column specs should be even (column/value pairs)")
-	}
+	for_pairs(columnspecs, func(key, value interface{}) {
+		column, ok := key.(int)
+		panic_if_type_is_not_ok(ok, "int", key)
 
-	var ok bool
-	var column int
-	for i, spec := range columnspecs {
-		if i & 1 == 0 {
-			column, ok = spec.(int)
-			if !ok {
-				panic("non-integer column id")
-			}
-		} else {
-			var gvalue gobject.Value
-			gvalue.Init(this.GetColumnType(column))
-			gvalue.SetGoInterface(spec)
-			this.SetValue(iter, column, &gvalue)
-			gvalue.Unset()
-		}
-	}
+		var gvalue gobject.Value
+		gvalue.Init(this.GetColumnType(column))
+		gvalue.SetGoInterface(value)
+		this.SetValue(iter, column, &gvalue)
+		gvalue.Unset()
+	})
 }
 
 //----------------------------------------------------------------------------
@@ -208,22 +216,11 @@ func (this *ListStore) Set(iter *TreeIter, columnspecs ...interface{}) {
 //----------------------------------------------------------------------------
 
 func (this *TreeModelImpl) Get(iter *TreeIter, columnspecs ...interface{}) {
-	if len(columnspecs) & 1 != 0 {
-		panic("the number of column specs should be even (column/value pairs)")
-	}
-
-	var ok bool
-	var column int
-	for i, spec := range columnspecs {
-		if i & 1 == 0 {
-			column, ok = spec.(int)
-			if !ok {
-				panic("non-integer column id")
-			}
-		} else {
-			gvalue := this.GetValue(iter, column)
-			gvalue.GetGoInterface(spec)
-			gvalue.Unset()
-		}
-	}
+	for_pairs(columnspecs, func(key, value interface{}) {
+		column, ok := key.(int)
+		panic_if_type_is_not_ok(ok, "int", key)
+		gvalue := this.GetValue(iter, column)
+		gvalue.GetGoInterface(value)
+		gvalue.Unset()
+	})
 }
