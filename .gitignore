@@ -1,0 +1,8 @@
+*.[568ao]
+[568a].out
+*.cgo*.go
+*.cgo*.c
+_cgo_*
+_obj
+*-?.?/*.go
+go-gobject-gen
