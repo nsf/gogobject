@@ -2,17 +2,32 @@
 	"namespace": "Gio",
 	"version": "2.0",
 	"whitelist": {
-		"callbacks": [],
+		"callbacks": [
+			"AsyncReadyCallback"
+		],
 		"functions": [],
 		"objects": [
-			"Icon"
+			"Application",
+			"Cancellable",
+			"Icon",
+			"Permission",
+			"MountOperation",
+			"EmblemedIcon",
+			"Emblem"
 		],
 		"structs": [],
 		"unions": [],
 		"interfaces": [
 			"Icon",
 			"File",
-			"AppInfo"
+			"AppInfo",
+			"ActionGroup",
+			"AsyncResult"
+		]
+	},
+	"method-blacklist": {
+		"Cancellable": [
+			"connect"
 		]
 	},
 	"method-whitelist": {

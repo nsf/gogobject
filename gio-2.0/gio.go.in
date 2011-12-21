@@ -17,9 +17,11 @@ package gio
 import "C"
 import "unsafe"
 import "runtime"
+import "errors"
 
 import (
 	"gobject/gobject-2.0"
+	"gobject/glib-2.0"
 )
 
 [<.GoUtils>]

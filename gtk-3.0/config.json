@@ -2,17 +2,11 @@
 	"namespace": "Gtk",
 	"version": "3.0",
 	"blacklist": {
-		"objects": [
-			"Accessible",
-			"Application",
-			"LockButton",
-			"MountOperation",
-			"NumerableIcon"
-		],
 		"callbacks": [
 			"AccelMapForeach",
-			"PageSetupDoneFunc",
-			"RcPropertyParser",
+			"RcPropertyParser", // uses glib.String
+
+			// mess with void* or byte[]
 			"ClipboardRichTextReceivedFunc",
 			"TextBufferDeserializeFunc",
 			"TextBufferSerializeFunc"
@@ -46,34 +40,24 @@
 	},
 	"method-blacklist": {
 		"AccelMap": [
-			"foreach",
-			"foreach_unfiltered",
-			"load_scanner"
-		],
-		"BindingEntry": [
-			"add_signal_from_string"
-		],
-		"Builder": [
-			"value_from_string"
+			"foreach", // broken annotation
+			"foreach_unfiltered", // broken annotation
+			"load_scanner" // uses glib.Scanner
 		],
 		"Buildable": [
-			"custom_tag_start"
-		],
-		"ComboBox": [
-			"get_popup_accessible"
+			"custom_tag_start" // uses glib.MarkupParser
 		],
 		"ListStore": [
-			"insert_with_valuesv",
-			"set"
+			"insert_with_valuesv", // to be implemented manually
+			"set" // implemented manually
 		],
 		"TreeStore": [
-			"insert_with_valuesv",
-			"insert_with_values",
-			"set"
+			"insert_with_valuesv", // to be implemented manually
+			"insert_with_values", // to be implemented manually
+			"set" // implemented manually
 		],
 		"Menu": [
-			"popup_for_device",
-			"attach_to_widget"
+			"attach_to_widget" // it uses callback which has no userdata
 		],
 		"MenuItem": [
 			"toggle_size_request"
@@ -83,11 +67,9 @@
 			"register_serialize_format"
 		],
 		"TreeView": [
+			// these two are deprecated
 			"set_hadjustment",
 			"set_vadjustment"
-		],
-		"TargetList": [
-			"find"
 		],
 		"RcProperty": [
 			"parse_border",
@@ -103,19 +85,9 @@
 		"StyleProvider": [
 			"get_style_property"
 		],
-		"Widget": [
-			"get_accessible"
-		],
-		"Window": [
-			"get_application",
-			"set_application"
-		],
 		"Clipboard": [
 			"request_rich_text"
 		]
-	},
-	"method-whitelist": {
-		"AppChooser": []
 	},
 	"renames": {
 		"Dialog.AddButton": "_AddButton",

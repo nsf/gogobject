@@ -4,10 +4,19 @@
 	"whitelist": {
 		"objects": [],
 		"structs": [
-			"KeyFile" // printer stuff in gtk uses that
+			// printer stuff in gtk uses that
+			"KeyFile",
+
+			// gio.ActionGroup interface uses that
+			"Variant",
+			"VariantType",
+
+			"PollFD"
 		],
 		"functions": [],
-		"callbacks": []
+		"callbacks": [
+			"DestroyNotify"
+		]
 	},
 	"blacklist": {
 		"constants": [
@@ -15,6 +24,14 @@
 			// (produces redeclaration)
 			"CSET_A_2_Z",
 			"CSET_a_2_z"
+		]
+	},
+	"method-blacklist": {
+		"Variant": [
+			"new_bytestring",
+
+			// cannot use notify1 (type unsafe.Pointer) as type _Ctype_GDestroyNotify in function argument
+			"new_from_data"
 		]
 	}
 }
