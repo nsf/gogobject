@@ -126,6 +126,8 @@
 	},
 	"renames": {
 		"Dialog.AddButton": "_AddButton",
+
+		// cosmetic renames
 		"Widget.SetHexpand": "SetHExpand",
 		"Widget.SetVexpand": "SetVExpand",
 		"Widget.SetHexpandSet": "SetHExpandSet",

@@ -86,6 +86,21 @@ func IsMethodBlacklisted(class, method string) bool {
 	return false
 }
 
+func ParseJSONWithComments(filename string, data interface{}) error {
+	f, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	d := json.NewDecoder(NewCommentSkipper(f))
+	err = d.Decode(data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func main() {
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [flags] <dir>\n", os.Args[0])
@@ -100,12 +115,7 @@ func main() {
 
 	// parse global config
 	if *GConfigPath != "" {
-		data, err := ioutil.ReadFile(*GConfigPath)
-		if err != nil {
-			panic(err)
-		}
-
-		err = json.Unmarshal(data, &GConfig)
+		err := ParseJSONWithComments(*GConfigPath, &GConfig)
 		if err != nil {
 			panic(err)
 		}
@@ -115,12 +125,7 @@ func main() {
 
 	// parse config
 	configPath := filepath.Join(flag.Arg(0), "config.json")
-	data, err := ioutil.ReadFile(configPath)
-	if err != nil {
-		panic(err)
-	}
-
-	err = json.Unmarshal(data, &Config)
+	err := ParseJSONWithComments(configPath, &Config)
 	if err != nil {
 		panic(err)
 	}

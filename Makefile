@@ -7,6 +7,7 @@ GOFILES=binding_generator.go \
 	main.go \
 	type.go \
 	typeconv.go \
-	templates.go
+	templates.go \
+	comment_skipper.go
 
 include $(GOROOT)/src/Make.cmd
