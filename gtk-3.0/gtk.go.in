@@ -57,7 +57,7 @@ func for_pairs(slice []interface{}, closure func(key, value interface{})) {
 	}
 }
 
-func panic_if_type_is_not_ok(ok bool, expected_type string, value interface{}) {
+func panic_if_not_type(ok bool, expected_type string, value interface{}) {
 	if !ok {
 		msg := fmt.Sprintf("expected type for argument: %s, got: %T",
 			expected_type, value)
@@ -109,9 +109,9 @@ func NewDialogWithButtons(title string, parent *Window, flags DialogFlags, butto
 
 	for_pairs(buttons, func(key, value interface{}) {
 		text, ok := key.(string)
-		panic_if_type_is_not_ok(ok, "string", key)
+		panic_if_not_type(ok, "string", key)
 		response, ok := value.(ResponseType)
-		panic_if_type_is_not_ok(ok, "ResponseType", value)
+		panic_if_not_type(ok, "ResponseType", value)
 		dialog.AddButton(text, response)
 	})
 
@@ -168,7 +168,7 @@ func (this *TreeStore) Append(parent *TreeIter, values ...interface{}) TreeIter 
 func (this *TreeStore) Set(iter *TreeIter, columnspecs ...interface{}) {
 	for_pairs(columnspecs, func(key, value interface{}) {
 		column, ok := key.(int)
-		panic_if_type_is_not_ok(ok, "int", key)
+		panic_if_not_type(ok, "int", key)
 
 		var gvalue gobject.Value
 		gvalue.Init(this.GetColumnType(column))
@@ -201,7 +201,7 @@ func (this *ListStore) Append(values ...interface{}) TreeIter {
 func (this *ListStore) Set(iter *TreeIter, columnspecs ...interface{}) {
 	for_pairs(columnspecs, func(key, value interface{}) {
 		column, ok := key.(int)
-		panic_if_type_is_not_ok(ok, "int", key)
+		panic_if_not_type(ok, "int", key)
 
 		var gvalue gobject.Value
 		gvalue.Init(this.GetColumnType(column))
@@ -218,7 +218,7 @@ func (this *ListStore) Set(iter *TreeIter, columnspecs ...interface{}) {
 func (this *TreeModelImpl) Get(iter *TreeIter, columnspecs ...interface{}) {
 	for_pairs(columnspecs, func(key, value interface{}) {
 		column, ok := key.(int)
-		panic_if_type_is_not_ok(ok, "int", key)
+		panic_if_not_type(ok, "int", key)
 		gvalue := this.GetValue(iter, column)
 		gvalue.GetGoInterface(value)
 		gvalue.Unset()
