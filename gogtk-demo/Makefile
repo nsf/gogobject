@@ -5,6 +5,7 @@ DEMOS=\
 	links.go \
 	list_store.go \
 	spinner.go \
+	expander.go \
 
 
 PREREQ=$(patsubst %.go,%.$O,$(DEMOS))

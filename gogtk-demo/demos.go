@@ -6,6 +6,7 @@ import (
 	"./links"
 	"./list_store"
 	"./spinner"
+	"./expander"
 )
 
 type DemoApp interface {
@@ -26,4 +27,5 @@ var demos = []*DemoDesc{
 	{Title: "Links",        Filename: "links.go",        Func: links.Do},
 	{Title: "List Store",   Filename: "list_store.go",   Func: list_store.Do},
 	{Title: "Spinner",      Filename: "spinner.go",      Func: spinner.Do},
+	{Title: "Expander",     Filename: "expander.go",     Func: expander.Do},
 }
