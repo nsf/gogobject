@@ -91,10 +91,7 @@ func AddColumns(treeview *gtk.TreeView, model *gtk.ListStore) {
 		model.Get(&iter, ColumnFixed, &checked)
 		model.Set(&iter, ColumnFixed, !checked)
 	})
-	c = gtk.NewTreeViewColumn()
-	c.SetTitle("Fixed?")
-	c.PackStart(toggle, true)
-	c.AddAttribute(toggle, "active", ColumnFixed)
+	c = gtk.NewTreeViewColumnWithAttributes("Fixed?", toggle, "active", ColumnFixed)
 
 	// set this column to a fixed sizing (of 50 pixels)
 	c.SetSizing(gtk.TreeViewColumnSizingFixed)
@@ -103,49 +100,36 @@ func AddColumns(treeview *gtk.TreeView, model *gtk.ListStore) {
 
 	// column for bug numbers
 	r = gtk.NewCellRendererText()
-	c = gtk.NewTreeViewColumn()
-	c.SetTitle("Bug number")
-	c.PackStart(r, true)
-	c.AddAttribute(r, "text", ColumnNumber)
+	c = gtk.NewTreeViewColumnWithAttributes("Bug number", r, "text", ColumnNumber)
 	c.SetSortColumnId(ColumnNumber)
 	treeview.AppendColumn(c)
 
 	// column for severities
 	r = gtk.NewCellRendererText()
-	c = gtk.NewTreeViewColumn()
-	c.SetTitle("Severity")
-	c.PackStart(r, true)
-	c.AddAttribute(r, "text", ColumnSeverity)
+	c = gtk.NewTreeViewColumnWithAttributes("Severity", r, "text", ColumnSeverity)
 	c.SetSortColumnId(ColumnSeverity)
 	treeview.AppendColumn(c)
 
 	// column for description
 	r = gtk.NewCellRendererText()
-	c = gtk.NewTreeViewColumn()
-	c.SetTitle("Description")
-	c.PackStart(r, true)
-	c.AddAttribute(r, "text", ColumnDescription)
+	c = gtk.NewTreeViewColumnWithAttributes("Description", r, "text", ColumnDescription)
 	c.SetSortColumnId(ColumnDescription)
 	treeview.AppendColumn(c)
 
 	// column for spinner
 	r = gtk.NewCellRendererSpinner()
-	c = gtk.NewTreeViewColumn()
-	c.SetTitle("Spinning")
-	c.PackStart(r, true)
-	c.AddAttribute(r, "pulse", ColumnPulse)
-	c.AddAttribute(r, "active", ColumnActive)
+	c = gtk.NewTreeViewColumnWithAttributes("Spinning", r,
+		"pulse", ColumnPulse,
+		"active", ColumnActive)
 	c.SetSortColumnId(ColumnPulse)
 	treeview.AppendColumn(c)
 
 	// column for symbolic icon
 	r = gtk.NewCellRendererPixbuf()
 	// TODO: r.Set("follow-state", true)
-	c = gtk.NewTreeViewColumn()
-	c.SetTitle("Symbolic icon")
-	c.PackStart(r, true)
-	c.AddAttribute(r, "icon-name", ColumnIcon)
-	c.AddAttribute(r, "sensitive", ColumnSensitive)
+	c = gtk.NewTreeViewColumnWithAttributes("Symbolic icon", r,
+		"icon-name", ColumnIcon,
+		"sensitive", ColumnSensitive)
 	c.SetSortColumnId(ColumnIcon)
 	treeview.AppendColumn(c)
 }
