@@ -8,13 +8,13 @@ import (
 )
 
 const (
-	TitleColumn = iota
-	FilenameColumn
-	AppColumn
-	StyleColumn
+	title_column = iota
+	filename_column
+	func_column
+	style_column
 )
 
-func CreateTreeView() *gtk.TreeView {
+func create_tree_view() *gtk.TreeView {
 	model := gtk.NewTreeStore(
 		gobject.String,      // title
 		gobject.String,      // filename
@@ -28,16 +28,16 @@ func CreateTreeView() *gtk.TreeView {
 	treeview.SetSizeRequest(200, -1)
 
 	for _, demo := range demos {
-		iter := model.Append(nil, demo.Title, demo.Filename, demo.App, pango.StyleNormal)
+		iter := model.Append(nil, demo.Title, demo.Filename, demo.Func, pango.StyleNormal)
 		for _, cdemo := range demo.Children {
-			model.Append(&iter, cdemo.Title, demo.Filename, cdemo.App, pango.StyleNormal)
+			model.Append(&iter, cdemo.Title, demo.Filename, cdemo.Func, pango.StyleNormal)
 		}
 	}
 
 	r := gtk.NewCellRendererText()
 	c := gtk.NewTreeViewColumnWithAttributes("Widget (double click for demo)", r,
-		"text", TitleColumn,
-		"style", StyleColumn)
+		"text", title_column,
+		"style", style_column)
 	treeview.AppendColumn(c)
 
 	iter, _ := model.GetIterFirst()
@@ -48,17 +48,23 @@ func CreateTreeView() *gtk.TreeView {
 		iter, _ := model.GetIter(path)
 		var app interface{}
 		var style pango.Style
-		model.Get(&iter, AppColumn, &app, StyleColumn, &style)
+		model.Get(&iter, func_column, &app, style_column, &style)
 		if style == pango.StyleItalic {
 			style = pango.StyleNormal
 		} else {
 			style = pango.StyleItalic
 		}
 
-		model.Set(&iter, StyleColumn, style)
-		w := app.(DemoApp).Do(gtk.ToWindow(treeview.GetToplevel()))
+		model.Set(&iter, style_column, style)
+		w := app.(DemoFunc)(gtk.ToWindow(treeview.GetToplevel()))
 		if w != nil {
-			// TODO
+			w.Connect("destroy", func() {
+				var style pango.Style
+				model.Get(&iter, style_column, &style)
+				if style == pango.StyleItalic {
+					model.Set(&iter, style_column, pango.StyleNormal)
+				}
+			})
 		}
 	})
 	treeview.CollapseAll()
@@ -69,7 +75,7 @@ func CreateTreeView() *gtk.TreeView {
 	return treeview
 }
 
-func CreateText(is_source bool) (*gtk.ScrolledWindow, *gtk.TextBuffer) {
+func create_text(is_source bool) (*gtk.ScrolledWindow, *gtk.TextBuffer) {
 	sw := gtk.NewScrolledWindow(nil, nil)
 	sw.SetPolicy(gtk.PolicyTypeAutomatic, gtk.PolicyTypeAutomatic)
 	sw.SetShadowType(gtk.ShadowTypeIn)
@@ -108,7 +114,7 @@ func main() {
 	window.Add(hbox)
 
 	// treeview
-	treeview := CreateTreeView()
+	treeview := create_tree_view()
 	hbox.PackStart(treeview, false, false, 0)
 
 	// notebook
@@ -116,7 +122,7 @@ func main() {
 	hbox.PackStart(notebook, true, true, 0)
 
 	// info
-	sw, infobuf := CreateText(false)
+	sw, infobuf := create_text(false)
 	NewNotebookPage(notebook, sw, "_Info")
 	tag := gtk.NewTextTag("title")
 	tag.SetProperty("font", "Sans 18")

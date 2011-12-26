@@ -1,14 +1,10 @@
-package main
+package button_boxes
 
 import "gobject/gtk-3.0"
 
-type ButtonBoxesApp struct {
-	window *gtk.Window
-}
+var window *gtk.Window
 
-var ButtonBoxes ButtonBoxesApp
-
-func (*ButtonBoxesApp) CreateBBox(orient gtk.Orientation, title string, spacing int, layout gtk.ButtonBoxStyle) *gtk.Frame {
+func create_bbox(orient gtk.Orientation, title string, spacing int, layout gtk.ButtonBoxStyle) *gtk.Frame {
 	frame := gtk.NewFrame(title)
 	bbox := gtk.NewButtonBox(orient)
 
@@ -31,15 +27,15 @@ func (*ButtonBoxesApp) CreateBBox(orient gtk.Orientation, title string, spacing 
 	return frame
 }
 
-func (bb *ButtonBoxesApp) Do(mainwin *gtk.Window) *gtk.Window {
-	if bb.window == nil {
-		bb.window = gtk.NewWindow(gtk.WindowTypeToplevel)
-		bb.window.SetTitle("Button Boxes")
-		bb.window.Connect("destroy", func() { bb.window = nil })
-		bb.window.SetBorderWidth(10)
+func Do(mainwin *gtk.Window) *gtk.Window {
+	if window == nil {
+		window = gtk.NewWindow(gtk.WindowTypeToplevel)
+		window.SetTitle("Button Boxes")
+		window.Connect("destroy", func() { window = nil })
+		window.SetBorderWidth(10)
 
 		main_vbox := gtk.NewBox(gtk.OrientationVertical, 0)
-		bb.window.Add(main_vbox)
+		window.Add(main_vbox)
 
 		frame_horz := gtk.NewFrame("Horizontal Button Boxes")
 		main_vbox.PackStart(frame_horz, true, true, 10)
@@ -49,16 +45,16 @@ func (bb *ButtonBoxesApp) Do(mainwin *gtk.Window) *gtk.Window {
 		frame_horz.Add(vbox)
 
 		vbox.PackStart(
-			bb.CreateBBox(gtk.OrientationHorizontal, "Spread",
+			create_bbox(gtk.OrientationHorizontal, "Spread",
 				40, gtk.ButtonBoxStyleSpread), true, true, 0)
 		vbox.PackStart(
-			bb.CreateBBox(gtk.OrientationHorizontal, "Edge",
+			create_bbox(gtk.OrientationHorizontal, "Edge",
 				40, gtk.ButtonBoxStyleEdge), true, true, 5)
 		vbox.PackStart(
-			bb.CreateBBox(gtk.OrientationHorizontal, "Start",
+			create_bbox(gtk.OrientationHorizontal, "Start",
 				40, gtk.ButtonBoxStyleStart), true, true, 5)
 		vbox.PackStart(
-			bb.CreateBBox(gtk.OrientationHorizontal, "End",
+			create_bbox(gtk.OrientationHorizontal, "End",
 				40, gtk.ButtonBoxStyleEnd), true, true, 5)
 
 
@@ -70,24 +66,23 @@ func (bb *ButtonBoxesApp) Do(mainwin *gtk.Window) *gtk.Window {
 		frame_vert.Add(hbox)
 
 		hbox.PackStart(
-			bb.CreateBBox(gtk.OrientationVertical, "Spread",
+			create_bbox(gtk.OrientationVertical, "Spread",
 				30, gtk.ButtonBoxStyleSpread), true, true, 0)
 		hbox.PackStart(
-			bb.CreateBBox(gtk.OrientationVertical, "Edge",
+			create_bbox(gtk.OrientationVertical, "Edge",
 				30, gtk.ButtonBoxStyleEdge), true, true, 5)
 		hbox.PackStart(
-			bb.CreateBBox(gtk.OrientationVertical, "Start",
+			create_bbox(gtk.OrientationVertical, "Start",
 				30, gtk.ButtonBoxStyleStart), true, true, 5)
 		hbox.PackStart(
-			bb.CreateBBox(gtk.OrientationVertical, "End",
+			create_bbox(gtk.OrientationVertical, "End",
 				30, gtk.ButtonBoxStyleEnd), true, true, 5)
 	}
 
-	if (!bb.window.GetVisible()) {
-		bb.window.ShowAll()
+	if (!window.GetVisible()) {
+		window.ShowAll()
 	} else {
-		bb.window.Destroy()
-		bb.window = nil
+		window.Destroy()
 	}
-	return bb.window
+	return window
 }

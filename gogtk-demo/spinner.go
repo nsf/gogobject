@@ -1,62 +1,64 @@
-package main
+package spinner
 
 import "gobject/gtk-3.0"
-import "os"
 
-func Spinner() *gtk.Dialog {
-	window := gtk.NewDialogWithButtons("GtkSpinner", nil, 0,
-		gtk.StockClose, gtk.ResponseTypeNone)
+var dialog *gtk.Dialog
 
-	window.SetResizable(false)
-	window.Connect("response", func() {
-		window.Destroy()
-	})
+func Do(mainwin *gtk.Window) *gtk.Window {
+	if dialog == nil {
+		dialog = gtk.NewDialogWithButtons("GtkSpinner", mainwin, 0,
+			gtk.StockClose, gtk.ResponseTypeNone)
 
-	content_area := gtk.ToBox(window.GetContentArea())
-	vbox := gtk.NewBox(gtk.OrientationVertical, 5)
-	content_area.PackStart(vbox, true, true, 0)
-	vbox.SetBorderWidth(5)
+		dialog.SetResizable(false)
+		dialog.Connect("response", func() { dialog.Destroy() })
+		dialog.Connect("destroy", func() { dialog = nil })
 
-	var hbox *gtk.Box
+		content_area := gtk.ToBox(dialog.GetContentArea())
+		vbox := gtk.NewBox(gtk.OrientationVertical, 5)
+		content_area.PackStart(vbox, true, true, 0)
+		vbox.SetBorderWidth(5)
 
-	// Sensitive
-	hbox = gtk.NewBox(gtk.OrientationHorizontal, 5)
-	spinner_sensitive := gtk.NewSpinner()
-	hbox.Add(spinner_sensitive)
-	hbox.Add(gtk.NewEntry())
-	vbox.Add(hbox)
+		var hbox *gtk.Box
 
-	// Disabled
-	hbox = gtk.NewBox(gtk.OrientationHorizontal, 5)
-	spinner_unsensitive := gtk.NewSpinner()
-	hbox.Add(spinner_unsensitive)
-	hbox.Add(gtk.NewEntry())
-	vbox.Add(hbox)
-	hbox.SetSensitive(false)
+		// Sensitive
+		hbox = gtk.NewBox(gtk.OrientationHorizontal, 5)
+		spinner_sensitive := gtk.NewSpinner()
+		hbox.Add(spinner_sensitive)
+		hbox.Add(gtk.NewEntry())
+		vbox.Add(hbox)
 
-	button := gtk.NewButtonFromStock(gtk.StockMediaPlay)
-	button.Connect("clicked", func() {
+		// Disabled
+		hbox = gtk.NewBox(gtk.OrientationHorizontal, 5)
+		spinner_unsensitive := gtk.NewSpinner()
+		hbox.Add(spinner_unsensitive)
+		hbox.Add(gtk.NewEntry())
+		vbox.Add(hbox)
+		hbox.SetSensitive(false)
+
+		button := gtk.NewButtonFromStock(gtk.StockMediaPlay)
+		button.Connect("clicked", func() {
+			spinner_sensitive.Start()
+			spinner_unsensitive.Start()
+		})
+		vbox.Add(button)
+
+		button = gtk.NewButtonFromStock(gtk.StockMediaStop)
+		button.Connect("clicked", func() {
+			spinner_sensitive.Stop()
+			spinner_unsensitive.Stop()
+		})
+		vbox.Add(button)
+
 		spinner_sensitive.Start()
 		spinner_unsensitive.Start()
-	})
-	vbox.Add(button)
+	}
 
-	button = gtk.NewButtonFromStock(gtk.StockMediaStop)
-	button.Connect("clicked", func() {
-		spinner_sensitive.Stop()
-		spinner_unsensitive.Stop()
-	})
-	vbox.Add(button)
+	if !dialog.GetVisible() {
+		dialog.ShowAll()
+	} else {
+		dialog.Destroy()
+	}
 
-	spinner_sensitive.Start()
-	spinner_unsensitive.Start()
-
-	window.ShowAll()
-	return window
+	return gtk.ToWindow(dialog)
 }
 
-func main() {
-	gtk.Init(os.Args)
-	Spinner()
-	gtk.Main()
-}

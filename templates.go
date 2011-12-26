@@ -117,8 +117,11 @@ type [<.name>] struct {
 }
 
 func To[<.name>](objlike [<.gobject>]Like) *[<.name>] {
-	t := (*[<.name>])(nil).GetStaticType()
 	c := objlike.InheritedFromGObject()
+	if c == nil {
+		return nil
+	}
+	t := (*[<.name>])(nil).GetStaticType()
 	obj := _GObjectGrabIfType(unsafe.Pointer(c), t)
 	if obj != nil {
 		return (*[<.name>])(obj)
@@ -127,6 +130,9 @@ func To[<.name>](objlike [<.gobject>]Like) *[<.name>] {
 }
 
 func (this0 *[<.name>]) InheritedFrom[<.cprefix>][<.name>]() [<.cgotype>] {
+	if this0 == nil {
+		return nil
+	}
 	return ([<.cgotype>])(this0.C)
 }
 

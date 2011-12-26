@@ -1,53 +1,48 @@
-package main
+package links
 
 import "gobject/gtk-3.0"
 
-type LinksApp struct {
-	window *gtk.Window
-}
+var window *gtk.Window
 
-var Links LinksApp
-
-const links_labelText =
+const label_text =
 `Some <a href="http://en.wikipedia.org/wiki/Text" title="plain text">text</a> may be marked up
 as hyperlinks, which can be clicked
 or activated via <a href="keynav">keynav</a>`
 
-const links_dialogText =
+const dialog_text =
 `The term <i>keynav</i> is a shorthand for ` +
 `keyboard navigation and refers to the process of using ` +
 `a program (exclusively) via keyboard input.`
 
+func Do(mainwin *gtk.Window) *gtk.Window {
+	if window == nil {
+		window = gtk.NewWindow(gtk.WindowTypeToplevel)
+		window.SetTitle("Links")
+		window.Connect("destroy", func() { window = nil })
+		window.SetBorderWidth(12)
 
-func (this *LinksApp) Do(mainwin *gtk.Window) *gtk.Window {
-	if this.window == nil {
-		this.window = gtk.NewWindow(gtk.WindowTypeToplevel)
-		this.window.SetTitle("Links")
-		this.window.SetBorderWidth(12)
-
-		label := gtk.NewLabel(links_labelText)
+		label := gtk.NewLabel(label_text)
 		label.SetUseMarkup(true)
-		label.Connect("activate-link", links_ActivateLink)
-		this.window.Add(label)
+		label.Connect("activate-link", activate_link)
+		window.Add(label)
 	}
 
-	if !this.window.GetVisible() {
-		this.window.ShowAll()
+	if !window.GetVisible() {
+		window.ShowAll()
 	} else {
-		this.window.Destroy()
-		this.window = nil
+		window.Destroy()
 	}
-	return this.window
+	return window
 }
 
-func links_ActivateLink(label *gtk.Label, uri string) bool {
+func activate_link(label *gtk.Label, uri string) bool {
 	if uri == "keynav" {
 		parent := gtk.ToWindow(label.GetParent())
 		dialog := gtk.NewMessageDialogWithMarkup(parent,
 			gtk.DialogFlagsDestroyWithParent,
 			gtk.MessageTypeInfo,
 			gtk.ButtonsTypeOk,
-			links_dialogText)
+			dialog_text)
 		dialog.Present()
 		dialog.Connect("response", func() {
 			dialog.Destroy()
