@@ -17,7 +17,7 @@ func main() {
 	cr.MoveTo(0.25, 0.25)
 	cr.LineTo(0.5, 0.375)
 	cr.RelLineTo(0.25, -0.125)
-	cr.Arc(0.5, 0.5, 0.25 * math.Sqrt(2), -0.25 * math.Pi, 0.25 * math.Pi)
+	cr.Arc(0.5, 0.5, 0.25 * math.Sqrt2, -0.25 * math.Pi, 0.25 * math.Pi)
 	cr.RelCurveTo(-0.25, -0.125, -0.25, 0.125, -0.5, 0)
 	cr.ClosePath()
 

@@ -13,33 +13,9 @@ import "runtime"
 import "reflect"
 import "unsafe"
 
-/*
-These are the names from the generator, they must be preserved.
-
-type Context struct {}
-type Surface struct {}
-type Matrix struct {}
-type Pattern struct {}
-type Region struct {}
-type Content C.uint32_t
-const (
-	ContentColor Content = 4096
-	ContentAlpha Content = 8192
-	ContentColorAlpha Content = 12288
-)
-type FontOptions struct {}
-type FontType struct {}
-type FontFace struct {}
-type ScaledFont struct {}
-type Path struct {}
-type RectangleInt struct { data [16]byte }
-*/
-// blacklisted: image_surface_create (function)
-
 //----------------------------------------------------------------------------
 // TODO MOVE
 //----------------------------------------------------------------------------
-
 
 type RectangleInt struct {
 	X int32
@@ -1032,11 +1008,19 @@ func (this *Pattern) GetFilter() Filter {
 	return Filter(C.cairo_pattern_get_filter(this.c))
 }
 
-// TODO: Implement these
 // void                cairo_pattern_set_matrix            (cairo_pattern_t *pattern,
 //                                                          const cairo_matrix_t *matrix);
+func (this *Pattern) SetMatrix(matrix *Matrix) {
+	C.cairo_pattern_set_matrix(this.c, matrix.c())
+}
+
 // void                cairo_pattern_get_matrix            (cairo_pattern_t *pattern,
 //                                                          cairo_matrix_t *matrix);
+func (this *Pattern) GetMatrix() Matrix {
+	var matrix C.cairo_matrix_t
+	C.cairo_pattern_get_matrix(this.c, &matrix)
+	return *(*Matrix)(unsafe.Pointer(&matrix))
+}
 
 // enum                cairo_pattern_type_t;
 type PatternType int
@@ -1256,13 +1240,25 @@ func (this *Context) Rotate(angle float64) {
 	C.cairo_rotate(this.c, C.double(angle))
 }
 
-// TODO: Implement these
 // void                cairo_transform                     (cairo_t *cr,
 //                                                          const cairo_matrix_t *matrix);
+func (this *Context) Transform(matrix *Matrix) {
+	C.cairo_transform(this.c, matrix.c())
+}
+
 // void                cairo_set_matrix                    (cairo_t *cr,
 //                                                          const cairo_matrix_t *matrix);
+func (this *Context) SetMatrix(matrix *Matrix) {
+	C.cairo_set_matrix(this.c, matrix.c())
+}
+
 // void                cairo_get_matrix                    (cairo_t *cr,
 //                                                          cairo_matrix_t *matrix);
+func (this *Context) GetMatrix() Matrix {
+	var matrix C.cairo_matrix_t
+	C.cairo_get_matrix(this.c, &matrix)
+	return *(*Matrix)(unsafe.Pointer(&matrix))
+}
 
 // void                cairo_identity_matrix               (cairo_t *cr);
 func (this *Context) IdentityMatrix() {
@@ -1638,3 +1634,106 @@ func (this *Surface) WriteToPNG(filename string) Status {
 // cairo_status_t      cairo_surface_write_to_png_stream   (cairo_surface_t *surface,
 //                                                          cairo_write_func_t write_func,
 //                                                          void *closure);
+
+//----------------------------------------------------------------------------
+// Matrix
+//----------------------------------------------------------------------------
+
+//                     cairo_matrix_t;
+type Matrix struct {
+	xx, yx, xy, yy, x0, y0 float64
+}
+
+func (this *Matrix) c() *C.cairo_matrix_t {
+	return (*C.cairo_matrix_t)(unsafe.Pointer(this))
+}
+
+// void                cairo_matrix_init                   (cairo_matrix_t *matrix,
+//                                                          double xx,
+//                                                          double yx,
+//                                                          double xy,
+//                                                          double yy,
+//                                                          double x0,
+//                                                          double y0);
+func (this *Matrix) Init(xx, yx, xy, yy, x0, y0 float64) {
+	C.cairo_matrix_init(this.c(), C.double(xx), C.double(yx), C.double(xy), C.double(yy), C.double(x0), C.double(y0))
+}
+
+// void                cairo_matrix_init_identity          (cairo_matrix_t *matrix);
+func (this *Matrix) InitIdentity() {
+	C.cairo_matrix_init_identity(this.c())
+}
+
+// void                cairo_matrix_init_translate         (cairo_matrix_t *matrix,
+//                                                          double tx,
+//                                                          double ty);
+func (this *Matrix) InitTranslate(tx, ty float64) {
+	C.cairo_matrix_init_translate(this.c(), C.double(tx), C.double(ty))
+}
+
+// void                cairo_matrix_init_scale             (cairo_matrix_t *matrix,
+//                                                          double sx,
+//                                                          double sy);
+func (this *Matrix) InitScale(sx, sy float64) {
+	C.cairo_matrix_init_scale(this.c(), C.double(sx), C.double(sy))
+}
+
+// void                cairo_matrix_init_rotate            (cairo_matrix_t *matrix,
+//                                                          double radians);
+func (this *Matrix) InitRotate(radians float64) {
+	C.cairo_matrix_init_rotate(this.c(), C.double(radians))
+}
+
+// void                cairo_matrix_translate              (cairo_matrix_t *matrix,
+//                                                          double tx,
+//                                                          double ty);
+func (this *Matrix) Translate(tx, ty float64) {
+	C.cairo_matrix_translate(this.c(), C.double(tx), C.double(ty))
+}
+
+// void                cairo_matrix_scale                  (cairo_matrix_t *matrix,
+//                                                          double sx,
+//                                                          double sy);
+func (this *Matrix) Scale(sx, sy float64) {
+	C.cairo_matrix_scale(this.c(), C.double(sx), C.double(sy))
+}
+
+// void                cairo_matrix_rotate                 (cairo_matrix_t *matrix,
+//                                                          double radians);
+func (this *Matrix) Rotate(radians float64) {
+	C.cairo_matrix_rotate(this.c(), C.double(radians))
+}
+
+// cairo_status_t      cairo_matrix_invert                 (cairo_matrix_t *matrix);
+func (this *Matrix) Invert() Status {
+	return Status(C.cairo_matrix_invert(this.c()))
+}
+
+// void                cairo_matrix_multiply               (cairo_matrix_t *result,
+//                                                          const cairo_matrix_t *a,
+//                                                          const cairo_matrix_t *b);
+func (this *Matrix) Multiply(b *Matrix) Matrix {
+	var result C.cairo_matrix_t
+	C.cairo_matrix_multiply(&result, this.c(), b.c())
+	return *(*Matrix)(unsafe.Pointer(&result))
+}
+
+// void                cairo_matrix_transform_distance     (const cairo_matrix_t *matrix,
+//                                                          double *dx,
+//                                                          double *dy);
+func (this *Matrix) TransformDistance(dx, dy float64) (float64, float64) {
+	C.cairo_matrix_transform_distance(this.c(),
+		(*C.double)(unsafe.Pointer(&dx)),
+		(*C.double)(unsafe.Pointer(&dy)))
+	return dx, dy
+}
+
+// void                cairo_matrix_transform_point        (const cairo_matrix_t *matrix,
+//                                                          double *x,
+//                                                          double *y);
+func (this *Matrix) TransformPoint(x, y float64) (float64, float64) {
+	C.cairo_matrix_transform_point(this.c(),
+		(*C.double)(unsafe.Pointer(&x)),
+		(*C.double)(unsafe.Pointer(&y)))
+	return x, y
+}
