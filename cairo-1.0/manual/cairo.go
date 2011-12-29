@@ -462,39 +462,29 @@ type Rectangle struct {
 	X, Y, Width, Height float64
 }
 
-// TODO: remove RectangleList
 //                     cairo_rectangle_list_t;
-type RectangleList struct {
-	c *C.cairo_rectangle_list_t
-}
-
-func (this *RectangleList) Status() Status {
-	return Status(this.c.status)
-}
-
-func (this *RectangleList) Slice() []Rectangle {
-	var slice reflect.SliceHeader
-	slice.Data = uintptr(unsafe.Pointer(this.c.rectangles))
-	slice.Len = int(this.c.num_rectangles)
-	slice.Cap = slice.Len
-	return *(*[]Rectangle)(unsafe.Pointer(&slice))
-}
-
-func rectangle_list_finalizer(this *RectangleList) {
-	C.cairo_rectangle_list_destroy(this.c)
-}
-
-func (this *RectangleList) wrap() {
-	runtime.SetFinalizer(this, rectangle_list_finalizer)
-}
-
 // void                cairo_rectangle_list_destroy        (cairo_rectangle_list_t *rectangle_list);
 
 // cairo_rectangle_list_t * cairo_copy_clip_rectangle_list (cairo_t *cr);
-func (this *Context) CopyClipRectangleList() *RectangleList {
-	rl := &RectangleList{ C.cairo_copy_clip_rectangle_list(this.c) }
-	rl.wrap()
-	return rl
+func (this *Context) CopyClipRectangleList() ([]Rectangle, Status) {
+	var slice []Rectangle
+	var status Status
+
+	rl := C.cairo_copy_clip_rectangle_list(this.c)
+	if rl.num_rectangles > 0 {
+		var slice_header reflect.SliceHeader
+		slice_header.Data = uintptr(unsafe.Pointer(rl.rectangles))
+		slice_header.Len = int(rl.num_rectangles)
+		slice_header.Cap = int(rl.num_rectangles)
+		slice_src := *(*[]Rectangle)(unsafe.Pointer(&slice_header))
+		slice = make([]Rectangle, rl.num_rectangles)
+		copy(slice, slice_src)
+	}
+
+	status = Status(rl.status)
+
+	C.cairo_rectangle_list_destroy(rl)
+	return slice, status
 }
 
 // void                cairo_fill                          (cairo_t *cr);
