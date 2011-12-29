@@ -6,12 +6,26 @@ package cairo
 /*
 #include <stdlib.h>
 #include <cairo.h>
+
+extern cairo_status_t io_reader_wrapper(void*, unsigned char*, unsigned int);
+static cairo_surface_t * _cairo_image_surface_create_from_png_stream(void *closure)
+{
+	return cairo_image_surface_create_from_png_stream(io_reader_wrapper, closure);
+}
+
+extern cairo_status_t io_writer_wrapper(void*, const unsigned char*, unsigned int);
+static cairo_status_t _cairo_surface_write_to_png_stream(cairo_surface_t *surface, void *closure)
+{
+	return cairo_surface_write_to_png_stream(surface, io_writer_wrapper, closure);
+}
+
 #cgo pkg-config: cairo
 */
 import "C"
 import "runtime"
 import "reflect"
 import "unsafe"
+import "io"
 
 //----------------------------------------------------------------------------
 // TODO MOVE
@@ -1610,13 +1624,37 @@ func NewImageSurfaceFromPNG(filename string) *Surface {
 	return surface
 }
 
-// TODO: Implement these (hook with io.Reader)
+
 // cairo_status_t      (*cairo_read_func_t)                (void *closure,
 //                                                          unsigned char *data,
 //                                                          unsigned int length);
+
+//export io_reader_wrapper
+func io_reader_wrapper(reader_up unsafe.Pointer, data_up unsafe.Pointer, length uint32) uint32 {
+	var reader io.Reader
+	var data []byte
+	var data_header reflect.SliceHeader
+	reader = *(*io.Reader)(reader_up)
+	data_header.Data = uintptr(data_up)
+	data_header.Len = int(length)
+	data_header.Cap = int(length)
+	data = *(*[]byte)(unsafe.Pointer(&data_header))
+
+	_, err := reader.Read(data)
+	if err != nil {
+		return uint32(StatusReadError)
+	}
+	return uint32(StatusSuccess)
+}
+
 // cairo_surface_t *   cairo_image_surface_create_from_png_stream
 //                                                         (cairo_read_func_t read_func,
 //                                                          void *closure);
+func NewImageSurfaceFromPNGStream(r io.Reader) *Surface {
+	surface := &Surface{ C._cairo_image_surface_create_from_png_stream(unsafe.Pointer(&r)) }
+	surface.wrap()
+	return surface
+}
 
 // cairo_status_t      cairo_surface_write_to_png          (cairo_surface_t *surface,
 //                                                          const char *filename);
@@ -1627,13 +1665,34 @@ func (this *Surface) WriteToPNG(filename string) Status {
 	return Status(status)
 }
 
-// TODO: Implement these (hook with io.Writer)
 // cairo_status_t      (*cairo_write_func_t)               (void *closure,
 //                                                          unsigned char *data,
 //                                                          unsigned int length);
+
+//export io_writer_wrapper
+func io_writer_wrapper(writer_up unsafe.Pointer, data_up unsafe.Pointer, length uint32) uint32 {
+	var writer io.Writer
+	var data []byte
+	var data_header reflect.SliceHeader
+	writer = *(*io.Writer)(writer_up)
+	data_header.Data = uintptr(data_up)
+	data_header.Len = int(length)
+	data_header.Cap = int(length)
+	data = *(*[]byte)(unsafe.Pointer(&data_header))
+
+	_, err := writer.Write(data)
+	if err != nil {
+		return uint32(StatusWriteError)
+	}
+	return uint32(StatusSuccess)
+}
+
 // cairo_status_t      cairo_surface_write_to_png_stream   (cairo_surface_t *surface,
 //                                                          cairo_write_func_t write_func,
 //                                                          void *closure);
+func (this *Surface) WriteToPNGStream(w io.Writer) Status {
+	return Status(C._cairo_surface_write_to_png_stream(this.c, unsafe.Pointer(&w)))
+}
 
 //----------------------------------------------------------------------------
 // Matrix
