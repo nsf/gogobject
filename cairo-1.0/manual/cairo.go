@@ -31,6 +31,8 @@ import "io"
 // TODO MOVE
 //----------------------------------------------------------------------------
 
+var go_repr_cookie C.cairo_user_data_key_t
+
 type RectangleInt struct {
 	X int32
 	Y int32
@@ -106,18 +108,32 @@ type Context struct {
 }
 
 func context_finalizer(this *Context) {
+	C.cairo_set_user_data(this.c, &go_repr_cookie, nil, nil)
 	C.cairo_destroy(this.c)
 }
 
-func (this *Context) wrap() {
-	runtime.SetFinalizer(this, context_finalizer)
+func ContextWrap(c *C.cairo_t, grab bool) *Context {
+	go_repr := C.cairo_get_user_data(c, &go_repr_cookie)
+	if go_repr != nil {
+		return (*Context)(go_repr)
+	}
+
+	context := &Context{ c }
+	if grab {
+		C.cairo_reference(c)
+	}
+	runtime.SetFinalizer(context, context_finalizer)
+
+	status := C.cairo_set_user_data(c, &go_repr_cookie, unsafe.Pointer(context), nil)
+	if status != C.CAIRO_STATUS_SUCCESS {
+		panic("failed to set user data, out of memory?")
+	}
+	return context
 }
 
 // cairo_t *           cairo_create                        (cairo_surface_t *target);
 func NewContext(target *Surface) *Context {
-	this := &Context{ C.cairo_create(target.c) }
-	this.wrap()
-	return this
+	return ContextWrap(C.cairo_create(target.c), false)
 }
 
 // cairo_t *           cairo_reference                     (cairo_t *cr);
@@ -140,9 +156,7 @@ func (this *Context) Restore() {
 
 // cairo_surface_t *   cairo_get_target                    (cairo_t *cr);
 func (this *Context) GetTarget() *Surface {
-	target := &Surface{ C.cairo_get_target(this.c) }
-	target.grab()
-	return target
+	return SurfaceWrap(C.cairo_get_target(this.c), true)
 }
 
 // void                cairo_push_group                    (cairo_t *cr);
@@ -158,9 +172,7 @@ func (this *Context) PushGroupWithContent(content Content) {
 
 // cairo_pattern_t *   cairo_pop_group                     (cairo_t *cr);
 func (this *Context) PopGroup() *Pattern {
-	pattern := &Pattern{ C.cairo_pop_group(this.c) }
-	pattern.wrap()
-	return pattern
+	return PatternWrap(C.cairo_pop_group(this.c), false)
 }
 
 // void                cairo_pop_group_to_source           (cairo_t *cr);
@@ -170,9 +182,7 @@ func (this *Context) PopGroupToSource() {
 
 // cairo_surface_t *   cairo_get_group_target              (cairo_t *cr);
 func (this *Context) GetGroupTarget() *Surface {
-	target := &Surface{ C.cairo_get_group_target(this.c) }
-	target.grab()
-	return target
+	return SurfaceWrap(C.cairo_get_group_target(this.c), true)
 }
 
 // void                cairo_set_source_rgb                (cairo_t *cr,
@@ -208,9 +218,7 @@ func (this *Context) SetSourceSurface(surface *Surface, x, y float64) {
 
 // cairo_pattern_t *   cairo_get_source                    (cairo_t *cr);
 func (this *Context) GetSource() *Pattern {
-	source := &Pattern{ C.cairo_get_source(this.c) }
-	source.grab()
-	return source
+	return PatternWrap(C.cairo_get_source(this.c), true)
 }
 
 // enum                cairo_antialias_t;
@@ -584,7 +592,6 @@ func (this *Context) ShowPage() {
 	C.cairo_show_page(this.c)
 }
 
-// TODO: Implement these
 // unsigned int        cairo_get_reference_count           (cairo_t *cr);
 // cairo_status_t      cairo_set_user_data                 (cairo_t *cr,
 //                                                          const cairo_user_data_key_t *key,
@@ -606,8 +613,10 @@ func path_finalizer(this *Path) {
 	C.cairo_path_destroy(this.c)
 }
 
-func (this *Path) wrap() {
-	runtime.SetFinalizer(this, path_finalizer)
+func PathWrap(c *C.cairo_path_t) *Path {
+	path := &Path{ c }
+	runtime.SetFinalizer(path, path_finalizer)
+	return path
 }
 
 // TODO: Implement?
@@ -624,16 +633,12 @@ const (
 
 // cairo_path_t *      cairo_copy_path                     (cairo_t *cr);
 func (this *Context) CopyPath() *Path {
-	path := &Path{ C.cairo_copy_path(this.c) }
-	path.wrap()
-	return path
+	return PathWrap(C.cairo_copy_path(this.c))
 }
 
 // cairo_path_t *      cairo_copy_path_flat                (cairo_t *cr);
 func (this *Context) CopyPathFlat() *Path {
-	path := &Path{ C.cairo_copy_path_flat(this.c) }
-	path.wrap()
-	return path
+	return PathWrap(C.cairo_copy_path_flat(this.c))
 }
 
 // void                cairo_path_destroy                  (cairo_path_t *path);
@@ -790,16 +795,27 @@ type Pattern struct {
 }
 
 func pattern_finalizer(this *Pattern) {
+	C.cairo_pattern_set_user_data(this.c, &go_repr_cookie, nil, nil)
 	C.cairo_pattern_destroy(this.c)
 }
 
-func (this *Pattern) grab() {
-	C.cairo_pattern_reference(this.c)
-	this.wrap()
-}
+func PatternWrap(c *C.cairo_pattern_t, grab bool) *Pattern {
+	go_repr := C.cairo_pattern_get_user_data(c, &go_repr_cookie)
+	if go_repr != nil {
+		return (*Pattern)(go_repr)
+	}
 
-func (this *Pattern) wrap() {
-	runtime.SetFinalizer(this, pattern_finalizer)
+	pattern := &Pattern{ c }
+	if grab {
+		C.cairo_pattern_reference(c)
+	}
+	runtime.SetFinalizer(pattern, pattern_finalizer)
+
+	status := C.cairo_pattern_set_user_data(c, &go_repr_cookie, unsafe.Pointer(pattern), nil)
+	if status != C.CAIRO_STATUS_SUCCESS {
+		panic("failed to set user data, out of memory?")
+	}
+	return pattern
 }
 
 // void                cairo_pattern_add_color_stop_rgb    (cairo_pattern_t *pattern,
@@ -852,9 +868,7 @@ func (this *Pattern) GetColorStopRGBA(index int) (offset, red, green, blue, alph
 //                                                          double green,
 //                                                          double blue);
 func NewPatternRGB(red, green, blue float64) *Pattern {
-	pattern := &Pattern{ C.cairo_pattern_create_rgb(C.double(red), C.double(green), C.double(blue)) }
-	pattern.wrap()
-	return pattern
+	return PatternWrap(C.cairo_pattern_create_rgb(C.double(red), C.double(green), C.double(blue)), false)
 }
 
 // cairo_pattern_t *   cairo_pattern_create_rgba           (double red,
@@ -862,9 +876,7 @@ func NewPatternRGB(red, green, blue float64) *Pattern {
 //                                                          double blue,
 //                                                          double alpha);
 func NewPatternRGBA(red, green, blue, alpha float64) *Pattern {
-	pattern := &Pattern{ C.cairo_pattern_create_rgba(C.double(red), C.double(green), C.double(blue), C.double(alpha)) }
-	pattern.wrap()
-	return pattern
+	return PatternWrap(C.cairo_pattern_create_rgba(C.double(red), C.double(green), C.double(blue), C.double(alpha)), false)
 }
 
 // cairo_status_t      cairo_pattern_get_rgba              (cairo_pattern_t *pattern,
@@ -883,9 +895,7 @@ func (this *Pattern) GetRGBA() (red, green, blue, alpha float64, status Status) 
 
 // cairo_pattern_t *   cairo_pattern_create_for_surface    (cairo_surface_t *surface);
 func NewPatternForSurface(surface *Surface) *Pattern {
-	pattern := &Pattern{ C.cairo_pattern_create_for_surface(surface.c) }
-	pattern.wrap()
-	return pattern
+	return PatternWrap(C.cairo_pattern_create_for_surface(surface.c), false)
 }
 
 // cairo_status_t      cairo_pattern_get_surface           (cairo_pattern_t *pattern,
@@ -893,8 +903,7 @@ func NewPatternForSurface(surface *Surface) *Pattern {
 func (this *Pattern) GetSurface() (*Surface, Status) {
 	var surfacec *C.cairo_surface_t
 	status := Status(C.cairo_pattern_get_surface(this.c, &surfacec))
-	surface := &Surface{ surfacec }
-	surface.grab()
+	surface := SurfaceWrap(surfacec, true)
 	return surface, status
 }
 
@@ -903,10 +912,8 @@ func (this *Pattern) GetSurface() (*Surface, Status) {
 //                                                          double x1,
 //                                                          double y1);
 func NewPatternLinear(x0, y0, x1, y1 float64) *Pattern {
-	pattern := &Pattern{ C.cairo_pattern_create_linear(
-		C.double(x0), C.double(y0), C.double(x1), C.double(y1)) }
-	pattern.wrap()
-	return pattern
+	return PatternWrap(C.cairo_pattern_create_linear(
+		C.double(x0), C.double(y0), C.double(x1), C.double(y1)), false)
 }
 
 // cairo_status_t      cairo_pattern_get_linear_points     (cairo_pattern_t *pattern,
@@ -930,10 +937,8 @@ func (this *Pattern) GetLinearPoints() (x0, y0, x1, y1 float64, status Status) {
 //                                                          double cy1,
 //                                                          double radius1);
 func NewPatternRadial(cx0, cy0, radius0, cx1, cy1, radius1 float64) *Pattern {
-	pattern := &Pattern{ C.cairo_pattern_create_radial(
-		C.double(cx0), C.double(cy0), C.double(radius0), C.double(cx1), C.double(cy1), C.double(radius1)) }
-	pattern.wrap()
-	return pattern
+	return PatternWrap(C.cairo_pattern_create_radial(
+		C.double(cx0), C.double(cy0), C.double(radius0), C.double(cx1), C.double(cy1), C.double(radius1)), false)
 }
 
 // cairo_status_t      cairo_pattern_get_radial_circles    (cairo_pattern_t *pattern,
@@ -1062,27 +1067,23 @@ func region_finalizer(this *Region) {
 	C.cairo_region_destroy(this.c)
 }
 
-func (this *Region) grab() {
-	C.cairo_region_reference(this.c)
-	this.wrap()
-}
-
-func (this *Region) wrap() {
-	runtime.SetFinalizer(this, region_finalizer)
+func RegionWrap(c *C.cairo_region_t, grab bool) *Region {
+	if grab {
+		C.cairo_region_reference(c)
+	}
+	region := &Region{ c }
+	runtime.SetFinalizer(region, region_finalizer)
+	return region
 }
 
 // cairo_region_t *    cairo_region_create                 (void);
 func NewRegion() *Region {
-	region := &Region{ C.cairo_region_create() }
-	region.wrap()
-	return region
+	return RegionWrap(C.cairo_region_create(), false)
 }
 
 // cairo_region_t *    cairo_region_create_rectangle       (const cairo_rectangle_int_t *rectangle);
 func NewRegionRectangle(rectangle *RectangleInt) *Region {
-	region := &Region{ C.cairo_region_create_rectangle(rectangle.c()) }
-	region.wrap()
-	return region
+	return RegionWrap(C.cairo_region_create_rectangle(rectangle.c()), false)
 }
 
 // cairo_region_t *    cairo_region_create_rectangles      (const cairo_rectangle_int_t *rects,
@@ -1093,16 +1094,12 @@ func NewRegionRectangles(rects []RectangleInt) *Region {
 	if count > 0 {
 		first = rects[0].c()
 	}
-	region := &Region{ C.cairo_region_create_rectangles(first, count) }
-	region.wrap()
-	return region
+	return RegionWrap(C.cairo_region_create_rectangles(first, count), false)
 }
 
 // cairo_region_t *    cairo_region_copy                   (const cairo_region_t *original);
 func (this *Region) Copy() *Region {
-	region := &Region{ C.cairo_region_copy(this.c) }
-	region.wrap()
-	return region
+	return RegionWrap(C.cairo_region_copy(this.c), false)
 }
 
 // cairo_region_t *    cairo_region_reference              (cairo_region_t *region);
@@ -1342,16 +1339,28 @@ type Surface struct {
 }
 
 func surface_finalizer(this *Surface) {
+	C.cairo_surface_set_user_data(this.c, &go_repr_cookie, nil, nil)
 	C.cairo_surface_destroy(this.c)
 }
 
-func (this *Surface) grab() {
-	C.cairo_surface_reference(this.c)
-	this.wrap()
-}
+func SurfaceWrap(c *C.cairo_surface_t, grab bool) *Surface {
+	go_repr := C.cairo_surface_get_user_data(c, &go_repr_cookie)
+	if go_repr != nil {
+		return (*Surface)(go_repr)
+	}
 
-func (this *Surface) wrap() {
-	runtime.SetFinalizer(this, surface_finalizer)
+	surface := &Surface{ c }
+	if grab {
+		C.cairo_pattern_reference(c)
+	}
+	runtime.SetFinalizer(surface, surface_finalizer)
+
+	status := C.cairo_surface_set_user_data(c, &go_repr_cookie, unsafe.Pointer(surface), nil)
+	if status != C.CAIRO_STATUS_SUCCESS {
+		panic("failed to set user data, out of memory?")
+	}
+	return surface
+
 }
 
 // enum                cairo_content_t;
@@ -1371,9 +1380,7 @@ func (this Content) c() C.cairo_content_t {
 //                                                          int width,
 //                                                          int height);
 func (this *Surface) CreateSimilar(content Content, width, height int) *Surface {
-	surface := &Surface{ C.cairo_surface_create_similar(this.c, content.c(), C.int(width), C.int(height)) }
-	surface.wrap()
-	return surface
+	return SurfaceWrap(C.cairo_surface_create_similar(this.c, content.c(), C.int(width), C.int(height)), false)
 }
 
 // cairo_surface_t *   cairo_surface_create_for_rectangle  (cairo_surface_t *target,
@@ -1382,10 +1389,8 @@ func (this *Surface) CreateSimilar(content Content, width, height int) *Surface 
 //                                                          double width,
 //                                                          double height);
 func (this *Surface) CreateForRectangle(x, y, width, height float64) *Surface {
-	surface := &Surface{ C.cairo_surface_create_for_rectangle(this.c,
-		C.double(x), C.double(y), C.double(width), C.double(height)) }
-	surface.wrap()
-	return surface
+	return SurfaceWrap(C.cairo_surface_create_for_rectangle(this.c,
+		C.double(x), C.double(y), C.double(width), C.double(height)), false)
 }
 
 // cairo_surface_t *   cairo_surface_reference             (cairo_surface_t *surface);
@@ -1566,9 +1571,7 @@ func (this Format) StrideForWidth(width int) int {
 //                                                          int width,
 //                                                          int height);
 func NewImageSurface(format Format, width, height int) *Surface {
-	surface := &Surface{ C.cairo_image_surface_create(format.c(), C.int(width), C.int(height)) }
-	surface.wrap()
-	return surface
+	return SurfaceWrap(C.cairo_image_surface_create(format.c(), C.int(width), C.int(height)), false)
 }
 
 // TODO: Implement this (need a way to keep GC from freeing the 'data')
@@ -1608,8 +1611,7 @@ func (this *Surface) GetStride() int {
 // cairo_surface_t *   cairo_image_surface_create_from_png (const char *filename);
 func NewImageSurfaceFromPNG(filename string) *Surface {
 	cfilename := C.CString(filename)
-	surface := &Surface{ C.cairo_image_surface_create_from_png(cfilename) }
-	surface.wrap()
+	surface := SurfaceWrap(C.cairo_image_surface_create_from_png(cfilename), false)
 	C.free(unsafe.Pointer(cfilename))
 	return surface
 }
@@ -1641,9 +1643,7 @@ func io_reader_wrapper(reader_up unsafe.Pointer, data_up unsafe.Pointer, length 
 //                                                         (cairo_read_func_t read_func,
 //                                                          void *closure);
 func NewImageSurfaceFromPNGStream(r io.Reader) *Surface {
-	surface := &Surface{ C._cairo_image_surface_create_from_png_stream(unsafe.Pointer(&r)) }
-	surface.wrap()
-	return surface
+	return SurfaceWrap(C._cairo_image_surface_create_from_png_stream(unsafe.Pointer(&r)), false)
 }
 
 // cairo_status_t      cairo_surface_write_to_png          (cairo_surface_t *surface,
