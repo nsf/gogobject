@@ -34,13 +34,13 @@ import "io"
 var go_repr_cookie C.cairo_user_data_key_t
 
 type RectangleInt struct {
-	X int32
-	Y int32
-	Width int32
+	X      int32
+	Y      int32
+	Width  int32
 	Height int32
 }
 
-func (this *RectangleInt) C() *C.cairo_rectangle_int_t {
+func (this *RectangleInt) c() *C.cairo_rectangle_int_t {
 	return (*C.cairo_rectangle_int_t)(unsafe.Pointer(this))
 }
 
@@ -49,52 +49,53 @@ func (this *RectangleInt) C() *C.cairo_rectangle_int_t {
 //----------------------------------------------------------------------------
 
 type Status int
+
 const (
-	StatusSuccess Status			 = C.CAIRO_STATUS_SUCCESS
-	StatusNoMemory Status			 = C.CAIRO_STATUS_NO_MEMORY
-	StatusInvalidRestore Status		 = C.CAIRO_STATUS_INVALID_RESTORE
-	StatusInvalidPopGroup Status		 = C.CAIRO_STATUS_INVALID_POP_GROUP
-	StatusNoCurrentPoint Status		 = C.CAIRO_STATUS_NO_CURRENT_POINT
-	StatusInvalidMatrix Status		 = C.CAIRO_STATUS_INVALID_MATRIX
-	StatusInvalidStatus Status		 = C.CAIRO_STATUS_INVALID_STATUS
-	StatusNullPointer Status		 = C.CAIRO_STATUS_NULL_POINTER
-	StatusInvalidString Status		 = C.CAIRO_STATUS_INVALID_STRING
-	StatusInvalidPathData Status		 = C.CAIRO_STATUS_INVALID_PATH_DATA
-	StatusReadError Status			 = C.CAIRO_STATUS_READ_ERROR
-	StatusWriteError Status			 = C.CAIRO_STATUS_WRITE_ERROR
-	StatusSurfaceFinished Status		 = C.CAIRO_STATUS_SURFACE_FINISHED
-	StatusSurfaceTypeMismatch Status	 = C.CAIRO_STATUS_SURFACE_TYPE_MISMATCH
-	StatusPatternTypeMismatch Status	 = C.CAIRO_STATUS_PATTERN_TYPE_MISMATCH
-	StatusInvalidContent Status		 = C.CAIRO_STATUS_INVALID_CONTENT
-	StatusInvalidFormat Status		 = C.CAIRO_STATUS_INVALID_FORMAT
-	StatusInvalidVisual Status		 = C.CAIRO_STATUS_INVALID_VISUAL
-	StatusFileNotFound Status		 = C.CAIRO_STATUS_FILE_NOT_FOUND
-	StatusInvalidDash Status		 = C.CAIRO_STATUS_INVALID_DASH
-	StatusInvalidDscComment Status		 = C.CAIRO_STATUS_INVALID_DSC_COMMENT
-	StatusInvalidIndex Status		 = C.CAIRO_STATUS_INVALID_INDEX
-	StatusClipNotRepresentable Status	 = C.CAIRO_STATUS_CLIP_NOT_REPRESENTABLE
-	StatusTempFileError Status		 = C.CAIRO_STATUS_TEMP_FILE_ERROR
-	StatusInvalidStride Status		 = C.CAIRO_STATUS_INVALID_STRIDE
-	StatusFontTypeMismatch Status		 = C.CAIRO_STATUS_FONT_TYPE_MISMATCH
-	StatusUserFontImmutable Status		 = C.CAIRO_STATUS_USER_FONT_IMMUTABLE
-	StatusUserFontError Status		 = C.CAIRO_STATUS_USER_FONT_ERROR
-	StatusNegativeCount Status		 = C.CAIRO_STATUS_NEGATIVE_COUNT
-	StatusInvalidClusters Status		 = C.CAIRO_STATUS_INVALID_CLUSTERS
-	StatusInvalidSlant Status		 = C.CAIRO_STATUS_INVALID_SLANT
-	StatusInvalidWeight Status		 = C.CAIRO_STATUS_INVALID_WEIGHT
-	StatusInvalidSize Status		 = C.CAIRO_STATUS_INVALID_SIZE
-	StatusUserFontNotImplemented Status	 = C.CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED
-	StatusDeviceTypeMismatch Status		 = C.CAIRO_STATUS_DEVICE_TYPE_MISMATCH
-	StatusDeviceError Status		 = C.CAIRO_STATUS_DEVICE_ERROR
-	StatusLastStatus Status			 = C.CAIRO_STATUS_LAST_STATUS
+	StatusSuccess                Status = C.CAIRO_STATUS_SUCCESS
+	StatusNoMemory               Status = C.CAIRO_STATUS_NO_MEMORY
+	StatusInvalidRestore         Status = C.CAIRO_STATUS_INVALID_RESTORE
+	StatusInvalidPopGroup        Status = C.CAIRO_STATUS_INVALID_POP_GROUP
+	StatusNoCurrentPoint         Status = C.CAIRO_STATUS_NO_CURRENT_POINT
+	StatusInvalidMatrix          Status = C.CAIRO_STATUS_INVALID_MATRIX
+	StatusInvalidStatus          Status = C.CAIRO_STATUS_INVALID_STATUS
+	StatusNullPointer            Status = C.CAIRO_STATUS_NULL_POINTER
+	StatusInvalidString          Status = C.CAIRO_STATUS_INVALID_STRING
+	StatusInvalidPathData        Status = C.CAIRO_STATUS_INVALID_PATH_DATA
+	StatusReadError              Status = C.CAIRO_STATUS_READ_ERROR
+	StatusWriteError             Status = C.CAIRO_STATUS_WRITE_ERROR
+	StatusSurfaceFinished        Status = C.CAIRO_STATUS_SURFACE_FINISHED
+	StatusSurfaceTypeMismatch    Status = C.CAIRO_STATUS_SURFACE_TYPE_MISMATCH
+	StatusPatternTypeMismatch    Status = C.CAIRO_STATUS_PATTERN_TYPE_MISMATCH
+	StatusInvalidContent         Status = C.CAIRO_STATUS_INVALID_CONTENT
+	StatusInvalidFormat          Status = C.CAIRO_STATUS_INVALID_FORMAT
+	StatusInvalidVisual          Status = C.CAIRO_STATUS_INVALID_VISUAL
+	StatusFileNotFound           Status = C.CAIRO_STATUS_FILE_NOT_FOUND
+	StatusInvalidDash            Status = C.CAIRO_STATUS_INVALID_DASH
+	StatusInvalidDscComment      Status = C.CAIRO_STATUS_INVALID_DSC_COMMENT
+	StatusInvalidIndex           Status = C.CAIRO_STATUS_INVALID_INDEX
+	StatusClipNotRepresentable   Status = C.CAIRO_STATUS_CLIP_NOT_REPRESENTABLE
+	StatusTempFileError          Status = C.CAIRO_STATUS_TEMP_FILE_ERROR
+	StatusInvalidStride          Status = C.CAIRO_STATUS_INVALID_STRIDE
+	StatusFontTypeMismatch       Status = C.CAIRO_STATUS_FONT_TYPE_MISMATCH
+	StatusUserFontImmutable      Status = C.CAIRO_STATUS_USER_FONT_IMMUTABLE
+	StatusUserFontError          Status = C.CAIRO_STATUS_USER_FONT_ERROR
+	StatusNegativeCount          Status = C.CAIRO_STATUS_NEGATIVE_COUNT
+	StatusInvalidClusters        Status = C.CAIRO_STATUS_INVALID_CLUSTERS
+	StatusInvalidSlant           Status = C.CAIRO_STATUS_INVALID_SLANT
+	StatusInvalidWeight          Status = C.CAIRO_STATUS_INVALID_WEIGHT
+	StatusInvalidSize            Status = C.CAIRO_STATUS_INVALID_SIZE
+	StatusUserFontNotImplemented Status = C.CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED
+	StatusDeviceTypeMismatch     Status = C.CAIRO_STATUS_DEVICE_TYPE_MISMATCH
+	StatusDeviceError            Status = C.CAIRO_STATUS_DEVICE_ERROR
+	StatusLastStatus             Status = C.CAIRO_STATUS_LAST_STATUS
 )
 
-func (this Status) C() C.cairo_status_t {
+func (this Status) c() C.cairo_status_t {
 	return C.cairo_status_t(this)
 }
 
 func (this Status) String() string {
-	cstr := C.cairo_status_to_string(this.C())
+	cstr := C.cairo_status_to_string(this.c())
 	return C.GoString(cstr)
 }
 
@@ -118,7 +119,7 @@ func ContextWrap(c *C.cairo_t, grab bool) *Context {
 		return (*Context)(go_repr)
 	}
 
-	context := &Context{ c }
+	context := &Context{c}
 	if grab {
 		C.cairo_reference(c)
 	}
@@ -167,7 +168,7 @@ func (this *Context) PushGroup() {
 // void                cairo_push_group_with_content       (cairo_t *cr,
 //                                                          cairo_content_t content);
 func (this *Context) PushGroupWithContent(content Content) {
-	C.cairo_push_group_with_content(this.C, content.C())
+	C.cairo_push_group_with_content(this.C, content.c())
 }
 
 // cairo_pattern_t *   cairo_pop_group                     (cairo_t *cr);
@@ -223,21 +224,22 @@ func (this *Context) GetSource() *Pattern {
 
 // enum                cairo_antialias_t;
 type Antialias int
+
 const (
-	AntialiasDefault Antialias	 = C.CAIRO_ANTIALIAS_DEFAULT
-	AntialiasNone Antialias		 = C.CAIRO_ANTIALIAS_NONE
-	AntialiasGray Antialias		 = C.CAIRO_ANTIALIAS_GRAY
-	AntialiasSubpixel Antialias	 = C.CAIRO_ANTIALIAS_SUBPIXEL
+	AntialiasDefault  Antialias = C.CAIRO_ANTIALIAS_DEFAULT
+	AntialiasNone     Antialias = C.CAIRO_ANTIALIAS_NONE
+	AntialiasGray     Antialias = C.CAIRO_ANTIALIAS_GRAY
+	AntialiasSubpixel Antialias = C.CAIRO_ANTIALIAS_SUBPIXEL
 )
 
-func (this Antialias) C() C.cairo_antialias_t {
+func (this Antialias) c() C.cairo_antialias_t {
 	return C.cairo_antialias_t(this)
 }
 
 // void                cairo_set_antialias                 (cairo_t *cr,
 //                                                          cairo_antialias_t antialias);
 func (this *Context) SetAntialias(antialias Antialias) {
-	C.cairo_set_antialias(this.C, antialias.C())
+	C.cairo_set_antialias(this.C, antialias.c())
 }
 
 // cairo_antialias_t   cairo_get_antialias                 (cairo_t *cr);
@@ -281,19 +283,20 @@ func (this *Context) GetDash() ([]float64, float64) {
 
 // enum                cairo_fill_rule_t;
 type FillRule int
+
 const (
 	FillRuleWinding FillRule = C.CAIRO_FILL_RULE_WINDING
 	FillRuleEvenOdd FillRule = C.CAIRO_FILL_RULE_EVEN_ODD
 )
 
-func (this FillRule) C() C.cairo_fill_rule_t {
+func (this FillRule) c() C.cairo_fill_rule_t {
 	return C.cairo_fill_rule_t(this)
 }
 
 // void                cairo_set_fill_rule                 (cairo_t *cr,
 //                                                          cairo_fill_rule_t fill_rule);
 func (this *Context) SetFillRule(fill_rule FillRule) {
-	C.cairo_set_fill_rule(this.C, fill_rule.C())
+	C.cairo_set_fill_rule(this.C, fill_rule.c())
 }
 
 // cairo_fill_rule_t   cairo_get_fill_rule                 (cairo_t *cr);
@@ -303,20 +306,21 @@ func (this *Context) GetFillRule() FillRule {
 
 // enum                cairo_line_cap_t;
 type LineCap int
+
 const (
-	LineCapButt LineCap	 = C.CAIRO_LINE_CAP_BUTT
-	LineCapRound LineCap	 = C.CAIRO_LINE_CAP_ROUND
-	LineCapSquare LineCap	 = C.CAIRO_LINE_CAP_SQUARE
+	LineCapButt   LineCap = C.CAIRO_LINE_CAP_BUTT
+	LineCapRound  LineCap = C.CAIRO_LINE_CAP_ROUND
+	LineCapSquare LineCap = C.CAIRO_LINE_CAP_SQUARE
 )
 
-func (this LineCap) C() C.cairo_line_cap_t {
+func (this LineCap) c() C.cairo_line_cap_t {
 	return C.cairo_line_cap_t(this)
 }
 
 // void                cairo_set_line_cap                  (cairo_t *cr,
 //                                                          cairo_line_cap_t line_cap);
 func (this *Context) SetLineCap(line_cap LineCap) {
-	C.cairo_set_line_cap(this.C, line_cap.C())
+	C.cairo_set_line_cap(this.C, line_cap.c())
 }
 
 // cairo_line_cap_t    cairo_get_line_cap                  (cairo_t *cr);
@@ -326,20 +330,21 @@ func (this *Context) GetLineCap() LineCap {
 
 // enum                cairo_line_join_t;
 type LineJoin int
+
 const (
 	LineJoinMiter LineJoin = C.CAIRO_LINE_JOIN_MITER
 	LineJoinRound LineJoin = C.CAIRO_LINE_JOIN_ROUND
 	LineJoinBevel LineJoin = C.CAIRO_LINE_JOIN_BEVEL
 )
 
-func (this LineJoin) C() C.cairo_line_join_t {
+func (this LineJoin) c() C.cairo_line_join_t {
 	return C.cairo_line_join_t(this)
 }
 
 // void                cairo_set_line_join                 (cairo_t *cr,
 //                                                          cairo_line_join_t line_join);
 func (this *Context) SetLineJoin(line_join LineJoin) {
-	C.cairo_set_line_join(this.C, line_join.C())
+	C.cairo_set_line_join(this.C, line_join.c())
 }
 
 // cairo_line_join_t   cairo_get_line_join                 (cairo_t *cr);
@@ -371,46 +376,47 @@ func (this *Context) GetMiterLimit() float64 {
 
 // enum                cairo_operator_t;
 type Operator int
+
 const (
-	OperatorClear Operator		 = C.CAIRO_OPERATOR_CLEAR
-	OperatorSource Operator		 = C.CAIRO_OPERATOR_SOURCE
-	OperatorOver Operator		 = C.CAIRO_OPERATOR_OVER
-	OperatorIn Operator		 = C.CAIRO_OPERATOR_IN
-	OperatorOut Operator		 = C.CAIRO_OPERATOR_OUT
-	OperatorAtop Operator		 = C.CAIRO_OPERATOR_ATOP
-	OperatorDest Operator		 = C.CAIRO_OPERATOR_DEST
-	OperatorDestOver Operator	 = C.CAIRO_OPERATOR_DEST_OVER
-	OperatorDestIn Operator		 = C.CAIRO_OPERATOR_DEST_IN
-	OperatorDestOut Operator	 = C.CAIRO_OPERATOR_DEST_OUT
-	OperatorDestAtop Operator	 = C.CAIRO_OPERATOR_DEST_ATOP
-	OperatorXor Operator		 = C.CAIRO_OPERATOR_XOR
-	OperatorAdd Operator		 = C.CAIRO_OPERATOR_ADD
-	OperatorSaturate Operator	 = C.CAIRO_OPERATOR_SATURATE
-	OperatorMultiply Operator	 = C.CAIRO_OPERATOR_MULTIPLY
-	OperatorScreen Operator		 = C.CAIRO_OPERATOR_SCREEN
-	OperatorOverlay Operator	 = C.CAIRO_OPERATOR_OVERLAY
-	OperatorDarken Operator		 = C.CAIRO_OPERATOR_DARKEN
-	OperatorLighten Operator	 = C.CAIRO_OPERATOR_LIGHTEN
-	OperatorColorDodge Operator	 = C.CAIRO_OPERATOR_COLOR_DODGE
-	OperatorColorBurn Operator	 = C.CAIRO_OPERATOR_COLOR_BURN
-	OperatorHardLight Operator	 = C.CAIRO_OPERATOR_HARD_LIGHT
-	OperatorSoftLight Operator	 = C.CAIRO_OPERATOR_SOFT_LIGHT
-	OperatorDifference Operator	 = C.CAIRO_OPERATOR_DIFFERENCE
-	OperatorExclusion Operator	 = C.CAIRO_OPERATOR_EXCLUSION
-	OperatorHslHue Operator		 = C.CAIRO_OPERATOR_HSL_HUE
-	OperatorHslSaturation Operator	 = C.CAIRO_OPERATOR_HSL_SATURATION
-	OperatorHslColor Operator	 = C.CAIRO_OPERATOR_HSL_COLOR
-	OperatorHslLuminosity Operator	 = C.CAIRO_OPERATOR_HSL_LUMINOSITY
+	OperatorClear         Operator = C.CAIRO_OPERATOR_CLEAR
+	OperatorSource        Operator = C.CAIRO_OPERATOR_SOURCE
+	OperatorOver          Operator = C.CAIRO_OPERATOR_OVER
+	OperatorIn            Operator = C.CAIRO_OPERATOR_IN
+	OperatorOut           Operator = C.CAIRO_OPERATOR_OUT
+	OperatorAtop          Operator = C.CAIRO_OPERATOR_ATOP
+	OperatorDest          Operator = C.CAIRO_OPERATOR_DEST
+	OperatorDestOver      Operator = C.CAIRO_OPERATOR_DEST_OVER
+	OperatorDestIn        Operator = C.CAIRO_OPERATOR_DEST_IN
+	OperatorDestOut       Operator = C.CAIRO_OPERATOR_DEST_OUT
+	OperatorDestAtop      Operator = C.CAIRO_OPERATOR_DEST_ATOP
+	OperatorXor           Operator = C.CAIRO_OPERATOR_XOR
+	OperatorAdd           Operator = C.CAIRO_OPERATOR_ADD
+	OperatorSaturate      Operator = C.CAIRO_OPERATOR_SATURATE
+	OperatorMultiply      Operator = C.CAIRO_OPERATOR_MULTIPLY
+	OperatorScreen        Operator = C.CAIRO_OPERATOR_SCREEN
+	OperatorOverlay       Operator = C.CAIRO_OPERATOR_OVERLAY
+	OperatorDarken        Operator = C.CAIRO_OPERATOR_DARKEN
+	OperatorLighten       Operator = C.CAIRO_OPERATOR_LIGHTEN
+	OperatorColorDodge    Operator = C.CAIRO_OPERATOR_COLOR_DODGE
+	OperatorColorBurn     Operator = C.CAIRO_OPERATOR_COLOR_BURN
+	OperatorHardLight     Operator = C.CAIRO_OPERATOR_HARD_LIGHT
+	OperatorSoftLight     Operator = C.CAIRO_OPERATOR_SOFT_LIGHT
+	OperatorDifference    Operator = C.CAIRO_OPERATOR_DIFFERENCE
+	OperatorExclusion     Operator = C.CAIRO_OPERATOR_EXCLUSION
+	OperatorHslHue        Operator = C.CAIRO_OPERATOR_HSL_HUE
+	OperatorHslSaturation Operator = C.CAIRO_OPERATOR_HSL_SATURATION
+	OperatorHslColor      Operator = C.CAIRO_OPERATOR_HSL_COLOR
+	OperatorHslLuminosity Operator = C.CAIRO_OPERATOR_HSL_LUMINOSITY
 )
 
-func (this Operator) C() C.cairo_operator_t {
+func (this Operator) c() C.cairo_operator_t {
 	return C.cairo_operator_t(this)
 }
 
 // void                cairo_set_operator                  (cairo_t *cr,
 //                                                          cairo_operator_t op);
 func (this *Context) SetOperator(op Operator) {
-	C.cairo_set_operator(this.C, op.C())
+	C.cairo_set_operator(this.C, op.c())
 }
 
 // cairo_operator_t    cairo_get_operator                  (cairo_t *cr);
@@ -614,7 +620,7 @@ func path_finalizer(this *Path) {
 }
 
 func PathWrap(c *C.cairo_path_t) *Path {
-	path := &Path{ c }
+	path := &Path{c}
 	runtime.SetFinalizer(path, path_finalizer)
 	return path
 }
@@ -624,11 +630,12 @@ func PathWrap(c *C.cairo_path_t) *Path {
 
 // enum                cairo_path_data_type_t;
 type PathDataType int
+
 const (
-	PathMoveTo PathDataType		 = C.CAIRO_PATH_MOVE_TO
-	PathLineTo PathDataType		 = C.CAIRO_PATH_LINE_TO
-	PathCurveTo PathDataType	 = C.CAIRO_PATH_CURVE_TO
-	PathClosePath PathDataType	 = C.CAIRO_PATH_CLOSE_PATH
+	PathMoveTo    PathDataType = C.CAIRO_PATH_MOVE_TO
+	PathLineTo    PathDataType = C.CAIRO_PATH_LINE_TO
+	PathCurveTo   PathDataType = C.CAIRO_PATH_CURVE_TO
+	PathClosePath PathDataType = C.CAIRO_PATH_CLOSE_PATH
 )
 
 // cairo_path_t *      cairo_copy_path                     (cairo_t *cr);
@@ -794,15 +801,17 @@ func (this *Context) PathExtents() (x1, y1, x2, y2 float64) {
 // 		RadialGradient
 //----------------------------------------------------------------------------
 
-type PatternLike interface { InheritedFromCairoPattern() *C.cairo_pattern_t }
+type PatternLike interface {
+	InheritedFromCairoPattern() *C.cairo_pattern_t
+}
 
 // typedef             cairo_pattern_t;
-type Pattern struct { C *C.cairo_pattern_t }
-type SolidPattern struct { Pattern }
-type SurfacePattern struct { Pattern }
-type Gradient struct { Pattern }
-type LinearGradient struct { Gradient }
-type RadialGradient struct { Gradient }
+type Pattern struct{ C *C.cairo_pattern_t }
+type SolidPattern struct{ Pattern }
+type SurfacePattern struct{ Pattern }
+type Gradient struct{ Pattern }
+type LinearGradient struct{ Gradient }
+type RadialGradient struct{ Gradient }
 
 func pattern_finalizer(this *Pattern) {
 	C.cairo_pattern_set_user_data(this.C, &go_repr_cookie, nil, nil)
@@ -815,7 +824,7 @@ func PatternWrap(c *C.cairo_pattern_t, grab bool) unsafe.Pointer {
 		return unsafe.Pointer(go_repr)
 	}
 
-	pattern := &Pattern{ c }
+	pattern := &Pattern{c}
 	if grab {
 		C.cairo_pattern_reference(c)
 	}
@@ -830,7 +839,7 @@ func PatternWrap(c *C.cairo_pattern_t, grab bool) unsafe.Pointer {
 
 func ensure_pattern_type(c *C.cairo_pattern_t, types ...PatternType) {
 	for _, t := range types {
-		if C.cairo_pattern_get_type(c) == t.C() {
+		if C.cairo_pattern_get_type(c) == t.c() {
 			return
 		}
 	}
@@ -1026,21 +1035,22 @@ func (this *Pattern) Status() Status {
 
 // enum                cairo_extend_t;
 type Extend int
+
 const (
-	ExtendNone Extend	 = C.CAIRO_EXTEND_NONE
-	ExtendRepeat Extend	 = C.CAIRO_EXTEND_REPEAT
-	ExtendReflect Extend	 = C.CAIRO_EXTEND_REFLECT
-	ExtendPad Extend	 = C.CAIRO_EXTEND_PAD
+	ExtendNone    Extend = C.CAIRO_EXTEND_NONE
+	ExtendRepeat  Extend = C.CAIRO_EXTEND_REPEAT
+	ExtendReflect Extend = C.CAIRO_EXTEND_REFLECT
+	ExtendPad     Extend = C.CAIRO_EXTEND_PAD
 )
 
-func (this Extend) C() C.cairo_extend_t {
+func (this Extend) c() C.cairo_extend_t {
 	return C.cairo_extend_t(this)
 }
 
 // void                cairo_pattern_set_extend            (cairo_pattern_t *pattern,
 //                                                          cairo_extend_t extend);
 func (this *SurfacePattern) SetExtend(extend Extend) {
-	C.cairo_pattern_set_extend(this.C, extend.C())
+	C.cairo_pattern_set_extend(this.C, extend.c())
 }
 
 // cairo_extend_t      cairo_pattern_get_extend            (cairo_pattern_t *pattern);
@@ -1050,23 +1060,24 @@ func (this *SurfacePattern) GetExtend() Extend {
 
 // enum                cairo_filter_t;
 type Filter int
+
 const (
-	FilterFast Filter	 = C.CAIRO_FILTER_FAST
-	FilterGood Filter	 = C.CAIRO_FILTER_GOOD
-	FilterBest Filter	 = C.CAIRO_FILTER_BEST
-	FilterNearest Filter	 = C.CAIRO_FILTER_NEAREST
-	FilterBilinear Filter	 = C.CAIRO_FILTER_BILINEAR
-	FilterGaussian Filter	 = C.CAIRO_FILTER_GAUSSIAN
+	FilterFast     Filter = C.CAIRO_FILTER_FAST
+	FilterGood     Filter = C.CAIRO_FILTER_GOOD
+	FilterBest     Filter = C.CAIRO_FILTER_BEST
+	FilterNearest  Filter = C.CAIRO_FILTER_NEAREST
+	FilterBilinear Filter = C.CAIRO_FILTER_BILINEAR
+	FilterGaussian Filter = C.CAIRO_FILTER_GAUSSIAN
 )
 
-func (this Filter) C() C.cairo_filter_t {
+func (this Filter) c() C.cairo_filter_t {
 	return C.cairo_filter_t(this)
 }
 
 // void                cairo_pattern_set_filter            (cairo_pattern_t *pattern,
 //                                                          cairo_filter_t filter);
 func (this *SurfacePattern) SetFilter(filter Filter) {
-	C.cairo_pattern_set_filter(this.C, filter.C())
+	C.cairo_pattern_set_filter(this.C, filter.c())
 }
 
 // cairo_filter_t      cairo_pattern_get_filter            (cairo_pattern_t *pattern);
@@ -1077,7 +1088,7 @@ func (this *SurfacePattern) GetFilter() Filter {
 // void                cairo_pattern_set_matrix            (cairo_pattern_t *pattern,
 //                                                          const cairo_matrix_t *matrix);
 func (this *Pattern) SetMatrix(matrix *Matrix) {
-	C.cairo_pattern_set_matrix(this.C, matrix.C())
+	C.cairo_pattern_set_matrix(this.C, matrix.c())
 }
 
 // void                cairo_pattern_get_matrix            (cairo_pattern_t *pattern,
@@ -1090,14 +1101,15 @@ func (this *Pattern) GetMatrix() Matrix {
 
 // enum                cairo_pattern_type_t;
 type PatternType int
+
 const (
-	PatternTypeSolid PatternType	 = C.CAIRO_PATTERN_TYPE_SOLID
-	PatternTypeSurface PatternType	 = C.CAIRO_PATTERN_TYPE_SURFACE
-	PatternTypeLinear PatternType	 = C.CAIRO_PATTERN_TYPE_LINEAR
-	PatternTypeRadial PatternType	 = C.CAIRO_PATTERN_TYPE_RADIAL
+	PatternTypeSolid   PatternType = C.CAIRO_PATTERN_TYPE_SOLID
+	PatternTypeSurface PatternType = C.CAIRO_PATTERN_TYPE_SURFACE
+	PatternTypeLinear  PatternType = C.CAIRO_PATTERN_TYPE_LINEAR
+	PatternTypeRadial  PatternType = C.CAIRO_PATTERN_TYPE_RADIAL
 )
 
-func (this PatternType) C() C.cairo_pattern_type_t {
+func (this PatternType) c() C.cairo_pattern_type_t {
 	return C.cairo_pattern_type_t(this)
 }
 
@@ -1132,7 +1144,7 @@ func RegionWrap(c *C.cairo_region_t, grab bool) *Region {
 	if grab {
 		C.cairo_region_reference(c)
 	}
-	region := &Region{ c }
+	region := &Region{c}
 	runtime.SetFinalizer(region, region_finalizer)
 	return region
 }
@@ -1144,7 +1156,7 @@ func NewRegion() *Region {
 
 // cairo_region_t *    cairo_region_create_rectangle       (const cairo_rectangle_int_t *rectangle);
 func NewRegionRectangle(rectangle *RectangleInt) *Region {
-	return RegionWrap(C.cairo_region_create_rectangle(rectangle.C()), false)
+	return RegionWrap(C.cairo_region_create_rectangle(rectangle.c()), false)
 }
 
 // cairo_region_t *    cairo_region_create_rectangles      (const cairo_rectangle_int_t *rects,
@@ -1153,7 +1165,7 @@ func NewRegionRectangles(rects []RectangleInt) *Region {
 	var first *C.cairo_rectangle_int_t
 	count := C.int(len(rects))
 	if count > 0 {
-		first = rects[0].C()
+		first = rects[0].c()
 	}
 	return RegionWrap(C.cairo_region_create_rectangles(first, count), false)
 }
@@ -1174,7 +1186,7 @@ func (this *Region) Status() Status {
 // void                cairo_region_get_extents            (const cairo_region_t *region,
 //                                                          cairo_rectangle_int_t *extents);
 func (this *Region) GetExtents() (extents RectangleInt) {
-	C.cairo_region_get_extents(this.C, extents.C())
+	C.cairo_region_get_extents(this.C, extents.c())
 	return
 }
 
@@ -1187,7 +1199,7 @@ func (this *Region) NumRectangles() int {
 //                                                          int nth,
 //                                                          cairo_rectangle_int_t *rectangle);
 func (this *Region) GetRectangle(nth int) (rectangle RectangleInt) {
-	C.cairo_region_get_rectangle(this.C, C.int(nth), rectangle.C())
+	C.cairo_region_get_rectangle(this.C, C.int(nth), rectangle.c())
 	return
 }
 
@@ -1205,16 +1217,17 @@ func (this *Region) ContainsPoint(x, y int) bool {
 
 // enum                cairo_region_overlap_t;
 type RegionOverlap int
+
 const (
-	RegionOverlapIn RegionOverlap	 = C.CAIRO_REGION_OVERLAP_IN		/* completely inside region */
-	RegionOverlapOut RegionOverlap	 = C.CAIRO_REGION_OVERLAP_OUT		/* completely outside region */
-	RegionOverlapPart RegionOverlap	 = C.CAIRO_REGION_OVERLAP_PART		/* partly inside region */
+	RegionOverlapIn   RegionOverlap = C.CAIRO_REGION_OVERLAP_IN   /* completely inside region */
+	RegionOverlapOut  RegionOverlap = C.CAIRO_REGION_OVERLAP_OUT  /* completely outside region */
+	RegionOverlapPart RegionOverlap = C.CAIRO_REGION_OVERLAP_PART /* partly inside region */
 )
 
 // cairo_region_overlap_t  cairo_region_contains_rectangle (const cairo_region_t *region,
 //                                                          const cairo_rectangle_int_t *rectangle);
 func (this *Region) ContainsRectangle(rectangle *RectangleInt) RegionOverlap {
-	return RegionOverlap(C.cairo_region_contains_rectangle(this.C, rectangle.C()))
+	return RegionOverlap(C.cairo_region_contains_rectangle(this.C, rectangle.c()))
 }
 
 // cairo_bool_t        cairo_region_equal                  (const cairo_region_t *a,
@@ -1239,7 +1252,7 @@ func (this *Region) Intersect(other *Region) Status {
 // cairo_status_t      cairo_region_intersect_rectangle    (cairo_region_t *dst,
 //                                                          const cairo_rectangle_int_t *rectangle);
 func (this *Region) IntersectRectangle(rectangle *RectangleInt) Status {
-	return Status(C.cairo_region_intersect_rectangle(this.C, rectangle.C()))
+	return Status(C.cairo_region_intersect_rectangle(this.C, rectangle.c()))
 }
 
 // cairo_status_t      cairo_region_subtract               (cairo_region_t *dst,
@@ -1251,7 +1264,7 @@ func (this *Region) Subtract(other *Region) Status {
 // cairo_status_t      cairo_region_subtract_rectangle     (cairo_region_t *dst,
 //                                                          const cairo_rectangle_int_t *rectangle);
 func (this *Region) SubtractRectangle(rectangle *RectangleInt) Status {
-	return Status(C.cairo_region_subtract_rectangle(this.C, rectangle.C()))
+	return Status(C.cairo_region_subtract_rectangle(this.C, rectangle.c()))
 }
 
 // cairo_status_t      cairo_region_union                  (cairo_region_t *dst,
@@ -1263,7 +1276,7 @@ func (this *Region) Union(other *Region) Status {
 // cairo_status_t      cairo_region_union_rectangle        (cairo_region_t *dst,
 //                                                          const cairo_rectangle_int_t *rectangle);
 func (this *Region) UnionRectangle(rectangle *RectangleInt) Status {
-	return Status(C.cairo_region_union_rectangle(this.C, rectangle.C()))
+	return Status(C.cairo_region_union_rectangle(this.C, rectangle.c()))
 }
 
 // cairo_status_t      cairo_region_xor                    (cairo_region_t *dst,
@@ -1275,7 +1288,7 @@ func (this *Region) Xor(other *Region) Status {
 // cairo_status_t      cairo_region_xor_rectangle          (cairo_region_t *dst,
 //                                                          const cairo_rectangle_int_t *rectangle);
 func (this *Region) XorRectangle(rectangle *RectangleInt) Status {
-	return Status(C.cairo_region_xor_rectangle(this.C, rectangle.C()))
+	return Status(C.cairo_region_xor_rectangle(this.C, rectangle.c()))
 }
 
 //----------------------------------------------------------------------------
@@ -1305,13 +1318,13 @@ func (this *Context) Rotate(angle float64) {
 // void                cairo_transform                     (cairo_t *cr,
 //                                                          const cairo_matrix_t *matrix);
 func (this *Context) Transform(matrix *Matrix) {
-	C.cairo_transform(this.C, matrix.C())
+	C.cairo_transform(this.C, matrix.c())
 }
 
 // void                cairo_set_matrix                    (cairo_t *cr,
 //                                                          const cairo_matrix_t *matrix);
 func (this *Context) SetMatrix(matrix *Matrix) {
-	C.cairo_set_matrix(this.C, matrix.C())
+	C.cairo_set_matrix(this.C, matrix.c())
 }
 
 // void                cairo_get_matrix                    (cairo_t *cr,
@@ -1374,41 +1387,44 @@ func (this *Context) DeviceToUserDistance(dx, dy float64) (float64, float64) {
 //                     cairo_glyph_t;
 // type Glyph (see types_$GOARCH.go)
 
-func (this *Glyph) C() *C.cairo_glyph_t {
+func (this *Glyph) c() *C.cairo_glyph_t {
 	return (*C.cairo_glyph_t)(unsafe.Pointer(this))
 }
 
 // enum                cairo_font_slant_t;
 type FontSlant int
+
 const (
-	FontSlantNormal FontSlant	 = C.CAIRO_FONT_SLANT_NORMAL
-	FontSlantItalic FontSlant	 = C.CAIRO_FONT_SLANT_ITALIC
-	FontSlantOblique FontSlant	 = C.CAIRO_FONT_SLANT_OBLIQUE
+	FontSlantNormal  FontSlant = C.CAIRO_FONT_SLANT_NORMAL
+	FontSlantItalic  FontSlant = C.CAIRO_FONT_SLANT_ITALIC
+	FontSlantOblique FontSlant = C.CAIRO_FONT_SLANT_OBLIQUE
 )
 
-func (this FontSlant) C() C.cairo_font_slant_t {
+func (this FontSlant) c() C.cairo_font_slant_t {
 	return C.cairo_font_slant_t(this)
 }
 
 // enum                cairo_font_weight_t;
 type FontWeight int
+
 const (
 	FontWeightNormal FontWeight = C.CAIRO_FONT_WEIGHT_NORMAL
-	FontWeightBold FontWeight = C.CAIRO_FONT_WEIGHT_BOLD
+	FontWeightBold   FontWeight = C.CAIRO_FONT_WEIGHT_BOLD
 )
 
-func (this FontWeight) C() C.cairo_font_weight_t {
+func (this FontWeight) c() C.cairo_font_weight_t {
 	return C.cairo_font_weight_t(this)
 }
 
 //                     cairo_text_cluster_t;
 type TextCluster struct {
-	NumBytes int32
+	NumBytes  int32
 	NumGlyphs int32
 }
 
 // enum                cairo_text_cluster_flags_t;
 type TextClusterFlags int
+
 const (
 	TextClusterFlagBackward TextClusterFlags = C.CAIRO_TEXT_CLUSTER_FLAG_BACKWARD
 )
@@ -1419,7 +1435,7 @@ const (
 //                                                          cairo_font_weight_t weight);
 func (this *Context) SelectFontFace(family string, slant FontSlant, weight FontWeight) {
 	cfamily := C.CString(family)
-	C.cairo_select_font_face(this.C, cfamily, slant.C(), weight.C())
+	C.cairo_select_font_face(this.C, cfamily, slant.c(), weight.c())
 	C.free(unsafe.Pointer(cfamily))
 }
 
@@ -1432,14 +1448,14 @@ func (this *Context) SetFontSize(size float64) {
 // void                cairo_set_font_matrix               (cairo_t *cr,
 //                                                          const cairo_matrix_t *matrix);
 func (this *Context) SetFontMatrix(matrix *Matrix) {
-	C.cairo_set_font_matrix(this.C, matrix.C())
+	C.cairo_set_font_matrix(this.C, matrix.c())
 }
 
 // void                cairo_get_font_matrix               (cairo_t *cr,
 //                                                          cairo_matrix_t *matrix);
 func (this *Context) GetFontMatrix() Matrix {
 	var matrix Matrix
-	C.cairo_get_font_matrix(this.C, matrix.C())
+	C.cairo_get_font_matrix(this.C, matrix.c())
 	return matrix
 }
 
@@ -1470,7 +1486,7 @@ func (this *Context) ShowGlyphs(glyphs []Glyph) {
 	var first *C.cairo_glyph_t
 	var n = C.int(len(glyphs))
 	if n > 0 {
-		first = glyphs[0].C()
+		first = glyphs[0].c()
 	}
 
 	C.cairo_show_glyphs(this.C, first, n)
@@ -1522,10 +1538,10 @@ func (this *Context) ShowGlyphs(glyphs []Glyph) {
 // #define             CAIRO_MIME_TYPE_PNG
 // #define             CAIRO_MIME_TYPE_URI
 const (
-	MimeTypeJp2 = "image/jp2"
+	MimeTypeJp2  = "image/jp2"
 	MimeTypeJpeg = "image/jpeg"
-	MimeTypePng = "image/png"
-	MimeTypeUri = "text/x-uri"
+	MimeTypePng  = "image/png"
+	MimeTypeUri  = "text/x-uri"
 )
 
 // typedef             cairo_surface_t;
@@ -1544,7 +1560,7 @@ func SurfaceWrap(c *C.cairo_surface_t, grab bool) *Surface {
 		return (*Surface)(go_repr)
 	}
 
-	surface := &Surface{ c }
+	surface := &Surface{c}
 	if grab {
 		C.cairo_pattern_reference(c)
 	}
@@ -1560,13 +1576,14 @@ func SurfaceWrap(c *C.cairo_surface_t, grab bool) *Surface {
 
 // enum                cairo_content_t;
 type Content int
+
 const (
-	ContentColor Content		 = C.CAIRO_CONTENT_COLOR
-	ContentAlpha Content		 = C.CAIRO_CONTENT_ALPHA
-	ContentColorAlpha Content	 = C.CAIRO_CONTENT_COLOR_ALPHA
+	ContentColor      Content = C.CAIRO_CONTENT_COLOR
+	ContentAlpha      Content = C.CAIRO_CONTENT_ALPHA
+	ContentColorAlpha Content = C.CAIRO_CONTENT_COLOR_ALPHA
 )
 
-func (this Content) C() C.cairo_content_t {
+func (this Content) c() C.cairo_content_t {
 	return C.cairo_content_t(this)
 }
 
@@ -1575,7 +1592,7 @@ func (this Content) C() C.cairo_content_t {
 //                                                          int width,
 //                                                          int height);
 func (this *Surface) CreateSimilar(content Content, width, height int) *Surface {
-	return SurfaceWrap(C.cairo_surface_create_similar(this.C, content.C(), C.int(width), C.int(height)), false)
+	return SurfaceWrap(C.cairo_surface_create_similar(this.C, content.c(), C.int(width), C.int(height)), false)
 }
 
 // cairo_surface_t *   cairo_surface_create_for_rectangle  (cairo_surface_t *target,
@@ -1669,31 +1686,32 @@ func (this *Surface) GetFallbackResolution() (x_pixels_per_inch, y_pixels_per_in
 
 // enum                cairo_surface_type_t;
 type SurfaceType int
+
 const (
-	SurfaceTypeImage SurfaceType		 = C.CAIRO_SURFACE_TYPE_IMAGE
-	SurfaceTypePDF SurfaceType		 = C.CAIRO_SURFACE_TYPE_PDF
-	SurfaceTypePS SurfaceType		 = C.CAIRO_SURFACE_TYPE_PS
-	SurfaceTypeXLib SurfaceType		 = C.CAIRO_SURFACE_TYPE_XLIB
-	SurfaceTypeXCB SurfaceType		 = C.CAIRO_SURFACE_TYPE_XCB
-	SurfaceTypeGlitz SurfaceType		 = C.CAIRO_SURFACE_TYPE_GLITZ
-	SurfaceTypeQuartz SurfaceType		 = C.CAIRO_SURFACE_TYPE_QUARTZ
-	SurfaceTypeWin32 SurfaceType		 = C.CAIRO_SURFACE_TYPE_WIN32
-	SurfaceTypeBeOS SurfaceType		 = C.CAIRO_SURFACE_TYPE_BEOS
-	SurfaceTypeDirectFB SurfaceType		 = C.CAIRO_SURFACE_TYPE_DIRECTFB
-	SurfaceTypeSVG SurfaceType		 = C.CAIRO_SURFACE_TYPE_SVG
-	SurfaceTypeOs2 SurfaceType		 = C.CAIRO_SURFACE_TYPE_OS2
-	SurfaceTypeWin32Printing SurfaceType	 = C.CAIRO_SURFACE_TYPE_WIN32_PRINTING
-	SurfaceTypeQuartzImage SurfaceType	 = C.CAIRO_SURFACE_TYPE_QUARTZ_IMAGE
-	SurfaceTypeScript SurfaceType		 = C.CAIRO_SURFACE_TYPE_SCRIPT
-	SurfaceTypeQt SurfaceType		 = C.CAIRO_SURFACE_TYPE_QT
-	SurfaceTypeRecording SurfaceType	 = C.CAIRO_SURFACE_TYPE_RECORDING
-	SurfaceTypeVg SurfaceType		 = C.CAIRO_SURFACE_TYPE_VG
-	SurfaceTypeGL SurfaceType		 = C.CAIRO_SURFACE_TYPE_GL
-	SurfaceTypeDRM SurfaceType		 = C.CAIRO_SURFACE_TYPE_DRM
-	SurfaceTypeTee SurfaceType		 = C.CAIRO_SURFACE_TYPE_TEE
-	SurfaceTypeXML SurfaceType		 = C.CAIRO_SURFACE_TYPE_XML
-	SurfaceTypeSkia SurfaceType		 = C.CAIRO_SURFACE_TYPE_SKIA
-	SurfaceTypeSubsurface SurfaceType	 = C.CAIRO_SURFACE_TYPE_SUBSURFACE
+	SurfaceTypeImage         SurfaceType = C.CAIRO_SURFACE_TYPE_IMAGE
+	SurfaceTypePDF           SurfaceType = C.CAIRO_SURFACE_TYPE_PDF
+	SurfaceTypePS            SurfaceType = C.CAIRO_SURFACE_TYPE_PS
+	SurfaceTypeXLib          SurfaceType = C.CAIRO_SURFACE_TYPE_XLIB
+	SurfaceTypeXCB           SurfaceType = C.CAIRO_SURFACE_TYPE_XCB
+	SurfaceTypeGlitz         SurfaceType = C.CAIRO_SURFACE_TYPE_GLITZ
+	SurfaceTypeQuartz        SurfaceType = C.CAIRO_SURFACE_TYPE_QUARTZ
+	SurfaceTypeWin32         SurfaceType = C.CAIRO_SURFACE_TYPE_WIN32
+	SurfaceTypeBeOS          SurfaceType = C.CAIRO_SURFACE_TYPE_BEOS
+	SurfaceTypeDirectFB      SurfaceType = C.CAIRO_SURFACE_TYPE_DIRECTFB
+	SurfaceTypeSVG           SurfaceType = C.CAIRO_SURFACE_TYPE_SVG
+	SurfaceTypeOs2           SurfaceType = C.CAIRO_SURFACE_TYPE_OS2
+	SurfaceTypeWin32Printing SurfaceType = C.CAIRO_SURFACE_TYPE_WIN32_PRINTING
+	SurfaceTypeQuartzImage   SurfaceType = C.CAIRO_SURFACE_TYPE_QUARTZ_IMAGE
+	SurfaceTypeScript        SurfaceType = C.CAIRO_SURFACE_TYPE_SCRIPT
+	SurfaceTypeQt            SurfaceType = C.CAIRO_SURFACE_TYPE_QT
+	SurfaceTypeRecording     SurfaceType = C.CAIRO_SURFACE_TYPE_RECORDING
+	SurfaceTypeVg            SurfaceType = C.CAIRO_SURFACE_TYPE_VG
+	SurfaceTypeGL            SurfaceType = C.CAIRO_SURFACE_TYPE_GL
+	SurfaceTypeDRM           SurfaceType = C.CAIRO_SURFACE_TYPE_DRM
+	SurfaceTypeTee           SurfaceType = C.CAIRO_SURFACE_TYPE_TEE
+	SurfaceTypeXML           SurfaceType = C.CAIRO_SURFACE_TYPE_XML
+	SurfaceTypeSkia          SurfaceType = C.CAIRO_SURFACE_TYPE_SKIA
+	SurfaceTypeSubsurface    SurfaceType = C.CAIRO_SURFACE_TYPE_SUBSURFACE
 )
 
 // cairo_surface_type_t  cairo_surface_get_type            (cairo_surface_t *surface);
@@ -1743,30 +1761,31 @@ func (this *Surface) HasShowTextGlyphs() bool {
 
 // enum                cairo_format_t;
 type Format int
+
 const (
-	FormatInvalid Format = C.CAIRO_FORMAT_INVALID
-	FormatARGB32 Format = C.CAIRO_FORMAT_ARGB32
-	FormatRGB24 Format = C.CAIRO_FORMAT_RGB24
-	FormatA8 Format = C.CAIRO_FORMAT_A8
-	FormatA1 Format = C.CAIRO_FORMAT_A1
+	FormatInvalid   Format = C.CAIRO_FORMAT_INVALID
+	FormatARGB32    Format = C.CAIRO_FORMAT_ARGB32
+	FormatRGB24     Format = C.CAIRO_FORMAT_RGB24
+	FormatA8        Format = C.CAIRO_FORMAT_A8
+	FormatA1        Format = C.CAIRO_FORMAT_A1
 	FormatRGB16_565 Format = C.CAIRO_FORMAT_RGB16_565
 )
 
-func (this Format) C() C.cairo_format_t {
+func (this Format) c() C.cairo_format_t {
 	return C.cairo_format_t(this)
 }
 
 // int                 cairo_format_stride_for_width       (cairo_format_t format,
 //                                                          int width);
 func (this Format) StrideForWidth(width int) int {
-	return int(C.cairo_format_stride_for_width(this.C(), C.int(width)))
+	return int(C.cairo_format_stride_for_width(this.c(), C.int(width)))
 }
 
 // cairo_surface_t *   cairo_image_surface_create          (cairo_format_t format,
 //                                                          int width,
 //                                                          int height);
 func NewImageSurface(format Format, width, height int) *Surface {
-	return SurfaceWrap(C.cairo_image_surface_create(format.C(), C.int(width), C.int(height)), false)
+	return SurfaceWrap(C.cairo_image_surface_create(format.c(), C.int(width), C.int(height)), false)
 }
 
 // TODO: Implement this (need a way to keep GC from freeing the 'data')
@@ -1810,7 +1829,6 @@ func NewImageSurfaceFromPNG(filename string) *Surface {
 	C.free(unsafe.Pointer(cfilename))
 	return surface
 }
-
 
 // cairo_status_t      (*cairo_read_func_t)                (void *closure,
 //                                                          unsigned char *data,
@@ -1888,7 +1906,7 @@ type Matrix struct {
 	xx, yx, xy, yy, x0, y0 float64
 }
 
-func (this *Matrix) C() *C.cairo_matrix_t {
+func (this *Matrix) c() *C.cairo_matrix_t {
 	return (*C.cairo_matrix_t)(unsafe.Pointer(this))
 }
 
@@ -1900,57 +1918,57 @@ func (this *Matrix) C() *C.cairo_matrix_t {
 //                                                          double x0,
 //                                                          double y0);
 func (this *Matrix) Init(xx, yx, xy, yy, x0, y0 float64) {
-	C.cairo_matrix_init(this.C(), C.double(xx), C.double(yx), C.double(xy), C.double(yy), C.double(x0), C.double(y0))
+	C.cairo_matrix_init(this.c(), C.double(xx), C.double(yx), C.double(xy), C.double(yy), C.double(x0), C.double(y0))
 }
 
 // void                cairo_matrix_init_identity          (cairo_matrix_t *matrix);
 func (this *Matrix) InitIdentity() {
-	C.cairo_matrix_init_identity(this.C())
+	C.cairo_matrix_init_identity(this.c())
 }
 
 // void                cairo_matrix_init_translate         (cairo_matrix_t *matrix,
 //                                                          double tx,
 //                                                          double ty);
 func (this *Matrix) InitTranslate(tx, ty float64) {
-	C.cairo_matrix_init_translate(this.C(), C.double(tx), C.double(ty))
+	C.cairo_matrix_init_translate(this.c(), C.double(tx), C.double(ty))
 }
 
 // void                cairo_matrix_init_scale             (cairo_matrix_t *matrix,
 //                                                          double sx,
 //                                                          double sy);
 func (this *Matrix) InitScale(sx, sy float64) {
-	C.cairo_matrix_init_scale(this.C(), C.double(sx), C.double(sy))
+	C.cairo_matrix_init_scale(this.c(), C.double(sx), C.double(sy))
 }
 
 // void                cairo_matrix_init_rotate            (cairo_matrix_t *matrix,
 //                                                          double radians);
 func (this *Matrix) InitRotate(radians float64) {
-	C.cairo_matrix_init_rotate(this.C(), C.double(radians))
+	C.cairo_matrix_init_rotate(this.c(), C.double(radians))
 }
 
 // void                cairo_matrix_translate              (cairo_matrix_t *matrix,
 //                                                          double tx,
 //                                                          double ty);
 func (this *Matrix) Translate(tx, ty float64) {
-	C.cairo_matrix_translate(this.C(), C.double(tx), C.double(ty))
+	C.cairo_matrix_translate(this.c(), C.double(tx), C.double(ty))
 }
 
 // void                cairo_matrix_scale                  (cairo_matrix_t *matrix,
 //                                                          double sx,
 //                                                          double sy);
 func (this *Matrix) Scale(sx, sy float64) {
-	C.cairo_matrix_scale(this.C(), C.double(sx), C.double(sy))
+	C.cairo_matrix_scale(this.c(), C.double(sx), C.double(sy))
 }
 
 // void                cairo_matrix_rotate                 (cairo_matrix_t *matrix,
 //                                                          double radians);
 func (this *Matrix) Rotate(radians float64) {
-	C.cairo_matrix_rotate(this.C(), C.double(radians))
+	C.cairo_matrix_rotate(this.c(), C.double(radians))
 }
 
 // cairo_status_t      cairo_matrix_invert                 (cairo_matrix_t *matrix);
 func (this *Matrix) Invert() Status {
-	return Status(C.cairo_matrix_invert(this.C()))
+	return Status(C.cairo_matrix_invert(this.c()))
 }
 
 // void                cairo_matrix_multiply               (cairo_matrix_t *result,
@@ -1958,7 +1976,7 @@ func (this *Matrix) Invert() Status {
 //                                                          const cairo_matrix_t *b);
 func (this *Matrix) Multiply(b *Matrix) Matrix {
 	var result C.cairo_matrix_t
-	C.cairo_matrix_multiply(&result, this.C(), b.C())
+	C.cairo_matrix_multiply(&result, this.c(), b.c())
 	return *(*Matrix)(unsafe.Pointer(&result))
 }
 
@@ -1966,7 +1984,7 @@ func (this *Matrix) Multiply(b *Matrix) Matrix {
 //                                                          double *dx,
 //                                                          double *dy);
 func (this *Matrix) TransformDistance(dx, dy float64) (float64, float64) {
-	C.cairo_matrix_transform_distance(this.C(),
+	C.cairo_matrix_transform_distance(this.c(),
 		(*C.double)(unsafe.Pointer(&dx)),
 		(*C.double)(unsafe.Pointer(&dy)))
 	return dx, dy
@@ -1976,7 +1994,7 @@ func (this *Matrix) TransformDistance(dx, dy float64) (float64, float64) {
 //                                                          double *x,
 //                                                          double *y);
 func (this *Matrix) TransformPoint(x, y float64) (float64, float64) {
-	C.cairo_matrix_transform_point(this.C(),
+	C.cairo_matrix_transform_point(this.c(),
 		(*C.double)(unsafe.Pointer(&x)),
 		(*C.double)(unsafe.Pointer(&y)))
 	return x, y
