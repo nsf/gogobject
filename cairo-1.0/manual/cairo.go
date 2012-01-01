@@ -6,17 +6,24 @@ package cairo
 /*
 #include <stdlib.h>
 #include <cairo.h>
+#include <cairo-pdf.h>
 
 extern cairo_status_t io_reader_wrapper(void*, unsigned char*, unsigned int);
+extern cairo_status_t io_writer_wrapper(void*, const unsigned char*, unsigned int);
+
 static cairo_surface_t * _cairo_image_surface_create_from_png_stream(void *closure)
 {
 	return cairo_image_surface_create_from_png_stream(io_reader_wrapper, closure);
 }
 
-extern cairo_status_t io_writer_wrapper(void*, const unsigned char*, unsigned int);
 static cairo_status_t _cairo_surface_write_to_png_stream(cairo_surface_t *surface, void *closure)
 {
 	return cairo_surface_write_to_png_stream(surface, io_writer_wrapper, closure);
+}
+
+static cairo_surface_t *_cairo_pdf_surface_create_for_stream(void *closure, double width_in_points, double height_in_points)
+{
+	return cairo_pdf_surface_create_for_stream(io_writer_wrapper, closure, width_in_points, height_in_points);
 }
 
 #cgo pkg-config: cairo
@@ -133,8 +140,8 @@ func ContextWrap(c *C.cairo_t, grab bool) *Context {
 }
 
 // cairo_t *           cairo_create                        (cairo_surface_t *target);
-func NewContext(target *Surface) *Context {
-	return ContextWrap(C.cairo_create(target.C), false)
+func NewContext(target SurfaceLike) *Context {
+	return ContextWrap(C.cairo_create(target.InheritedFromCairoSurface()), false)
 }
 
 // cairo_t *           cairo_reference                     (cairo_t *cr);
@@ -157,7 +164,7 @@ func (this *Context) Restore() {
 
 // cairo_surface_t *   cairo_get_target                    (cairo_t *cr);
 func (this *Context) GetTarget() *Surface {
-	return SurfaceWrap(C.cairo_get_target(this.C), true)
+	return (*Surface)(SurfaceWrap(C.cairo_get_target(this.C), true))
 }
 
 // void                cairo_push_group                    (cairo_t *cr);
@@ -183,7 +190,7 @@ func (this *Context) PopGroupToSource() {
 
 // cairo_surface_t *   cairo_get_group_target              (cairo_t *cr);
 func (this *Context) GetGroupTarget() *Surface {
-	return SurfaceWrap(C.cairo_get_group_target(this.C), true)
+	return (*Surface)(SurfaceWrap(C.cairo_get_group_target(this.C), true))
 }
 
 // void                cairo_set_source_rgb                (cairo_t *cr,
@@ -213,8 +220,8 @@ func (this *Context) SetSource(source PatternLike) {
 //                                                          cairo_surface_t *surface,
 //                                                          double x,
 //                                                          double y);
-func (this *Context) SetSourceSurface(surface *Surface, x, y float64) {
-	C.cairo_set_source_surface(this.C, surface.C, C.double(x), C.double(y))
+func (this *Context) SetSourceSurface(surface SurfaceLike, x, y float64) {
+	C.cairo_set_source_surface(this.C, surface.InheritedFromCairoSurface(), C.double(x), C.double(y))
 }
 
 // cairo_pattern_t *   cairo_get_source                    (cairo_t *cr);
@@ -542,8 +549,8 @@ func (this *Context) Mask(pattern PatternLike) {
 //                                                          cairo_surface_t *surface,
 //                                                          double surface_x,
 //                                                          double surface_y);
-func (this *Context) MaskSurface(surface *Surface, surface_x, surface_y float64) {
-	C.cairo_mask_surface(this.C, surface.C, C.double(surface_x), C.double(surface_y))
+func (this *Context) MaskSurface(surface SurfaceLike, surface_x, surface_y float64) {
+	C.cairo_mask_surface(this.C, surface.InheritedFromCairoSurface(), C.double(surface_x), C.double(surface_y))
 }
 
 // void                cairo_paint                         (cairo_t *cr);
@@ -801,11 +808,11 @@ func (this *Context) PathExtents() (x1, y1, x2, y2 float64) {
 // 		RadialGradient
 //----------------------------------------------------------------------------
 
+// typedef             cairo_pattern_t;
 type PatternLike interface {
 	InheritedFromCairoPattern() *C.cairo_pattern_t
 }
 
-// typedef             cairo_pattern_t;
 type Pattern struct{ C *C.cairo_pattern_t }
 type SolidPattern struct{ Pattern }
 type SurfacePattern struct{ Pattern }
@@ -960,8 +967,8 @@ func (this *SolidPattern) GetRGBA() (red, green, blue, alpha float64) {
 }
 
 // cairo_pattern_t *   cairo_pattern_create_for_surface    (cairo_surface_t *surface);
-func NewSurfacePattern(surface *Surface) *SurfacePattern {
-	return (*SurfacePattern)(PatternWrap(C.cairo_pattern_create_for_surface(surface.C), false))
+func NewSurfacePattern(surface SurfaceLike) *SurfacePattern {
+	return (*SurfacePattern)(PatternWrap(C.cairo_pattern_create_for_surface(surface.InheritedFromCairoSurface()), false))
 }
 
 // cairo_status_t      cairo_pattern_get_surface           (cairo_pattern_t *pattern,
@@ -969,7 +976,7 @@ func NewSurfacePattern(surface *Surface) *SurfacePattern {
 func (this *SurfacePattern) GetSurface() *Surface {
 	var surfacec *C.cairo_surface_t
 	C.cairo_pattern_get_surface(this.C, &surfacec)
-	surface := SurfaceWrap(surfacec, true)
+	surface := (*Surface)(SurfaceWrap(surfacec, true))
 	return surface
 }
 
@@ -1531,6 +1538,9 @@ func (this *Context) ShowGlyphs(glyphs []Glyph) {
 
 //----------------------------------------------------------------------------
 // Surface
+// 	ImageSurface
+// 	PDFSurface
+// 	... etc
 //----------------------------------------------------------------------------
 
 // #define             CAIRO_MIME_TYPE_JP2
@@ -1545,19 +1555,23 @@ const (
 )
 
 // typedef             cairo_surface_t;
-type Surface struct {
-	C *C.cairo_surface_t
+type SurfaceLike interface {
+	InheritedFromCairoSurface() *C.cairo_surface_t
 }
+
+type Surface struct { C *C.cairo_surface_t }
+type ImageSurface struct { Surface }
+type PDFSurface struct { Surface }
 
 func surface_finalizer(this *Surface) {
 	C.cairo_surface_set_user_data(this.C, &go_repr_cookie, nil, nil)
 	C.cairo_surface_destroy(this.C)
 }
 
-func SurfaceWrap(c *C.cairo_surface_t, grab bool) *Surface {
+func SurfaceWrap(c *C.cairo_surface_t, grab bool) unsafe.Pointer {
 	go_repr := C.cairo_surface_get_user_data(c, &go_repr_cookie)
 	if go_repr != nil {
-		return (*Surface)(go_repr)
+		return unsafe.Pointer(go_repr)
 	}
 
 	surface := &Surface{c}
@@ -1570,8 +1584,36 @@ func SurfaceWrap(c *C.cairo_surface_t, grab bool) *Surface {
 	if status != C.CAIRO_STATUS_SUCCESS {
 		panic("failed to set user data, out of memory?")
 	}
-	return surface
+	return unsafe.Pointer(surface)
+}
 
+func ensure_surface_type(c *C.cairo_surface_t, types ...SurfaceType) {
+	for _, t := range types {
+		if C.cairo_surface_get_type(c) == t.c() {
+			return
+		}
+	}
+	panic("unexpected surface type")
+}
+
+func ToSurface(like SurfaceLike) *Surface {
+	return (*Surface)(SurfaceWrap(like.InheritedFromCairoSurface(), true))
+}
+
+func ToImageSurface(like SurfaceLike) *ImageSurface {
+	c := like.InheritedFromCairoSurface()
+	ensure_surface_type(c, SurfaceTypeImage)
+	return (*ImageSurface)(SurfaceWrap(c, true))
+}
+
+func ToPDFSurface(like SurfaceLike) *PDFSurface {
+	c := like.InheritedFromCairoSurface()
+	ensure_surface_type(c, SurfaceTypePDF)
+	return (*PDFSurface)(SurfaceWrap(c, true))
+}
+
+func (this *Surface) InheritedFromCairoSurface() *C.cairo_surface_t {
+	return this.C
 }
 
 // enum                cairo_content_t;
@@ -1592,7 +1634,7 @@ func (this Content) c() C.cairo_content_t {
 //                                                          int width,
 //                                                          int height);
 func (this *Surface) CreateSimilar(content Content, width, height int) *Surface {
-	return SurfaceWrap(C.cairo_surface_create_similar(this.C, content.c(), C.int(width), C.int(height)), false)
+	return (*Surface)(SurfaceWrap(C.cairo_surface_create_similar(this.C, content.c(), C.int(width), C.int(height)), false))
 }
 
 // cairo_surface_t *   cairo_surface_create_for_rectangle  (cairo_surface_t *target,
@@ -1601,8 +1643,8 @@ func (this *Surface) CreateSimilar(content Content, width, height int) *Surface 
 //                                                          double width,
 //                                                          double height);
 func (this *Surface) CreateForRectangle(x, y, width, height float64) *Surface {
-	return SurfaceWrap(C.cairo_surface_create_for_rectangle(this.C,
-		C.double(x), C.double(y), C.double(width), C.double(height)), false)
+	return (*Surface)(SurfaceWrap(C.cairo_surface_create_for_rectangle(this.C,
+		C.double(x), C.double(y), C.double(width), C.double(height)), false))
 }
 
 // cairo_surface_t *   cairo_surface_reference             (cairo_surface_t *surface);
@@ -1714,6 +1756,10 @@ const (
 	SurfaceTypeSubsurface    SurfaceType = C.CAIRO_SURFACE_TYPE_SUBSURFACE
 )
 
+func (this SurfaceType) c() C.cairo_surface_type_t {
+	return C.cairo_surface_type_t(this)
+}
+
 // cairo_surface_type_t  cairo_surface_get_type            (cairo_surface_t *surface);
 func (this *Surface) GetType() SurfaceType {
 	return SurfaceType(C.cairo_surface_get_type(this.C))
@@ -1784,8 +1830,8 @@ func (this Format) StrideForWidth(width int) int {
 // cairo_surface_t *   cairo_image_surface_create          (cairo_format_t format,
 //                                                          int width,
 //                                                          int height);
-func NewImageSurface(format Format, width, height int) *Surface {
-	return SurfaceWrap(C.cairo_image_surface_create(format.c(), C.int(width), C.int(height)), false)
+func NewImageSurface(format Format, width, height int) *ImageSurface {
+	return (*ImageSurface)(SurfaceWrap(C.cairo_image_surface_create(format.c(), C.int(width), C.int(height)), false))
 }
 
 // TODO: Implement this (need a way to keep GC from freeing the 'data')
@@ -1799,22 +1845,22 @@ func NewImageSurface(format Format, width, height int) *Surface {
 // unsigned char *     cairo_image_surface_get_data        (cairo_surface_t *surface);
 
 // cairo_format_t      cairo_image_surface_get_format      (cairo_surface_t *surface);
-func (this *Surface) GetFormat() Format {
+func (this *ImageSurface) GetFormat() Format {
 	return Format(C.cairo_image_surface_get_format(this.C))
 }
 
 // int                 cairo_image_surface_get_width       (cairo_surface_t *surface);
-func (this *Surface) GetWidth() int {
+func (this *ImageSurface) GetWidth() int {
 	return int(C.cairo_image_surface_get_width(this.C))
 }
 
 // int                 cairo_image_surface_get_height      (cairo_surface_t *surface);
-func (this *Surface) GetHeight() int {
+func (this *ImageSurface) GetHeight() int {
 	return int(C.cairo_image_surface_get_height(this.C))
 }
 
 // int                 cairo_image_surface_get_stride      (cairo_surface_t *surface);
-func (this *Surface) GetStride() int {
+func (this *ImageSurface) GetStride() int {
 	return int(C.cairo_image_surface_get_stride(this.C))
 }
 
@@ -1823,9 +1869,9 @@ func (this *Surface) GetStride() int {
 //----------------------------------------------------------------------------
 
 // cairo_surface_t *   cairo_image_surface_create_from_png (const char *filename);
-func NewImageSurfaceFromPNG(filename string) *Surface {
+func NewImageSurfaceFromPNG(filename string) *ImageSurface {
 	cfilename := C.CString(filename)
-	surface := SurfaceWrap(C.cairo_image_surface_create_from_png(cfilename), false)
+	surface := (*ImageSurface)(SurfaceWrap(C.cairo_image_surface_create_from_png(cfilename), false))
 	C.free(unsafe.Pointer(cfilename))
 	return surface
 }
@@ -1855,13 +1901,13 @@ func io_reader_wrapper(reader_up unsafe.Pointer, data_up unsafe.Pointer, length 
 // cairo_surface_t *   cairo_image_surface_create_from_png_stream
 //                                                         (cairo_read_func_t read_func,
 //                                                          void *closure);
-func NewImageSurfaceFromPNGStream(r io.Reader) *Surface {
-	return SurfaceWrap(C._cairo_image_surface_create_from_png_stream(unsafe.Pointer(&r)), false)
+func NewImageSurfaceFromPNGStream(r io.Reader) *ImageSurface {
+	return (*ImageSurface)(SurfaceWrap(C._cairo_image_surface_create_from_png_stream(unsafe.Pointer(&r)), false))
 }
 
 // cairo_status_t      cairo_surface_write_to_png          (cairo_surface_t *surface,
 //                                                          const char *filename);
-func (this *Surface) WriteToPNG(filename string) Status {
+func (this *ImageSurface) WriteToPNG(filename string) Status {
 	cfilename := C.CString(filename)
 	status := C.cairo_surface_write_to_png(this.C, cfilename)
 	C.free(unsafe.Pointer(cfilename))
@@ -1893,8 +1939,81 @@ func io_writer_wrapper(writer_up unsafe.Pointer, data_up unsafe.Pointer, length 
 // cairo_status_t      cairo_surface_write_to_png_stream   (cairo_surface_t *surface,
 //                                                          cairo_write_func_t write_func,
 //                                                          void *closure);
-func (this *Surface) WriteToPNGStream(w io.Writer) Status {
+func (this *ImageSurface) WriteToPNGStream(w io.Writer) Status {
 	return Status(C._cairo_surface_write_to_png_stream(this.C, unsafe.Pointer(&w)))
+}
+
+//----------------------------------------------------------------------------
+// PDF Surfaces
+//----------------------------------------------------------------------------
+
+// #define             CAIRO_HAS_PDF_SURFACE
+// cairo_surface_t *   cairo_pdf_surface_create            (const char *filename,
+//                                                          double width_in_points,
+//                                                          double height_in_points);
+func NewPDFSurface(filename string, width_in_points, height_in_points float64) *PDFSurface {
+	cfilename := C.CString(filename)
+	surface := (*PDFSurface)(SurfaceWrap(C.cairo_pdf_surface_create(cfilename, C.double(width_in_points), C.double(height_in_points)), false))
+	C.free(unsafe.Pointer(cfilename))
+	return surface
+}
+
+// cairo_surface_t *   cairo_pdf_surface_create_for_stream (cairo_write_func_t write_func,
+//                                                          void *closure,
+//                                                          double width_in_points,
+//                                                          double height_in_points);
+func NewPDFSurfaceForStream(w io.Writer,  width_in_points, height_in_points float64) *PDFSurface {
+	surface := (*PDFSurface)(SurfaceWrap(C._cairo_pdf_surface_create_for_stream(unsafe.Pointer(&w),
+		C.double(width_in_points), C.double(height_in_points)), false))
+	return surface
+}
+
+// void                cairo_pdf_surface_restrict_to_version
+//                                                         (cairo_surface_t *surface,
+//                                                          cairo_pdf_version_t version);
+func (this *PDFSurface) RestrictToVersion(version PDFVersion) {
+	C.cairo_pdf_surface_restrict_to_version(this.C, version.c())
+}
+
+// enum                cairo_pdf_version_t;
+type PDFVersion int
+const (
+	PDFVersion_1_4 PDFVersion = C.CAIRO_PDF_VERSION_1_4
+	PDFVersion_1_5 PDFVersion = C.CAIRO_PDF_VERSION_1_5
+)
+
+func (this PDFVersion) c() C.cairo_pdf_version_t {
+	return C.cairo_pdf_version_t(this)
+}
+
+
+// void                cairo_pdf_get_versions              (cairo_pdf_version_t const **versions,
+//                                                          int *num_versions);
+func PDFGetVersions() []PDFVersion {
+	var versions *C.cairo_pdf_version_t
+	var num_versions C.int
+	C.cairo_pdf_get_versions(&versions, &num_versions)
+
+	var out []PDFVersion
+	if num_versions > 0 {
+		out = make([]PDFVersion, num_versions)
+		for i := range out {
+			out[i] = (*(*[999999]PDFVersion)(unsafe.Pointer(&versions)))[i]
+		}
+	}
+	return out
+}
+
+// const char *        cairo_pdf_version_to_string         (cairo_pdf_version_t version);
+func (this PDFVersion) String() string {
+	return C.GoString(C.cairo_pdf_version_to_string(this.c()))
+}
+
+// void                cairo_pdf_surface_set_size          (cairo_surface_t *surface,
+//                                                          double width_in_points,
+//                                                          double height_in_points);
+func (this *PDFSurface) SetSize(width_in_points, height_in_points float64) {
+	C.cairo_pdf_surface_set_size(this.C, C.double(width_in_points), C.double(height_in_points))
 }
 
 //----------------------------------------------------------------------------
