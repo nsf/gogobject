@@ -1559,9 +1559,9 @@ type SurfaceLike interface {
 	InheritedFromCairoSurface() *C.cairo_surface_t
 }
 
-type Surface struct { C *C.cairo_surface_t }
-type ImageSurface struct { Surface }
-type PDFSurface struct { Surface }
+type Surface struct{ C *C.cairo_surface_t }
+type ImageSurface struct{ Surface }
+type PDFSurface struct{ Surface }
 
 func surface_finalizer(this *Surface) {
 	C.cairo_surface_set_user_data(this.C, &go_repr_cookie, nil, nil)
@@ -1962,7 +1962,7 @@ func NewPDFSurface(filename string, width_in_points, height_in_points float64) *
 //                                                          void *closure,
 //                                                          double width_in_points,
 //                                                          double height_in_points);
-func NewPDFSurfaceForStream(w io.Writer,  width_in_points, height_in_points float64) *PDFSurface {
+func NewPDFSurfaceForStream(w io.Writer, width_in_points, height_in_points float64) *PDFSurface {
 	surface := (*PDFSurface)(SurfaceWrap(C._cairo_pdf_surface_create_for_stream(unsafe.Pointer(&w),
 		C.double(width_in_points), C.double(height_in_points)), false))
 	return surface
@@ -1977,6 +1977,7 @@ func (this *PDFSurface) RestrictToVersion(version PDFVersion) {
 
 // enum                cairo_pdf_version_t;
 type PDFVersion int
+
 const (
 	PDFVersion_1_4 PDFVersion = C.CAIRO_PDF_VERSION_1_4
 	PDFVersion_1_5 PDFVersion = C.CAIRO_PDF_VERSION_1_5
@@ -1985,7 +1986,6 @@ const (
 func (this PDFVersion) c() C.cairo_pdf_version_t {
 	return C.cairo_pdf_version_t(this)
 }
-
 
 // void                cairo_pdf_get_versions              (cairo_pdf_version_t const **versions,
 //                                                          int *num_versions);
