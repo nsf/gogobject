@@ -10,7 +10,7 @@ func main() {
 	cr.Scale(120, 120)
 
 	// Drawing code goes here
-	radpat := cairo.NewPatternRadial(0.25, 0.25, 0.1, 0.5, 0.5, 0.5)
+	radpat := cairo.NewRadialGradient(0.25, 0.25, 0.1, 0.5, 0.5, 0.5)
 	radpat.AddColorStopRGB(0, 1.0, 0.8, 0.8)
 	radpat.AddColorStopRGB(1, 0.9, 0.0, 0.0)
 
@@ -24,7 +24,7 @@ func main() {
 	cr.SetSource(radpat)
 	cr.Fill()
 
-	linpat := cairo.NewPatternLinear(0.25, 0.35, 0.75, 0.65)
+	linpat := cairo.NewLinearGradient(0.25, 0.35, 0.75, 0.65)
 	linpat.AddColorStopRGBA(0.00, 1, 1, 1, 0)
 	linpat.AddColorStopRGBA(0.25, 0, 1, 0, 0.5)
 	linpat.AddColorStopRGBA(0.50, 1, 1, 1, 0)

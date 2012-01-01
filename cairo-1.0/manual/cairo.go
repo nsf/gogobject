@@ -172,7 +172,7 @@ func (this *Context) PushGroupWithContent(content Content) {
 
 // cairo_pattern_t *   cairo_pop_group                     (cairo_t *cr);
 func (this *Context) PopGroup() *Pattern {
-	return PatternWrap(C.cairo_pop_group(this.C), false)
+	return (*Pattern)(PatternWrap(C.cairo_pop_group(this.C), false))
 }
 
 // void                cairo_pop_group_to_source           (cairo_t *cr);
@@ -204,8 +204,8 @@ func (this *Context) SetSourceRGBA(r, g, b, a float64) {
 
 // void                cairo_set_source                    (cairo_t *cr,
 //                                                          cairo_pattern_t *source);
-func (this *Context) SetSource(source *Pattern) {
-	C.cairo_set_source(this.C, source.C)
+func (this *Context) SetSource(source PatternLike) {
+	C.cairo_set_source(this.C, source.InheritedFromCairoPattern())
 }
 
 // void                cairo_set_source_surface            (cairo_t *cr,
@@ -218,7 +218,7 @@ func (this *Context) SetSourceSurface(surface *Surface, x, y float64) {
 
 // cairo_pattern_t *   cairo_get_source                    (cairo_t *cr);
 func (this *Context) GetSource() *Pattern {
-	return PatternWrap(C.cairo_get_source(this.C), true)
+	return (*Pattern)(PatternWrap(C.cairo_get_source(this.C), true))
 }
 
 // enum                cairo_antialias_t;
@@ -528,8 +528,8 @@ func (this *Context) InFill(x, y float64) bool {
 
 // void                cairo_mask                          (cairo_t *cr,
 //                                                          cairo_pattern_t *pattern);
-func (this *Context) Mask(pattern *Pattern) {
-	C.cairo_mask(this.C, pattern.C)
+func (this *Context) Mask(pattern PatternLike) {
+	C.cairo_mask(this.C, pattern.InheritedFromCairoPattern())
 }
 
 // void                cairo_mask_surface                  (cairo_t *cr,
@@ -794,20 +794,25 @@ func (this *Context) PathExtents() (x1, y1, x2, y2 float64) {
 // 		RadialGradient
 //----------------------------------------------------------------------------
 
+type PatternLike interface { InheritedFromCairoPattern() *C.cairo_pattern_t }
+
 // typedef             cairo_pattern_t;
-type Pattern struct {
-	C *C.cairo_pattern_t
-}
+type Pattern struct { C *C.cairo_pattern_t }
+type SolidPattern struct { Pattern }
+type SurfacePattern struct { Pattern }
+type Gradient struct { Pattern }
+type LinearGradient struct { Gradient }
+type RadialGradient struct { Gradient }
 
 func pattern_finalizer(this *Pattern) {
 	C.cairo_pattern_set_user_data(this.C, &go_repr_cookie, nil, nil)
 	C.cairo_pattern_destroy(this.C)
 }
 
-func PatternWrap(c *C.cairo_pattern_t, grab bool) *Pattern {
+func PatternWrap(c *C.cairo_pattern_t, grab bool) unsafe.Pointer {
 	go_repr := C.cairo_pattern_get_user_data(c, &go_repr_cookie)
 	if go_repr != nil {
-		return (*Pattern)(go_repr)
+		return unsafe.Pointer(go_repr)
 	}
 
 	pattern := &Pattern{ c }
@@ -820,7 +825,54 @@ func PatternWrap(c *C.cairo_pattern_t, grab bool) *Pattern {
 	if status != C.CAIRO_STATUS_SUCCESS {
 		panic("failed to set user data, out of memory?")
 	}
-	return pattern
+	return unsafe.Pointer(pattern)
+}
+
+func ensure_pattern_type(c *C.cairo_pattern_t, types ...PatternType) {
+	for _, t := range types {
+		if C.cairo_pattern_get_type(c) == t.C() {
+			return
+		}
+	}
+	panic("unexpected pattern type")
+}
+
+func ToPattern(like PatternLike) *Pattern {
+	return (*Pattern)(PatternWrap(like.InheritedFromCairoPattern(), true))
+}
+
+func ToSolidPattern(like PatternLike) *SolidPattern {
+	c := like.InheritedFromCairoPattern()
+	ensure_pattern_type(c, PatternTypeSolid)
+	return (*SolidPattern)(PatternWrap(c, true))
+}
+
+func ToSurfacePattern(like PatternLike) *SurfacePattern {
+	c := like.InheritedFromCairoPattern()
+	ensure_pattern_type(c, PatternTypeSurface)
+	return (*SurfacePattern)(PatternWrap(c, true))
+}
+
+func ToGradient(like PatternLike) *Gradient {
+	c := like.InheritedFromCairoPattern()
+	ensure_pattern_type(c, PatternTypeLinear, PatternTypeRadial)
+	return (*Gradient)(PatternWrap(c, true))
+}
+
+func ToLinearGradient(like PatternLike) *LinearGradient {
+	c := like.InheritedFromCairoPattern()
+	ensure_pattern_type(c, PatternTypeLinear)
+	return (*LinearGradient)(PatternWrap(c, true))
+}
+
+func ToRadialGradient(like PatternLike) *RadialGradient {
+	c := like.InheritedFromCairoPattern()
+	ensure_pattern_type(c, PatternTypeRadial)
+	return (*RadialGradient)(PatternWrap(c, true))
+}
+
+func (this *Pattern) InheritedFromCairoPattern() *C.cairo_pattern_t {
+	return this.C
 }
 
 // void                cairo_pattern_add_color_stop_rgb    (cairo_pattern_t *pattern,
@@ -828,7 +880,7 @@ func PatternWrap(c *C.cairo_pattern_t, grab bool) *Pattern {
 //                                                          double red,
 //                                                          double green,
 //                                                          double blue);
-func (this *Pattern) AddColorStopRGB(offset, red, green, blue float64) {
+func (this *Gradient) AddColorStopRGB(offset, red, green, blue float64) {
 	C.cairo_pattern_add_color_stop_rgb(this.C,
 		C.double(offset), C.double(red), C.double(green), C.double(blue))
 }
@@ -839,16 +891,16 @@ func (this *Pattern) AddColorStopRGB(offset, red, green, blue float64) {
 //                                                          double green,
 //                                                          double blue,
 //                                                          double alpha);
-func (this *Pattern) AddColorStopRGBA(offset, red, green, blue, alpha float64) {
+func (this *Gradient) AddColorStopRGBA(offset, red, green, blue, alpha float64) {
 	C.cairo_pattern_add_color_stop_rgba(this.C,
 		C.double(offset), C.double(red), C.double(green), C.double(blue), C.double(alpha))
 }
 
 // cairo_status_t      cairo_pattern_get_color_stop_count  (cairo_pattern_t *pattern,
 //                                                          int *count);
-func (this *Pattern) GetColorStopCount() (count int, status Status) {
-	status = Status(C.cairo_pattern_get_color_stop_count(this.C,
-		(*C.int)(unsafe.Pointer(&count))))
+func (this *Gradient) GetColorStopCount() (count int) {
+	C.cairo_pattern_get_color_stop_count(this.C,
+		(*C.int)(unsafe.Pointer(&count)))
 	return
 }
 
@@ -859,29 +911,29 @@ func (this *Pattern) GetColorStopCount() (count int, status Status) {
 //                                                          double *green,
 //                                                          double *blue,
 //                                                          double *alpha);
-func (this *Pattern) GetColorStopRGBA(index int) (offset, red, green, blue, alpha float64, status Status) {
-	status = Status(C.cairo_pattern_get_color_stop_rgba(this.C, C.int(index),
+func (this *Gradient) GetColorStopRGBA(index int) (offset, red, green, blue, alpha float64) {
+	C.cairo_pattern_get_color_stop_rgba(this.C, C.int(index),
 		(*C.double)(unsafe.Pointer(&offset)),
 		(*C.double)(unsafe.Pointer(&red)),
 		(*C.double)(unsafe.Pointer(&green)),
 		(*C.double)(unsafe.Pointer(&blue)),
-		(*C.double)(unsafe.Pointer(&alpha))))
+		(*C.double)(unsafe.Pointer(&alpha)))
 	return
 }
 
 // cairo_pattern_t *   cairo_pattern_create_rgb            (double red,
 //                                                          double green,
 //                                                          double blue);
-func NewPatternRGB(red, green, blue float64) *Pattern {
-	return PatternWrap(C.cairo_pattern_create_rgb(C.double(red), C.double(green), C.double(blue)), false)
+func NewSolidPatternRGB(red, green, blue float64) *SolidPattern {
+	return (*SolidPattern)(PatternWrap(C.cairo_pattern_create_rgb(C.double(red), C.double(green), C.double(blue)), false))
 }
 
 // cairo_pattern_t *   cairo_pattern_create_rgba           (double red,
 //                                                          double green,
 //                                                          double blue,
 //                                                          double alpha);
-func NewPatternRGBA(red, green, blue, alpha float64) *Pattern {
-	return PatternWrap(C.cairo_pattern_create_rgba(C.double(red), C.double(green), C.double(blue), C.double(alpha)), false)
+func NewSolidPatternRGBA(red, green, blue, alpha float64) *SolidPattern {
+	return (*SolidPattern)(PatternWrap(C.cairo_pattern_create_rgba(C.double(red), C.double(green), C.double(blue), C.double(alpha)), false))
 }
 
 // cairo_status_t      cairo_pattern_get_rgba              (cairo_pattern_t *pattern,
@@ -889,36 +941,36 @@ func NewPatternRGBA(red, green, blue, alpha float64) *Pattern {
 //                                                          double *green,
 //                                                          double *blue,
 //                                                          double *alpha);
-func (this *Pattern) GetRGBA() (red, green, blue, alpha float64, status Status) {
-	status = Status(C.cairo_pattern_get_rgba(this.C,
+func (this *SolidPattern) GetRGBA() (red, green, blue, alpha float64) {
+	C.cairo_pattern_get_rgba(this.C,
 		(*C.double)(unsafe.Pointer(&red)),
 		(*C.double)(unsafe.Pointer(&green)),
 		(*C.double)(unsafe.Pointer(&blue)),
-		(*C.double)(unsafe.Pointer(&alpha))))
+		(*C.double)(unsafe.Pointer(&alpha)))
 	return
 }
 
 // cairo_pattern_t *   cairo_pattern_create_for_surface    (cairo_surface_t *surface);
-func NewPatternForSurface(surface *Surface) *Pattern {
-	return PatternWrap(C.cairo_pattern_create_for_surface(surface.C), false)
+func NewSurfacePattern(surface *Surface) *SurfacePattern {
+	return (*SurfacePattern)(PatternWrap(C.cairo_pattern_create_for_surface(surface.C), false))
 }
 
 // cairo_status_t      cairo_pattern_get_surface           (cairo_pattern_t *pattern,
 //                                                          cairo_surface_t **surface);
-func (this *Pattern) GetSurface() (*Surface, Status) {
+func (this *SurfacePattern) GetSurface() *Surface {
 	var surfacec *C.cairo_surface_t
-	status := Status(C.cairo_pattern_get_surface(this.C, &surfacec))
+	C.cairo_pattern_get_surface(this.C, &surfacec)
 	surface := SurfaceWrap(surfacec, true)
-	return surface, status
+	return surface
 }
 
 // cairo_pattern_t *   cairo_pattern_create_linear         (double x0,
 //                                                          double y0,
 //                                                          double x1,
 //                                                          double y1);
-func NewPatternLinear(x0, y0, x1, y1 float64) *Pattern {
-	return PatternWrap(C.cairo_pattern_create_linear(
-		C.double(x0), C.double(y0), C.double(x1), C.double(y1)), false)
+func NewLinearGradient(x0, y0, x1, y1 float64) *LinearGradient {
+	return (*LinearGradient)(PatternWrap(C.cairo_pattern_create_linear(
+		C.double(x0), C.double(y0), C.double(x1), C.double(y1)), false))
 }
 
 // cairo_status_t      cairo_pattern_get_linear_points     (cairo_pattern_t *pattern,
@@ -926,12 +978,12 @@ func NewPatternLinear(x0, y0, x1, y1 float64) *Pattern {
 //                                                          double *y0,
 //                                                          double *x1,
 //                                                          double *y1);
-func (this *Pattern) GetLinearPoints() (x0, y0, x1, y1 float64, status Status) {
-	status = Status(C.cairo_pattern_get_linear_points(this.C,
+func (this *LinearGradient) GetLinearPoints() (x0, y0, x1, y1 float64) {
+	C.cairo_pattern_get_linear_points(this.C,
 		(*C.double)(unsafe.Pointer(&x0)),
 		(*C.double)(unsafe.Pointer(&y0)),
 		(*C.double)(unsafe.Pointer(&x1)),
-		(*C.double)(unsafe.Pointer(&y1))))
+		(*C.double)(unsafe.Pointer(&y1)))
 	return
 }
 
@@ -941,9 +993,9 @@ func (this *Pattern) GetLinearPoints() (x0, y0, x1, y1 float64, status Status) {
 //                                                          double cx1,
 //                                                          double cy1,
 //                                                          double radius1);
-func NewPatternRadial(cx0, cy0, radius0, cx1, cy1, radius1 float64) *Pattern {
-	return PatternWrap(C.cairo_pattern_create_radial(
-		C.double(cx0), C.double(cy0), C.double(radius0), C.double(cx1), C.double(cy1), C.double(radius1)), false)
+func NewRadialGradient(cx0, cy0, radius0, cx1, cy1, radius1 float64) *RadialGradient {
+	return (*RadialGradient)(PatternWrap(C.cairo_pattern_create_radial(
+		C.double(cx0), C.double(cy0), C.double(radius0), C.double(cx1), C.double(cy1), C.double(radius1)), false))
 }
 
 // cairo_status_t      cairo_pattern_get_radial_circles    (cairo_pattern_t *pattern,
@@ -953,14 +1005,14 @@ func NewPatternRadial(cx0, cy0, radius0, cx1, cy1, radius1 float64) *Pattern {
 //                                                          double *x1,
 //                                                          double *y1,
 //                                                          double *r1);
-func (this *Pattern) GetRadialCircles() (x0, y0, r0, x1, y1, r1 float64, status Status) {
-	status = Status(C.cairo_pattern_get_radial_circles(this.C,
+func (this *RadialGradient) GetRadialCircles() (x0, y0, r0, x1, y1, r1 float64) {
+	C.cairo_pattern_get_radial_circles(this.C,
 		(*C.double)(unsafe.Pointer(&x0)),
 		(*C.double)(unsafe.Pointer(&y0)),
 		(*C.double)(unsafe.Pointer(&r0)),
 		(*C.double)(unsafe.Pointer(&x1)),
 		(*C.double)(unsafe.Pointer(&y1)),
-		(*C.double)(unsafe.Pointer(&r1))))
+		(*C.double)(unsafe.Pointer(&r1)))
 	return
 }
 
@@ -987,12 +1039,12 @@ func (this Extend) C() C.cairo_extend_t {
 
 // void                cairo_pattern_set_extend            (cairo_pattern_t *pattern,
 //                                                          cairo_extend_t extend);
-func (this *Pattern) SetExtend(extend Extend) {
+func (this *SurfacePattern) SetExtend(extend Extend) {
 	C.cairo_pattern_set_extend(this.C, extend.C())
 }
 
 // cairo_extend_t      cairo_pattern_get_extend            (cairo_pattern_t *pattern);
-func (this *Pattern) GetExtend() Extend {
+func (this *SurfacePattern) GetExtend() Extend {
 	return Extend(C.cairo_pattern_get_extend(this.C))
 }
 
@@ -1013,12 +1065,12 @@ func (this Filter) C() C.cairo_filter_t {
 
 // void                cairo_pattern_set_filter            (cairo_pattern_t *pattern,
 //                                                          cairo_filter_t filter);
-func (this *Pattern) SetFilter(filter Filter) {
+func (this *SurfacePattern) SetFilter(filter Filter) {
 	C.cairo_pattern_set_filter(this.C, filter.C())
 }
 
 // cairo_filter_t      cairo_pattern_get_filter            (cairo_pattern_t *pattern);
-func (this *Pattern) GetFilter() Filter {
+func (this *SurfacePattern) GetFilter() Filter {
 	return Filter(C.cairo_pattern_get_filter(this.C))
 }
 
@@ -1044,6 +1096,10 @@ const (
 	PatternTypeLinear PatternType	 = C.CAIRO_PATTERN_TYPE_LINEAR
 	PatternTypeRadial PatternType	 = C.CAIRO_PATTERN_TYPE_RADIAL
 )
+
+func (this PatternType) C() C.cairo_pattern_type_t {
+	return C.cairo_pattern_type_t(this)
+}
 
 // cairo_pattern_type_t  cairo_pattern_get_type            (cairo_pattern_t *pattern);
 func (this *Pattern) GetType() PatternType {
