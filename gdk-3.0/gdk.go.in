@@ -27,3 +27,10 @@ import (
 [<.GoUtils>]
 
 [<.GoBindings>]
+
+type RGBA struct {
+	Red float64
+	Green float64
+	Blue float64
+	Alpha float64
+}

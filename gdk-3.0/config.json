@@ -2,6 +2,9 @@
 	"namespace": "Gdk",
 	"version": "3.0",
 	"blacklist": {
+		"structdefs": [
+			"RGBA" // implemented manually
+		],
 		"objects": [
 			"AppLaunchContext"
 		],

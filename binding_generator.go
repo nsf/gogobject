@@ -432,13 +432,15 @@ func ProcessStructInfo(si *gi.StructInfo) {
 		size = -1
 	}
 
-	switch size {
-	case -1:
-		printf("type %s struct { Pointer unsafe.Pointer }\n", name)
-	case 0:
-		printf("type %s struct {}\n", name)
-	default:
-		printf("type %s struct { data [%d]byte }\n", name, size)
+	if !IsBlacklisted("structdefs", name) {
+		switch size {
+		case -1:
+			printf("type %s struct { Pointer unsafe.Pointer }\n", name)
+		case 0:
+			printf("type %s struct {}\n", name)
+		default:
+			printf("type %s struct { data [%d]byte }\n", name, size)
+		}
 	}
 
 	for i, n := 0, si.NumMethod(); i < n; i++ {
