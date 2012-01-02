@@ -122,6 +122,10 @@ func (this *Dialog) AddButton(text string, response ResponseType) *Widget {
 	return this._AddButton(text, int(response))
 }
 
+func (this *Dialog) Run() ResponseType {
+	return ResponseType(this._Run())
+}
+
 //----------------------------------------------------------------------------
 // MessageDialog
 //----------------------------------------------------------------------------

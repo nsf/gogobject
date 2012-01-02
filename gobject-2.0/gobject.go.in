@@ -1209,6 +1209,8 @@ func (this *Value) SetGoValue(v reflect.Value) {
 	}
 }
 
+var CairoMarshaler func(*Value, reflect.Type) (reflect.Value, bool)
+
 func (this *Value) GetGoValue(t reflect.Type) reflect.Value {
 	var out reflect.Value
 	var dst Value
@@ -1266,6 +1268,15 @@ func (this *Value) GetGoValue(t reflect.Type) reflect.Value {
 			C.g_object_ref_sink((*C.GObject)(obj.C))
 			_SetGObjectFinalizer(obj)
 		} else {
+			// cairo marshaler hook
+			if CairoMarshaler != nil {
+				var ok bool
+				out, ok = CairoMarshaler(this, t)
+				if ok {
+					break
+				}
+			}
+
 			// must be a struct then
 			out = reflect.New(t)
 			*(*unsafe.Pointer)(unsafe.Pointer(out.Pointer())) = this.GetBoxed()

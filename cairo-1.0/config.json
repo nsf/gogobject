@@ -1,9 +1,0 @@
-{
-	"namespace": "cairo",
-	"version": "1.0",
-	"blacklist": {
-		"functions": [
-			"image_surface_create"
-		]
-	}
-}

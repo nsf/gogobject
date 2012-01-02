@@ -248,6 +248,12 @@ func GoTypeForInterface(bi *gi.BaseInfo, flags TypeFlags) string {
 		if flags&TypeReceiver != 0 && t == gi.INFO_TYPE_INTERFACE {
 			printf("Impl")
 		}
+	case gi.INFO_TYPE_STRUCT:
+		if ns == "cairo" {
+			printf(CairoGoTypeForInterface(bi, flags))
+			break
+		}
+		fallthrough
 	default:
 		_, disguised := GConfig.Sys.DisguisedTypes[fullnm]
 		if flags&TypePointer != 0 && !disguised {

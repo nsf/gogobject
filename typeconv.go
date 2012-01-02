@@ -60,7 +60,13 @@ func GoToCgoForInterface(bi *gi.BaseInfo, arg0, arg1 string, flags ConvFlags) st
 			arg1, arg0, prefix, bi.Name())
 		printf("}")
 	case gi.INFO_TYPE_STRUCT:
-		fullnm := strings.ToLower(bi.Namespace()) + "." + bi.Name()
+		ns := bi.Namespace()
+		if ns == "cairo" {
+			printf(CairoGoToCgoForInterface(bi, arg0, arg1, flags))
+			break
+		}
+
+		fullnm := strings.ToLower(ns) + "." + bi.Name()
 		if _, ok := GConfig.Sys.DisguisedTypes[fullnm]; ok {
 			flags &^= ConvPointer
 		}
@@ -182,7 +188,13 @@ func CgoToGoForInterface(bi *gi.BaseInfo, arg1, arg2 string, flags ConvFlags) st
 		gotype := GoTypeForInterface(bi, TypeReturn)
 		printf("%s = %s(%s)", arg2, gotype, arg1)
 	case gi.INFO_TYPE_STRUCT, gi.INFO_TYPE_UNION:
-		fullnm := strings.ToLower(bi.Namespace()) + "." + bi.Name()
+		ns := bi.Namespace()
+		if ns == "cairo" {
+			printf(CairoCgoToGoForInterface(bi, arg1, arg2, flags))
+			break
+		}
+
+		fullnm := strings.ToLower(ns) + "." + bi.Name()
 		gotype := GoTypeForInterface(bi, TypeReturn)
 
 		if flags&ConvListMember != 0 {

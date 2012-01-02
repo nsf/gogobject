@@ -16,8 +16,9 @@ make -C gi install
 make
 build glib-2.0
 build gobject-2.0
+
+make -C cairo-1.0 install
 build atk-1.0
-build cairo-1.0
 build gio-2.0
 build gdkpixbuf-2.0
 build pango-1.0

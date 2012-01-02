@@ -8,8 +8,8 @@ make clean
 clean_in_dir gi
 clean_in_dir glib-2.0
 clean_in_dir gobject-2.0
-clean_in_dir atk-1.0
 clean_in_dir cairo-1.0
+clean_in_dir atk-1.0
 clean_in_dir gio-2.0
 clean_in_dir gdkpixbuf-2.0
 clean_in_dir gdk-3.0
@@ -22,7 +22,6 @@ clean_in_dir gdk-2.0
 rm -f glib-2.0/glib.go
 rm -f gobject-2.0/gobject.go
 rm -f atk-1.0/atk.go
-rm -f cairo-1.0/cairo.go
 rm -f gio-2.0/gio.go
 rm -f gdkpixbuf-2.0/gdkpixbuf.go
 rm -f gdk-3.0/gdk.go

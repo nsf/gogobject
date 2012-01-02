@@ -7,6 +7,7 @@ package cairo
 #include <stdlib.h>
 #include <cairo.h>
 #include <cairo-pdf.h>
+#include <cairo-gobject.h>
 
 extern cairo_status_t io_reader_wrapper(void*, unsigned char*, unsigned int);
 extern cairo_status_t io_writer_wrapper(void*, const unsigned char*, unsigned int);
@@ -26,17 +27,128 @@ static cairo_surface_t *_cairo_pdf_surface_create_for_stream(void *closure, doub
 	return cairo_pdf_surface_create_for_stream(io_writer_wrapper, closure, width_in_points, height_in_points);
 }
 
-#cgo pkg-config: cairo
+#cgo pkg-config: cairo cairo-png cairo-pdf cairo-gobject
 */
 import "C"
 import "runtime"
+import "strings"
 import "reflect"
 import "unsafe"
 import "io"
 
+import (
+	"gobject/gobject-2.0"
+)
+
+//----------------------------------------------------------------------------
+// GObject types
+//----------------------------------------------------------------------------
+
+// structs
+// cairo_gobject_context_get_type (void);
+func (*Context) GetStaticType() gobject.Type {
+	return gobject.Type(C.cairo_gobject_context_get_type())
+}
+
+// cairo_gobject_device_get_type (void);
+
+// cairo_gobject_pattern_get_type (void);
+func (*Pattern) GetStaticType() gobject.Type {
+	return gobject.Type(C.cairo_gobject_pattern_get_type())
+}
+
+// cairo_gobject_surface_get_type (void);
+func (*Surface) GetStaticType() gobject.Type {
+	return gobject.Type(C.cairo_gobject_surface_get_type())
+}
+
+// cairo_gobject_rectangle_get_type (void);
+
+// cairo_gobject_scaled_font_get_type (void);
+// cairo_gobject_font_face_get_type (void);
+// cairo_gobject_font_options_get_type (void);
+func (*FontOptions) GetStaticType() gobject.Type {
+	return gobject.Type(C.cairo_gobject_font_options_get_type())
+}
+
+// cairo_gobject_rectangle_int_get_type (void);
+
+// cairo_gobject_region_get_type (void);
+func (*Region) GetStaticType() gobject.Type {
+	return gobject.Type(C.cairo_gobject_region_get_type())
+}
+
+// TODO: No need for these?
+// enums
+// cairo_gobject_status_get_type (void);
+// cairo_gobject_content_get_type (void);
+// cairo_gobject_operator_get_type (void);
+// cairo_gobject_antialias_get_type (void);
+// cairo_gobject_fill_rule_get_type (void);
+// cairo_gobject_line_cap_get_type (void);
+// cairo_gobject_line_join_get_type (void);
+// cairo_gobject_text_cluster_flags_get_type (void);
+// cairo_gobject_font_slant_get_type (void);
+// cairo_gobject_font_weight_get_type (void);
+// cairo_gobject_subpixel_order_get_type (void);
+// cairo_gobject_hint_style_get_type (void);
+// cairo_gobject_hint_metrics_get_type (void);
+// cairo_gobject_font_type_get_type (void);
+// cairo_gobject_path_data_type_get_type (void);
+// cairo_gobject_device_type_get_type (void);
+// cairo_gobject_surface_type_get_type (void);
+// cairo_gobject_format_get_type (void);
+// cairo_gobject_pattern_type_get_type (void);
+// cairo_gobject_extend_get_type (void);
+// cairo_gobject_filter_get_type (void);
+// cairo_gobject_region_overlap_get_type (void);
+
 //----------------------------------------------------------------------------
 // TODO MOVE
 //----------------------------------------------------------------------------
+
+// Cairo C to Go reflect.Value converter (for closure marshaling)
+func cairo_marshaler(value *gobject.Value, t reflect.Type) (reflect.Value, bool) {
+	if !strings.HasSuffix(t.Elem().PkgPath(), "cairo-1.0") {
+		return reflect.Value{}, false
+	}
+
+	out := reflect.New(t)
+	st, ok := out.Elem().Interface().(gobject.StaticTyper)
+	if !ok {
+		return reflect.Value{}, false
+	}
+	gtypedst := st.GetStaticType()
+
+	var dst gobject.Value
+	dst.Init(gtypedst)
+	ok = dst.Transform(value)
+	if !ok {
+		panic("GValue is not transformable to " + t.String())
+	}
+
+	// TODO: is it correct that I should always grab here?
+	switch gtypedst {
+	case (*Context)(nil).GetStaticType():
+		*(*unsafe.Pointer)(unsafe.Pointer(out.Pointer())) = ContextWrap(dst.GetBoxed(), true)
+	case (*Pattern)(nil).GetStaticType():
+		*(*unsafe.Pointer)(unsafe.Pointer(out.Pointer())) = PatternWrap(dst.GetBoxed(), true)
+	case (*Surface)(nil).GetStaticType():
+		*(*unsafe.Pointer)(unsafe.Pointer(out.Pointer())) = SurfaceWrap(dst.GetBoxed(), true)
+	case (*FontOptions)(nil).GetStaticType():
+		*(*unsafe.Pointer)(unsafe.Pointer(out.Pointer())) = FontOptionsWrap(dst.GetBoxed())
+	case (*Region)(nil).GetStaticType():
+		*(*unsafe.Pointer)(unsafe.Pointer(out.Pointer())) = RegionWrap(dst.GetBoxed(), true)
+	default:
+		return reflect.Value{}, false
+	}
+
+	return out.Elem(), true
+}
+
+func init() {
+	gobject.CairoMarshaler = cairo_marshaler
+}
 
 var go_repr_cookie C.cairo_user_data_key_t
 
@@ -112,21 +224,26 @@ func (this Status) String() string {
 
 // typedef             cairo_t;
 type Context struct {
-	C *C.cairo_t
+	C unsafe.Pointer
+}
+
+func (this *Context) c() *C.cairo_t {
+	return (*C.cairo_t)(this.C)
 }
 
 func context_finalizer(this *Context) {
-	C.cairo_set_user_data(this.C, &go_repr_cookie, nil, nil)
-	C.cairo_destroy(this.C)
+	C.cairo_set_user_data(this.c(), &go_repr_cookie, nil, nil)
+	C.cairo_destroy(this.c())
 }
 
-func ContextWrap(c *C.cairo_t, grab bool) unsafe.Pointer {
+func ContextWrap(c_un unsafe.Pointer, grab bool) unsafe.Pointer {
+	c := (*C.cairo_t)(c_un)
 	go_repr := C.cairo_get_user_data(c, &go_repr_cookie)
 	if go_repr != nil {
 		return unsafe.Pointer(go_repr)
 	}
 
-	context := &Context{c}
+	context := &Context{unsafe.Pointer(c)}
 	if grab {
 		C.cairo_reference(c)
 	}
@@ -141,7 +258,7 @@ func ContextWrap(c *C.cairo_t, grab bool) unsafe.Pointer {
 
 // cairo_t *           cairo_create                        (cairo_surface_t *target);
 func NewContext(target SurfaceLike) *Context {
-	return (*Context)(ContextWrap(C.cairo_create(target.InheritedFromCairoSurface()), false))
+	return (*Context)(ContextWrap(unsafe.Pointer(C.cairo_create(target.InheritedFromCairoSurface().c())), false))
 }
 
 // cairo_t *           cairo_reference                     (cairo_t *cr);
@@ -149,48 +266,48 @@ func NewContext(target SurfaceLike) *Context {
 
 // cairo_status_t      cairo_status                        (cairo_t *cr);
 func (this *Context) Status() Status {
-	return Status(C.cairo_status(this.C))
+	return Status(C.cairo_status(this.c()))
 }
 
 // void                cairo_save                          (cairo_t *cr);
 func (this *Context) Save() {
-	C.cairo_save(this.C)
+	C.cairo_save(this.c())
 }
 
 // void                cairo_restore                       (cairo_t *cr);
 func (this *Context) Restore() {
-	C.cairo_restore(this.C)
+	C.cairo_restore(this.c())
 }
 
 // cairo_surface_t *   cairo_get_target                    (cairo_t *cr);
 func (this *Context) GetTarget() *Surface {
-	return (*Surface)(SurfaceWrap(C.cairo_get_target(this.C), true))
+	return (*Surface)(SurfaceWrap(unsafe.Pointer(C.cairo_get_target(this.c())), true))
 }
 
 // void                cairo_push_group                    (cairo_t *cr);
 func (this *Context) PushGroup() {
-	C.cairo_push_group(this.C)
+	C.cairo_push_group(this.c())
 }
 
 // void                cairo_push_group_with_content       (cairo_t *cr,
 //                                                          cairo_content_t content);
 func (this *Context) PushGroupWithContent(content Content) {
-	C.cairo_push_group_with_content(this.C, content.c())
+	C.cairo_push_group_with_content(this.c(), content.c())
 }
 
 // cairo_pattern_t *   cairo_pop_group                     (cairo_t *cr);
 func (this *Context) PopGroup() *Pattern {
-	return (*Pattern)(PatternWrap(C.cairo_pop_group(this.C), false))
+	return (*Pattern)(PatternWrap(unsafe.Pointer(C.cairo_pop_group(this.c())), false))
 }
 
 // void                cairo_pop_group_to_source           (cairo_t *cr);
 func (this *Context) PopGroupToSource() {
-	C.cairo_pop_group_to_source(this.C)
+	C.cairo_pop_group_to_source(this.c())
 }
 
 // cairo_surface_t *   cairo_get_group_target              (cairo_t *cr);
 func (this *Context) GetGroupTarget() *Surface {
-	return (*Surface)(SurfaceWrap(C.cairo_get_group_target(this.C), true))
+	return (*Surface)(SurfaceWrap(unsafe.Pointer(C.cairo_get_group_target(this.c())), true))
 }
 
 // void                cairo_set_source_rgb                (cairo_t *cr,
@@ -198,7 +315,7 @@ func (this *Context) GetGroupTarget() *Surface {
 //                                                          double green,
 //                                                          double blue);
 func (this *Context) SetSourceRGB(r, g, b float64) {
-	C.cairo_set_source_rgb(this.C, C.double(r), C.double(g), C.double(b))
+	C.cairo_set_source_rgb(this.c(), C.double(r), C.double(g), C.double(b))
 }
 
 // void                cairo_set_source_rgba               (cairo_t *cr,
@@ -207,13 +324,13 @@ func (this *Context) SetSourceRGB(r, g, b float64) {
 //                                                          double blue,
 //                                                          double alpha);
 func (this *Context) SetSourceRGBA(r, g, b, a float64) {
-	C.cairo_set_source_rgba(this.C, C.double(r), C.double(g), C.double(b), C.double(a))
+	C.cairo_set_source_rgba(this.c(), C.double(r), C.double(g), C.double(b), C.double(a))
 }
 
 // void                cairo_set_source                    (cairo_t *cr,
 //                                                          cairo_pattern_t *source);
 func (this *Context) SetSource(source PatternLike) {
-	C.cairo_set_source(this.C, source.InheritedFromCairoPattern())
+	C.cairo_set_source(this.c(), source.InheritedFromCairoPattern().c())
 }
 
 // void                cairo_set_source_surface            (cairo_t *cr,
@@ -221,12 +338,12 @@ func (this *Context) SetSource(source PatternLike) {
 //                                                          double x,
 //                                                          double y);
 func (this *Context) SetSourceSurface(surface SurfaceLike, x, y float64) {
-	C.cairo_set_source_surface(this.C, surface.InheritedFromCairoSurface(), C.double(x), C.double(y))
+	C.cairo_set_source_surface(this.c(), surface.InheritedFromCairoSurface().c(), C.double(x), C.double(y))
 }
 
 // cairo_pattern_t *   cairo_get_source                    (cairo_t *cr);
 func (this *Context) GetSource() *Pattern {
-	return (*Pattern)(PatternWrap(C.cairo_get_source(this.C), true))
+	return (*Pattern)(PatternWrap(unsafe.Pointer(C.cairo_get_source(this.c())), true))
 }
 
 // enum                cairo_antialias_t;
@@ -246,12 +363,12 @@ func (this Antialias) c() C.cairo_antialias_t {
 // void                cairo_set_antialias                 (cairo_t *cr,
 //                                                          cairo_antialias_t antialias);
 func (this *Context) SetAntialias(antialias Antialias) {
-	C.cairo_set_antialias(this.C, antialias.c())
+	C.cairo_set_antialias(this.c(), antialias.c())
 }
 
 // cairo_antialias_t   cairo_get_antialias                 (cairo_t *cr);
 func (this *Context) GetAntialias() Antialias {
-	return Antialias(C.cairo_get_antialias(this.C))
+	return Antialias(C.cairo_get_antialias(this.c()))
 }
 
 // void                cairo_set_dash                      (cairo_t *cr,
@@ -263,12 +380,12 @@ func (this *Context) SetDash(dashes []float64, offset float64) {
 	if len(dashes) != 0 {
 		first = (*C.double)(unsafe.Pointer(&dashes[0]))
 	}
-	C.cairo_set_dash(this.C, first, C.int(len(dashes)), C.double(offset))
+	C.cairo_set_dash(this.c(), first, C.int(len(dashes)), C.double(offset))
 }
 
 // int                 cairo_get_dash_count                (cairo_t *cr);
 func (this *Context) GetDashCount() int {
-	return int(C.cairo_get_dash_count(this.C))
+	return int(C.cairo_get_dash_count(this.c()))
 }
 
 // void                cairo_get_dash                      (cairo_t *cr,
@@ -284,7 +401,7 @@ func (this *Context) GetDash() ([]float64, float64) {
 		dashes = make([]float64, count)
 		first = (*C.double)(unsafe.Pointer(&dashes[0]))
 	}
-	C.cairo_get_dash(this.C, first, &offset)
+	C.cairo_get_dash(this.c(), first, &offset)
 	return dashes, float64(offset)
 }
 
@@ -303,12 +420,12 @@ func (this FillRule) c() C.cairo_fill_rule_t {
 // void                cairo_set_fill_rule                 (cairo_t *cr,
 //                                                          cairo_fill_rule_t fill_rule);
 func (this *Context) SetFillRule(fill_rule FillRule) {
-	C.cairo_set_fill_rule(this.C, fill_rule.c())
+	C.cairo_set_fill_rule(this.c(), fill_rule.c())
 }
 
 // cairo_fill_rule_t   cairo_get_fill_rule                 (cairo_t *cr);
 func (this *Context) GetFillRule() FillRule {
-	return FillRule(C.cairo_get_fill_rule(this.C))
+	return FillRule(C.cairo_get_fill_rule(this.c()))
 }
 
 // enum                cairo_line_cap_t;
@@ -327,12 +444,12 @@ func (this LineCap) c() C.cairo_line_cap_t {
 // void                cairo_set_line_cap                  (cairo_t *cr,
 //                                                          cairo_line_cap_t line_cap);
 func (this *Context) SetLineCap(line_cap LineCap) {
-	C.cairo_set_line_cap(this.C, line_cap.c())
+	C.cairo_set_line_cap(this.c(), line_cap.c())
 }
 
 // cairo_line_cap_t    cairo_get_line_cap                  (cairo_t *cr);
 func (this *Context) GetLineCap() LineCap {
-	return LineCap(C.cairo_get_line_cap(this.C))
+	return LineCap(C.cairo_get_line_cap(this.c()))
 }
 
 // enum                cairo_line_join_t;
@@ -351,34 +468,34 @@ func (this LineJoin) c() C.cairo_line_join_t {
 // void                cairo_set_line_join                 (cairo_t *cr,
 //                                                          cairo_line_join_t line_join);
 func (this *Context) SetLineJoin(line_join LineJoin) {
-	C.cairo_set_line_join(this.C, line_join.c())
+	C.cairo_set_line_join(this.c(), line_join.c())
 }
 
 // cairo_line_join_t   cairo_get_line_join                 (cairo_t *cr);
 func (this *Context) GetLineJoin() LineJoin {
-	return LineJoin(C.cairo_get_line_join(this.C))
+	return LineJoin(C.cairo_get_line_join(this.c()))
 }
 
 // void                cairo_set_line_width                (cairo_t *cr,
 //                                                          double width);
 func (this *Context) SetLineWidth(width float64) {
-	C.cairo_set_line_width(this.C, C.double(width))
+	C.cairo_set_line_width(this.c(), C.double(width))
 }
 
 // double              cairo_get_line_width                (cairo_t *cr);
 func (this *Context) GetLineWidth() float64 {
-	return float64(C.cairo_get_line_width(this.C))
+	return float64(C.cairo_get_line_width(this.c()))
 }
 
 // void                cairo_set_miter_limit               (cairo_t *cr,
 //                                                          double limit);
 func (this *Context) SetMiterLimit(limit float64) {
-	C.cairo_set_miter_limit(this.C, C.double(limit))
+	C.cairo_set_miter_limit(this.c(), C.double(limit))
 }
 
 // double              cairo_get_miter_limit               (cairo_t *cr);
 func (this *Context) GetMiterLimit() float64 {
-	return float64(C.cairo_get_miter_limit(this.C))
+	return float64(C.cairo_get_miter_limit(this.c()))
 }
 
 // enum                cairo_operator_t;
@@ -423,33 +540,33 @@ func (this Operator) c() C.cairo_operator_t {
 // void                cairo_set_operator                  (cairo_t *cr,
 //                                                          cairo_operator_t op);
 func (this *Context) SetOperator(op Operator) {
-	C.cairo_set_operator(this.C, op.c())
+	C.cairo_set_operator(this.c(), op.c())
 }
 
 // cairo_operator_t    cairo_get_operator                  (cairo_t *cr);
 func (this *Context) GetOperator() Operator {
-	return Operator(C.cairo_get_operator(this.C))
+	return Operator(C.cairo_get_operator(this.c()))
 }
 
 // void                cairo_set_tolerance                 (cairo_t *cr,
 //                                                          double tolerance);
 func (this *Context) SetTolerance(tolerance float64) {
-	C.cairo_set_tolerance(this.C, C.double(tolerance))
+	C.cairo_set_tolerance(this.c(), C.double(tolerance))
 }
 
 // double              cairo_get_tolerance                 (cairo_t *cr);
 func (this *Context) GetTolerance() float64 {
-	return float64(C.cairo_get_tolerance(this.C))
+	return float64(C.cairo_get_tolerance(this.c()))
 }
 
 // void                cairo_clip                          (cairo_t *cr);
 func (this *Context) Clip() {
-	C.cairo_clip(this.C)
+	C.cairo_clip(this.c())
 }
 
 // void                cairo_clip_preserve                 (cairo_t *cr);
 func (this *Context) ClipPreserve() {
-	C.cairo_clip_preserve(this.C)
+	C.cairo_clip_preserve(this.c())
 }
 
 // void                cairo_clip_extents                  (cairo_t *cr,
@@ -458,7 +575,7 @@ func (this *Context) ClipPreserve() {
 //                                                          double *x2,
 //                                                          double *y2);
 func (this *Context) ClipExtents() (x1, y1, x2, y2 float64) {
-	C.cairo_clip_extents(this.C,
+	C.cairo_clip_extents(this.c(),
 		(*C.double)(unsafe.Pointer(&x1)),
 		(*C.double)(unsafe.Pointer(&y1)),
 		(*C.double)(unsafe.Pointer(&x2)),
@@ -470,12 +587,12 @@ func (this *Context) ClipExtents() (x1, y1, x2, y2 float64) {
 //                                                          double x,
 //                                                          double y);
 func (this *Context) InClip(x, y float64) bool {
-	return C.cairo_in_clip(this.C, C.double(x), C.double(y)) != 0
+	return C.cairo_in_clip(this.c(), C.double(x), C.double(y)) != 0
 }
 
 // void                cairo_reset_clip                    (cairo_t *cr);
 func (this *Context) ResetClip() {
-	C.cairo_reset_clip(this.C)
+	C.cairo_reset_clip(this.c())
 }
 
 //                     cairo_rectangle_t;
@@ -491,7 +608,7 @@ func (this *Context) CopyClipRectangleList() ([]Rectangle, Status) {
 	var slice []Rectangle
 	var status Status
 
-	rl := C.cairo_copy_clip_rectangle_list(this.C)
+	rl := C.cairo_copy_clip_rectangle_list(this.c())
 	if rl.num_rectangles > 0 {
 		var slice_header reflect.SliceHeader
 		slice_header.Data = uintptr(unsafe.Pointer(rl.rectangles))
@@ -510,12 +627,12 @@ func (this *Context) CopyClipRectangleList() ([]Rectangle, Status) {
 
 // void                cairo_fill                          (cairo_t *cr);
 func (this *Context) Fill() {
-	C.cairo_fill(this.C)
+	C.cairo_fill(this.c())
 }
 
 // void                cairo_fill_preserve                 (cairo_t *cr);
 func (this *Context) FillPreserve() {
-	C.cairo_fill_preserve(this.C)
+	C.cairo_fill_preserve(this.c())
 }
 
 // void                cairo_fill_extents                  (cairo_t *cr,
@@ -524,7 +641,7 @@ func (this *Context) FillPreserve() {
 //                                                          double *x2,
 //                                                          double *y2);
 func (this *Context) FillExtents() (x1, y1, x2, y2 float64) {
-	C.cairo_fill_extents(this.C,
+	C.cairo_fill_extents(this.c(),
 		(*C.double)(unsafe.Pointer(&x1)),
 		(*C.double)(unsafe.Pointer(&y1)),
 		(*C.double)(unsafe.Pointer(&x2)),
@@ -536,13 +653,13 @@ func (this *Context) FillExtents() (x1, y1, x2, y2 float64) {
 //                                                          double x,
 //                                                          double y);
 func (this *Context) InFill(x, y float64) bool {
-	return C.cairo_in_fill(this.C, C.double(x), C.double(y)) != 0
+	return C.cairo_in_fill(this.c(), C.double(x), C.double(y)) != 0
 }
 
 // void                cairo_mask                          (cairo_t *cr,
 //                                                          cairo_pattern_t *pattern);
 func (this *Context) Mask(pattern PatternLike) {
-	C.cairo_mask(this.C, pattern.InheritedFromCairoPattern())
+	C.cairo_mask(this.c(), pattern.InheritedFromCairoPattern().c())
 }
 
 // void                cairo_mask_surface                  (cairo_t *cr,
@@ -550,28 +667,28 @@ func (this *Context) Mask(pattern PatternLike) {
 //                                                          double surface_x,
 //                                                          double surface_y);
 func (this *Context) MaskSurface(surface SurfaceLike, surface_x, surface_y float64) {
-	C.cairo_mask_surface(this.C, surface.InheritedFromCairoSurface(), C.double(surface_x), C.double(surface_y))
+	C.cairo_mask_surface(this.c(), surface.InheritedFromCairoSurface().c(), C.double(surface_x), C.double(surface_y))
 }
 
 // void                cairo_paint                         (cairo_t *cr);
 func (this *Context) Paint() {
-	C.cairo_paint(this.C)
+	C.cairo_paint(this.c())
 }
 
 // void                cairo_paint_with_alpha              (cairo_t *cr,
 //                                                          double alpha);
 func (this *Context) PaintWithAlpha(alpha float64) {
-	C.cairo_paint_with_alpha(this.C, C.double(alpha))
+	C.cairo_paint_with_alpha(this.c(), C.double(alpha))
 }
 
 // void                cairo_stroke                        (cairo_t *cr);
 func (this *Context) Stroke() {
-	C.cairo_stroke(this.C)
+	C.cairo_stroke(this.c())
 }
 
 // void                cairo_stroke_preserve               (cairo_t *cr);
 func (this *Context) StrokePreserve() {
-	C.cairo_stroke_preserve(this.C)
+	C.cairo_stroke_preserve(this.c())
 }
 
 // void                cairo_stroke_extents                (cairo_t *cr,
@@ -580,7 +697,7 @@ func (this *Context) StrokePreserve() {
 //                                                          double *x2,
 //                                                          double *y2);
 func (this *Context) StrokeExtents() (x1, y1, x2, y2 float64) {
-	C.cairo_stroke_extents(this.C,
+	C.cairo_stroke_extents(this.c(),
 		(*C.double)(unsafe.Pointer(&x1)),
 		(*C.double)(unsafe.Pointer(&y1)),
 		(*C.double)(unsafe.Pointer(&x2)),
@@ -592,17 +709,17 @@ func (this *Context) StrokeExtents() (x1, y1, x2, y2 float64) {
 //                                                          double x,
 //                                                          double y);
 func (this *Context) InStroke(x, y float64) bool {
-	return C.cairo_in_stroke(this.C, C.double(x), C.double(y)) != 0
+	return C.cairo_in_stroke(this.c(), C.double(x), C.double(y)) != 0
 }
 
 // void                cairo_copy_page                     (cairo_t *cr);
 func (this *Context) CopyPage() {
-	C.cairo_copy_page(this.C)
+	C.cairo_copy_page(this.c())
 }
 
 // void                cairo_show_page                     (cairo_t *cr);
 func (this *Context) ShowPage() {
-	C.cairo_show_page(this.C)
+	C.cairo_show_page(this.c())
 }
 
 // unsigned int        cairo_get_reference_count           (cairo_t *cr);
@@ -619,15 +736,20 @@ func (this *Context) ShowPage() {
 
 //                     cairo_path_t;
 type Path struct {
-	C *C.cairo_path_t
+	C unsafe.Pointer
+}
+
+func (this *Path) c() *C.cairo_path_t {
+	return (*C.cairo_path_t)(this.C)
 }
 
 func path_finalizer(this *Path) {
-	C.cairo_path_destroy(this.C)
+	C.cairo_path_destroy(this.c())
 }
 
-func PathWrap(c *C.cairo_path_t) unsafe.Pointer {
-	path := &Path{c}
+func PathWrap(c_un unsafe.Pointer) unsafe.Pointer {
+	c := (*C.cairo_path_t)(c_un)
+	path := &Path{unsafe.Pointer(c)}
 	runtime.SetFinalizer(path, path_finalizer)
 	return unsafe.Pointer(path)
 }
@@ -647,12 +769,12 @@ const (
 
 // cairo_path_t *      cairo_copy_path                     (cairo_t *cr);
 func (this *Context) CopyPath() *Path {
-	return (*Path)(PathWrap(C.cairo_copy_path(this.C)))
+	return (*Path)(PathWrap(unsafe.Pointer(C.cairo_copy_path(this.c()))))
 }
 
 // cairo_path_t *      cairo_copy_path_flat                (cairo_t *cr);
 func (this *Context) CopyPathFlat() *Path {
-	return (*Path)(PathWrap(C.cairo_copy_path_flat(this.C)))
+	return (*Path)(PathWrap(unsafe.Pointer(C.cairo_copy_path_flat(this.c()))))
 }
 
 // void                cairo_path_destroy                  (cairo_path_t *path);
@@ -660,19 +782,19 @@ func (this *Context) CopyPathFlat() *Path {
 // void                cairo_append_path                   (cairo_t *cr,
 //                                                          const cairo_path_t *path);
 func (this *Context) AppendPath(path *Path) {
-	C.cairo_append_path(this.C, path.C)
+	C.cairo_append_path(this.c(), path.c())
 }
 
 // cairo_bool_t        cairo_has_current_point             (cairo_t *cr);
 func (this *Context) HasCurrentPoint() bool {
-	return C.cairo_has_current_point(this.C) != 0
+	return C.cairo_has_current_point(this.c()) != 0
 }
 
 // void                cairo_get_current_point             (cairo_t *cr,
 //                                                          double *x,
 //                                                          double *y);
 func (this *Context) GetCurrentPoint() (x, y float64) {
-	C.cairo_get_current_point(this.C,
+	C.cairo_get_current_point(this.c(),
 		(*C.double)(unsafe.Pointer(&x)),
 		(*C.double)(unsafe.Pointer(&y)))
 	return
@@ -680,17 +802,17 @@ func (this *Context) GetCurrentPoint() (x, y float64) {
 
 // void                cairo_new_path                      (cairo_t *cr);
 func (this *Context) NewPath() {
-	C.cairo_new_path(this.C)
+	C.cairo_new_path(this.c())
 }
 
 // void                cairo_new_sub_path                  (cairo_t *cr);
 func (this *Context) NewSubPath() {
-	C.cairo_new_sub_path(this.C)
+	C.cairo_new_sub_path(this.c())
 }
 
 // void                cairo_close_path                    (cairo_t *cr);
 func (this *Context) ClosePath() {
-	C.cairo_close_path(this.C)
+	C.cairo_close_path(this.c())
 }
 
 // void                cairo_arc                           (cairo_t *cr,
@@ -700,7 +822,7 @@ func (this *Context) ClosePath() {
 //                                                          double angle1,
 //                                                          double angle2);
 func (this *Context) Arc(xc, yc, radius, angle1, angle2 float64) {
-	C.cairo_arc(this.C, C.double(xc), C.double(yc), C.double(radius), C.double(angle1), C.double(angle2))
+	C.cairo_arc(this.c(), C.double(xc), C.double(yc), C.double(radius), C.double(angle1), C.double(angle2))
 }
 
 // void                cairo_arc_negative                  (cairo_t *cr,
@@ -710,7 +832,7 @@ func (this *Context) Arc(xc, yc, radius, angle1, angle2 float64) {
 //                                                          double angle1,
 //                                                          double angle2);
 func (this *Context) ArcNegative(xc, yc, radius, angle1, angle2 float64) {
-	C.cairo_arc_negative(this.C, C.double(xc), C.double(yc), C.double(radius), C.double(angle1), C.double(angle2))
+	C.cairo_arc_negative(this.c(), C.double(xc), C.double(yc), C.double(radius), C.double(angle1), C.double(angle2))
 }
 
 // void                cairo_curve_to                      (cairo_t *cr,
@@ -721,21 +843,21 @@ func (this *Context) ArcNegative(xc, yc, radius, angle1, angle2 float64) {
 //                                                          double x3,
 //                                                          double y3);
 func (this *Context) CurveTo(x1, y1, x2, y2, x3, y3 float64) {
-	C.cairo_curve_to(this.C, C.double(x1), C.double(y1), C.double(x2), C.double(y2), C.double(x3), C.double(y3))
+	C.cairo_curve_to(this.c(), C.double(x1), C.double(y1), C.double(x2), C.double(y2), C.double(x3), C.double(y3))
 }
 
 // void                cairo_line_to                       (cairo_t *cr,
 //                                                          double x,
 //                                                          double y);
 func (this *Context) LineTo(x, y float64) {
-	C.cairo_line_to(this.C, C.double(x), C.double(y))
+	C.cairo_line_to(this.c(), C.double(x), C.double(y))
 }
 
 // void                cairo_move_to                       (cairo_t *cr,
 //                                                          double x,
 //                                                          double y);
 func (this *Context) MoveTo(x, y float64) {
-	C.cairo_move_to(this.C, C.double(x), C.double(y))
+	C.cairo_move_to(this.c(), C.double(x), C.double(y))
 }
 
 // void                cairo_rectangle                     (cairo_t *cr,
@@ -744,7 +866,7 @@ func (this *Context) MoveTo(x, y float64) {
 //                                                          double width,
 //                                                          double height);
 func (this *Context) Rectangle(x, y, width, height float64) {
-	C.cairo_rectangle(this.C, C.double(x), C.double(y), C.double(width), C.double(height))
+	C.cairo_rectangle(this.c(), C.double(x), C.double(y), C.double(width), C.double(height))
 }
 
 // TODO: Implement
@@ -756,7 +878,7 @@ func (this *Context) Rectangle(x, y, width, height float64) {
 //                                                          const char *utf8);
 func (this *Context) TextPath(utf8 string) {
 	utf8c := C.CString(utf8)
-	C.cairo_text_path(this.C, utf8c)
+	C.cairo_text_path(this.c(), utf8c)
 	C.free(unsafe.Pointer(utf8c))
 }
 
@@ -768,21 +890,21 @@ func (this *Context) TextPath(utf8 string) {
 //                                                          double dx3,
 //                                                          double dy3);
 func (this *Context) RelCurveTo(dx1, dy1, dx2, dy2, dx3, dy3 float64) {
-	C.cairo_rel_curve_to(this.C, C.double(dx1), C.double(dy1), C.double(dx2), C.double(dy2), C.double(dx3), C.double(dy3))
+	C.cairo_rel_curve_to(this.c(), C.double(dx1), C.double(dy1), C.double(dx2), C.double(dy2), C.double(dx3), C.double(dy3))
 }
 
 // void                cairo_rel_line_to                   (cairo_t *cr,
 //                                                          double dx,
 //                                                          double dy);
 func (this *Context) RelLineTo(dx, dy float64) {
-	C.cairo_rel_line_to(this.C, C.double(dx), C.double(dy))
+	C.cairo_rel_line_to(this.c(), C.double(dx), C.double(dy))
 }
 
 // void                cairo_rel_move_to                   (cairo_t *cr,
 //                                                          double dx,
 //                                                          double dy);
 func (this *Context) RelMoveTo(dx, dy float64) {
-	C.cairo_rel_move_to(this.C, C.double(dx), C.double(dy))
+	C.cairo_rel_move_to(this.c(), C.double(dx), C.double(dy))
 }
 
 // void                cairo_path_extents                  (cairo_t *cr,
@@ -791,7 +913,7 @@ func (this *Context) RelMoveTo(dx, dy float64) {
 //                                                          double *x2,
 //                                                          double *y2);
 func (this *Context) PathExtents() (x1, y1, x2, y2 float64) {
-	C.cairo_path_extents(this.C,
+	C.cairo_path_extents(this.c(),
 		(*C.double)(unsafe.Pointer(&x1)),
 		(*C.double)(unsafe.Pointer(&y1)),
 		(*C.double)(unsafe.Pointer(&x2)),
@@ -810,28 +932,33 @@ func (this *Context) PathExtents() (x1, y1, x2, y2 float64) {
 
 // typedef             cairo_pattern_t;
 type PatternLike interface {
-	InheritedFromCairoPattern() *C.cairo_pattern_t
+	InheritedFromCairoPattern() *Pattern
 }
 
-type Pattern struct{ C *C.cairo_pattern_t }
+type Pattern struct{ C unsafe.Pointer }
 type SolidPattern struct{ Pattern }
 type SurfacePattern struct{ Pattern }
 type Gradient struct{ Pattern }
 type LinearGradient struct{ Gradient }
 type RadialGradient struct{ Gradient }
 
-func pattern_finalizer(this *Pattern) {
-	C.cairo_pattern_set_user_data(this.C, &go_repr_cookie, nil, nil)
-	C.cairo_pattern_destroy(this.C)
+func (this *Pattern) c() *C.cairo_pattern_t {
+	return (*C.cairo_pattern_t)(this.C)
 }
 
-func PatternWrap(c *C.cairo_pattern_t, grab bool) unsafe.Pointer {
+func pattern_finalizer(this *Pattern) {
+	C.cairo_pattern_set_user_data(this.c(), &go_repr_cookie, nil, nil)
+	C.cairo_pattern_destroy(this.c())
+}
+
+func PatternWrap(c_un unsafe.Pointer, grab bool) unsafe.Pointer {
+	c := (*C.cairo_pattern_t)(c_un)
 	go_repr := C.cairo_pattern_get_user_data(c, &go_repr_cookie)
 	if go_repr != nil {
 		return unsafe.Pointer(go_repr)
 	}
 
-	pattern := &Pattern{c}
+	pattern := &Pattern{unsafe.Pointer(c)}
 	if grab {
 		C.cairo_pattern_reference(c)
 	}
@@ -854,41 +981,41 @@ func ensure_pattern_type(c *C.cairo_pattern_t, types ...PatternType) {
 }
 
 func ToPattern(like PatternLike) *Pattern {
-	return (*Pattern)(PatternWrap(like.InheritedFromCairoPattern(), true))
+	return (*Pattern)(PatternWrap(unsafe.Pointer(like.InheritedFromCairoPattern().c()), true))
 }
 
 func ToSolidPattern(like PatternLike) *SolidPattern {
-	c := like.InheritedFromCairoPattern()
+	c := like.InheritedFromCairoPattern().c()
 	ensure_pattern_type(c, PatternTypeSolid)
-	return (*SolidPattern)(PatternWrap(c, true))
+	return (*SolidPattern)(PatternWrap(unsafe.Pointer(c), true))
 }
 
 func ToSurfacePattern(like PatternLike) *SurfacePattern {
-	c := like.InheritedFromCairoPattern()
+	c := like.InheritedFromCairoPattern().c()
 	ensure_pattern_type(c, PatternTypeSurface)
-	return (*SurfacePattern)(PatternWrap(c, true))
+	return (*SurfacePattern)(PatternWrap(unsafe.Pointer(c), true))
 }
 
 func ToGradient(like PatternLike) *Gradient {
-	c := like.InheritedFromCairoPattern()
+	c := like.InheritedFromCairoPattern().c()
 	ensure_pattern_type(c, PatternTypeLinear, PatternTypeRadial)
-	return (*Gradient)(PatternWrap(c, true))
+	return (*Gradient)(PatternWrap(unsafe.Pointer(c), true))
 }
 
 func ToLinearGradient(like PatternLike) *LinearGradient {
-	c := like.InheritedFromCairoPattern()
+	c := like.InheritedFromCairoPattern().c()
 	ensure_pattern_type(c, PatternTypeLinear)
-	return (*LinearGradient)(PatternWrap(c, true))
+	return (*LinearGradient)(PatternWrap(unsafe.Pointer(c), true))
 }
 
 func ToRadialGradient(like PatternLike) *RadialGradient {
-	c := like.InheritedFromCairoPattern()
+	c := like.InheritedFromCairoPattern().c()
 	ensure_pattern_type(c, PatternTypeRadial)
-	return (*RadialGradient)(PatternWrap(c, true))
+	return (*RadialGradient)(PatternWrap(unsafe.Pointer(c), true))
 }
 
-func (this *Pattern) InheritedFromCairoPattern() *C.cairo_pattern_t {
-	return this.C
+func (this *Pattern) InheritedFromCairoPattern() *Pattern {
+	return this
 }
 
 // void                cairo_pattern_add_color_stop_rgb    (cairo_pattern_t *pattern,
@@ -897,7 +1024,7 @@ func (this *Pattern) InheritedFromCairoPattern() *C.cairo_pattern_t {
 //                                                          double green,
 //                                                          double blue);
 func (this *Gradient) AddColorStopRGB(offset, red, green, blue float64) {
-	C.cairo_pattern_add_color_stop_rgb(this.C,
+	C.cairo_pattern_add_color_stop_rgb(this.c(),
 		C.double(offset), C.double(red), C.double(green), C.double(blue))
 }
 
@@ -908,14 +1035,14 @@ func (this *Gradient) AddColorStopRGB(offset, red, green, blue float64) {
 //                                                          double blue,
 //                                                          double alpha);
 func (this *Gradient) AddColorStopRGBA(offset, red, green, blue, alpha float64) {
-	C.cairo_pattern_add_color_stop_rgba(this.C,
+	C.cairo_pattern_add_color_stop_rgba(this.c(),
 		C.double(offset), C.double(red), C.double(green), C.double(blue), C.double(alpha))
 }
 
 // cairo_status_t      cairo_pattern_get_color_stop_count  (cairo_pattern_t *pattern,
 //                                                          int *count);
 func (this *Gradient) GetColorStopCount() (count int) {
-	C.cairo_pattern_get_color_stop_count(this.C,
+	C.cairo_pattern_get_color_stop_count(this.c(),
 		(*C.int)(unsafe.Pointer(&count)))
 	return
 }
@@ -928,7 +1055,7 @@ func (this *Gradient) GetColorStopCount() (count int) {
 //                                                          double *blue,
 //                                                          double *alpha);
 func (this *Gradient) GetColorStopRGBA(index int) (offset, red, green, blue, alpha float64) {
-	C.cairo_pattern_get_color_stop_rgba(this.C, C.int(index),
+	C.cairo_pattern_get_color_stop_rgba(this.c(), C.int(index),
 		(*C.double)(unsafe.Pointer(&offset)),
 		(*C.double)(unsafe.Pointer(&red)),
 		(*C.double)(unsafe.Pointer(&green)),
@@ -941,7 +1068,7 @@ func (this *Gradient) GetColorStopRGBA(index int) (offset, red, green, blue, alp
 //                                                          double green,
 //                                                          double blue);
 func NewSolidPatternRGB(red, green, blue float64) *SolidPattern {
-	return (*SolidPattern)(PatternWrap(C.cairo_pattern_create_rgb(C.double(red), C.double(green), C.double(blue)), false))
+	return (*SolidPattern)(PatternWrap(unsafe.Pointer(C.cairo_pattern_create_rgb(C.double(red), C.double(green), C.double(blue))), false))
 }
 
 // cairo_pattern_t *   cairo_pattern_create_rgba           (double red,
@@ -949,7 +1076,7 @@ func NewSolidPatternRGB(red, green, blue float64) *SolidPattern {
 //                                                          double blue,
 //                                                          double alpha);
 func NewSolidPatternRGBA(red, green, blue, alpha float64) *SolidPattern {
-	return (*SolidPattern)(PatternWrap(C.cairo_pattern_create_rgba(C.double(red), C.double(green), C.double(blue), C.double(alpha)), false))
+	return (*SolidPattern)(PatternWrap(unsafe.Pointer(C.cairo_pattern_create_rgba(C.double(red), C.double(green), C.double(blue), C.double(alpha))), false))
 }
 
 // cairo_status_t      cairo_pattern_get_rgba              (cairo_pattern_t *pattern,
@@ -958,7 +1085,7 @@ func NewSolidPatternRGBA(red, green, blue, alpha float64) *SolidPattern {
 //                                                          double *blue,
 //                                                          double *alpha);
 func (this *SolidPattern) GetRGBA() (red, green, blue, alpha float64) {
-	C.cairo_pattern_get_rgba(this.C,
+	C.cairo_pattern_get_rgba(this.c(),
 		(*C.double)(unsafe.Pointer(&red)),
 		(*C.double)(unsafe.Pointer(&green)),
 		(*C.double)(unsafe.Pointer(&blue)),
@@ -968,15 +1095,15 @@ func (this *SolidPattern) GetRGBA() (red, green, blue, alpha float64) {
 
 // cairo_pattern_t *   cairo_pattern_create_for_surface    (cairo_surface_t *surface);
 func NewSurfacePattern(surface SurfaceLike) *SurfacePattern {
-	return (*SurfacePattern)(PatternWrap(C.cairo_pattern_create_for_surface(surface.InheritedFromCairoSurface()), false))
+	return (*SurfacePattern)(PatternWrap(unsafe.Pointer(C.cairo_pattern_create_for_surface(surface.InheritedFromCairoSurface().c())), false))
 }
 
 // cairo_status_t      cairo_pattern_get_surface           (cairo_pattern_t *pattern,
 //                                                          cairo_surface_t **surface);
 func (this *SurfacePattern) GetSurface() *Surface {
 	var surfacec *C.cairo_surface_t
-	C.cairo_pattern_get_surface(this.C, &surfacec)
-	surface := (*Surface)(SurfaceWrap(surfacec, true))
+	C.cairo_pattern_get_surface(this.c(), &surfacec)
+	surface := (*Surface)(SurfaceWrap(unsafe.Pointer(surfacec), true))
 	return surface
 }
 
@@ -985,8 +1112,8 @@ func (this *SurfacePattern) GetSurface() *Surface {
 //                                                          double x1,
 //                                                          double y1);
 func NewLinearGradient(x0, y0, x1, y1 float64) *LinearGradient {
-	return (*LinearGradient)(PatternWrap(C.cairo_pattern_create_linear(
-		C.double(x0), C.double(y0), C.double(x1), C.double(y1)), false))
+	return (*LinearGradient)(PatternWrap(unsafe.Pointer(C.cairo_pattern_create_linear(
+		C.double(x0), C.double(y0), C.double(x1), C.double(y1))), false))
 }
 
 // cairo_status_t      cairo_pattern_get_linear_points     (cairo_pattern_t *pattern,
@@ -995,7 +1122,7 @@ func NewLinearGradient(x0, y0, x1, y1 float64) *LinearGradient {
 //                                                          double *x1,
 //                                                          double *y1);
 func (this *LinearGradient) GetLinearPoints() (x0, y0, x1, y1 float64) {
-	C.cairo_pattern_get_linear_points(this.C,
+	C.cairo_pattern_get_linear_points(this.c(),
 		(*C.double)(unsafe.Pointer(&x0)),
 		(*C.double)(unsafe.Pointer(&y0)),
 		(*C.double)(unsafe.Pointer(&x1)),
@@ -1010,8 +1137,8 @@ func (this *LinearGradient) GetLinearPoints() (x0, y0, x1, y1 float64) {
 //                                                          double cy1,
 //                                                          double radius1);
 func NewRadialGradient(cx0, cy0, radius0, cx1, cy1, radius1 float64) *RadialGradient {
-	return (*RadialGradient)(PatternWrap(C.cairo_pattern_create_radial(
-		C.double(cx0), C.double(cy0), C.double(radius0), C.double(cx1), C.double(cy1), C.double(radius1)), false))
+	return (*RadialGradient)(PatternWrap(unsafe.Pointer(C.cairo_pattern_create_radial(
+		C.double(cx0), C.double(cy0), C.double(radius0), C.double(cx1), C.double(cy1), C.double(radius1))), false))
 }
 
 // cairo_status_t      cairo_pattern_get_radial_circles    (cairo_pattern_t *pattern,
@@ -1022,7 +1149,7 @@ func NewRadialGradient(cx0, cy0, radius0, cx1, cy1, radius1 float64) *RadialGrad
 //                                                          double *y1,
 //                                                          double *r1);
 func (this *RadialGradient) GetRadialCircles() (x0, y0, r0, x1, y1, r1 float64) {
-	C.cairo_pattern_get_radial_circles(this.C,
+	C.cairo_pattern_get_radial_circles(this.c(),
 		(*C.double)(unsafe.Pointer(&x0)),
 		(*C.double)(unsafe.Pointer(&y0)),
 		(*C.double)(unsafe.Pointer(&r0)),
@@ -1037,7 +1164,7 @@ func (this *RadialGradient) GetRadialCircles() (x0, y0, r0, x1, y1, r1 float64) 
 
 // cairo_status_t      cairo_pattern_status                (cairo_pattern_t *pattern);
 func (this *Pattern) Status() Status {
-	return Status(C.cairo_pattern_status(this.C))
+	return Status(C.cairo_pattern_status(this.c()))
 }
 
 // enum                cairo_extend_t;
@@ -1057,12 +1184,12 @@ func (this Extend) c() C.cairo_extend_t {
 // void                cairo_pattern_set_extend            (cairo_pattern_t *pattern,
 //                                                          cairo_extend_t extend);
 func (this *SurfacePattern) SetExtend(extend Extend) {
-	C.cairo_pattern_set_extend(this.C, extend.c())
+	C.cairo_pattern_set_extend(this.c(), extend.c())
 }
 
 // cairo_extend_t      cairo_pattern_get_extend            (cairo_pattern_t *pattern);
 func (this *SurfacePattern) GetExtend() Extend {
-	return Extend(C.cairo_pattern_get_extend(this.C))
+	return Extend(C.cairo_pattern_get_extend(this.c()))
 }
 
 // enum                cairo_filter_t;
@@ -1084,25 +1211,25 @@ func (this Filter) c() C.cairo_filter_t {
 // void                cairo_pattern_set_filter            (cairo_pattern_t *pattern,
 //                                                          cairo_filter_t filter);
 func (this *SurfacePattern) SetFilter(filter Filter) {
-	C.cairo_pattern_set_filter(this.C, filter.c())
+	C.cairo_pattern_set_filter(this.c(), filter.c())
 }
 
 // cairo_filter_t      cairo_pattern_get_filter            (cairo_pattern_t *pattern);
 func (this *SurfacePattern) GetFilter() Filter {
-	return Filter(C.cairo_pattern_get_filter(this.C))
+	return Filter(C.cairo_pattern_get_filter(this.c()))
 }
 
 // void                cairo_pattern_set_matrix            (cairo_pattern_t *pattern,
 //                                                          const cairo_matrix_t *matrix);
 func (this *Pattern) SetMatrix(matrix *Matrix) {
-	C.cairo_pattern_set_matrix(this.C, matrix.c())
+	C.cairo_pattern_set_matrix(this.c(), matrix.c())
 }
 
 // void                cairo_pattern_get_matrix            (cairo_pattern_t *pattern,
 //                                                          cairo_matrix_t *matrix);
 func (this *Pattern) GetMatrix() Matrix {
 	var matrix C.cairo_matrix_t
-	C.cairo_pattern_get_matrix(this.C, &matrix)
+	C.cairo_pattern_get_matrix(this.c(), &matrix)
 	return *(*Matrix)(unsafe.Pointer(&matrix))
 }
 
@@ -1122,7 +1249,7 @@ func (this PatternType) c() C.cairo_pattern_type_t {
 
 // cairo_pattern_type_t  cairo_pattern_get_type            (cairo_pattern_t *pattern);
 func (this *Pattern) GetType() PatternType {
-	return PatternType(C.cairo_pattern_get_type(this.C))
+	return PatternType(C.cairo_pattern_get_type(this.c()))
 }
 
 // TODO: Implement these
@@ -1140,30 +1267,35 @@ func (this *Pattern) GetType() PatternType {
 
 // typedef             cairo_region_t;
 type Region struct {
-	C *C.cairo_region_t
+	C unsafe.Pointer
+}
+
+func (this *Region) c() *C.cairo_region_t {
+	return (*C.cairo_region_t)(this.C)
 }
 
 func region_finalizer(this *Region) {
-	C.cairo_region_destroy(this.C)
+	C.cairo_region_destroy(this.c())
 }
 
-func RegionWrap(c *C.cairo_region_t, grab bool) unsafe.Pointer {
+func RegionWrap(c_un unsafe.Pointer, grab bool) unsafe.Pointer {
+	c := (*C.cairo_region_t)(c_un)
 	if grab {
 		C.cairo_region_reference(c)
 	}
-	region := &Region{c}
+	region := &Region{unsafe.Pointer(c)}
 	runtime.SetFinalizer(region, region_finalizer)
 	return unsafe.Pointer(region)
 }
 
 // cairo_region_t *    cairo_region_create                 (void);
 func NewRegion() *Region {
-	return (*Region)(RegionWrap(C.cairo_region_create(), false))
+	return (*Region)(RegionWrap(unsafe.Pointer(C.cairo_region_create()), false))
 }
 
 // cairo_region_t *    cairo_region_create_rectangle       (const cairo_rectangle_int_t *rectangle);
 func NewRegionRectangle(rectangle *RectangleInt) *Region {
-	return (*Region)(RegionWrap(C.cairo_region_create_rectangle(rectangle.c()), false))
+	return (*Region)(RegionWrap(unsafe.Pointer(C.cairo_region_create_rectangle(rectangle.c())), false))
 }
 
 // cairo_region_t *    cairo_region_create_rectangles      (const cairo_rectangle_int_t *rects,
@@ -1174,12 +1306,12 @@ func NewRegionRectangles(rects []RectangleInt) *Region {
 	if count > 0 {
 		first = rects[0].c()
 	}
-	return (*Region)(RegionWrap(C.cairo_region_create_rectangles(first, count), false))
+	return (*Region)(RegionWrap(unsafe.Pointer(C.cairo_region_create_rectangles(first, count)), false))
 }
 
 // cairo_region_t *    cairo_region_copy                   (const cairo_region_t *original);
 func (this *Region) Copy() *Region {
-	return (*Region)(RegionWrap(C.cairo_region_copy(this.C), false))
+	return (*Region)(RegionWrap(unsafe.Pointer(C.cairo_region_copy(this.c())), false))
 }
 
 // cairo_region_t *    cairo_region_reference              (cairo_region_t *region);
@@ -1187,39 +1319,39 @@ func (this *Region) Copy() *Region {
 
 // cairo_status_t      cairo_region_status                 (const cairo_region_t *region);
 func (this *Region) Status() Status {
-	return Status(C.cairo_region_status(this.C))
+	return Status(C.cairo_region_status(this.c()))
 }
 
 // void                cairo_region_get_extents            (const cairo_region_t *region,
 //                                                          cairo_rectangle_int_t *extents);
 func (this *Region) GetExtents() (extents RectangleInt) {
-	C.cairo_region_get_extents(this.C, extents.c())
+	C.cairo_region_get_extents(this.c(), extents.c())
 	return
 }
 
 // int                 cairo_region_num_rectangles         (const cairo_region_t *region);
 func (this *Region) NumRectangles() int {
-	return int(C.cairo_region_num_rectangles(this.C))
+	return int(C.cairo_region_num_rectangles(this.c()))
 }
 
 // void                cairo_region_get_rectangle          (const cairo_region_t *region,
 //                                                          int nth,
 //                                                          cairo_rectangle_int_t *rectangle);
 func (this *Region) GetRectangle(nth int) (rectangle RectangleInt) {
-	C.cairo_region_get_rectangle(this.C, C.int(nth), rectangle.c())
+	C.cairo_region_get_rectangle(this.c(), C.int(nth), rectangle.c())
 	return
 }
 
 // cairo_bool_t        cairo_region_is_empty               (const cairo_region_t *region);
 func (this *Region) IsEmpty() bool {
-	return C.cairo_region_is_empty(this.C) != 0
+	return C.cairo_region_is_empty(this.c()) != 0
 }
 
 // cairo_bool_t        cairo_region_contains_point         (const cairo_region_t *region,
 //                                                          int x,
 //                                                          int y);
 func (this *Region) ContainsPoint(x, y int) bool {
-	return C.cairo_region_contains_point(this.C, C.int(x), C.int(y)) != 0
+	return C.cairo_region_contains_point(this.c(), C.int(x), C.int(y)) != 0
 }
 
 // enum                cairo_region_overlap_t;
@@ -1234,68 +1366,68 @@ const (
 // cairo_region_overlap_t  cairo_region_contains_rectangle (const cairo_region_t *region,
 //                                                          const cairo_rectangle_int_t *rectangle);
 func (this *Region) ContainsRectangle(rectangle *RectangleInt) RegionOverlap {
-	return RegionOverlap(C.cairo_region_contains_rectangle(this.C, rectangle.c()))
+	return RegionOverlap(C.cairo_region_contains_rectangle(this.c(), rectangle.c()))
 }
 
 // cairo_bool_t        cairo_region_equal                  (const cairo_region_t *a,
 //                                                          const cairo_region_t *b);
 func (this *Region) Equal(b *Region) bool {
-	return C.cairo_region_equal(this.C, b.C) != 0
+	return C.cairo_region_equal(this.c(), b.c()) != 0
 }
 
 // void                cairo_region_translate              (cairo_region_t *region,
 //                                                          int dx,
 //                                                          int dy);
 func (this *Region) Translate(dx, dy int) {
-	C.cairo_region_translate(this.C, C.int(dx), C.int(dy))
+	C.cairo_region_translate(this.c(), C.int(dx), C.int(dy))
 }
 
 // cairo_status_t      cairo_region_intersect              (cairo_region_t *dst,
 //                                                          const cairo_region_t *other);
 func (this *Region) Intersect(other *Region) Status {
-	return Status(C.cairo_region_intersect(this.C, other.C))
+	return Status(C.cairo_region_intersect(this.c(), other.c()))
 }
 
 // cairo_status_t      cairo_region_intersect_rectangle    (cairo_region_t *dst,
 //                                                          const cairo_rectangle_int_t *rectangle);
 func (this *Region) IntersectRectangle(rectangle *RectangleInt) Status {
-	return Status(C.cairo_region_intersect_rectangle(this.C, rectangle.c()))
+	return Status(C.cairo_region_intersect_rectangle(this.c(), rectangle.c()))
 }
 
 // cairo_status_t      cairo_region_subtract               (cairo_region_t *dst,
 //                                                          const cairo_region_t *other);
 func (this *Region) Subtract(other *Region) Status {
-	return Status(C.cairo_region_subtract(this.C, other.C))
+	return Status(C.cairo_region_subtract(this.c(), other.c()))
 }
 
 // cairo_status_t      cairo_region_subtract_rectangle     (cairo_region_t *dst,
 //                                                          const cairo_rectangle_int_t *rectangle);
 func (this *Region) SubtractRectangle(rectangle *RectangleInt) Status {
-	return Status(C.cairo_region_subtract_rectangle(this.C, rectangle.c()))
+	return Status(C.cairo_region_subtract_rectangle(this.c(), rectangle.c()))
 }
 
 // cairo_status_t      cairo_region_union                  (cairo_region_t *dst,
 //                                                          const cairo_region_t *other);
 func (this *Region) Union(other *Region) Status {
-	return Status(C.cairo_region_union(this.C, other.C))
+	return Status(C.cairo_region_union(this.c(), other.c()))
 }
 
 // cairo_status_t      cairo_region_union_rectangle        (cairo_region_t *dst,
 //                                                          const cairo_rectangle_int_t *rectangle);
 func (this *Region) UnionRectangle(rectangle *RectangleInt) Status {
-	return Status(C.cairo_region_union_rectangle(this.C, rectangle.c()))
+	return Status(C.cairo_region_union_rectangle(this.c(), rectangle.c()))
 }
 
 // cairo_status_t      cairo_region_xor                    (cairo_region_t *dst,
 //                                                          const cairo_region_t *other);
 func (this *Region) Xor(other *Region) Status {
-	return Status(C.cairo_region_xor(this.C, other.C))
+	return Status(C.cairo_region_xor(this.c(), other.c()))
 }
 
 // cairo_status_t      cairo_region_xor_rectangle          (cairo_region_t *dst,
 //                                                          const cairo_rectangle_int_t *rectangle);
 func (this *Region) XorRectangle(rectangle *RectangleInt) Status {
-	return Status(C.cairo_region_xor_rectangle(this.C, rectangle.c()))
+	return Status(C.cairo_region_xor_rectangle(this.c(), rectangle.c()))
 }
 
 //----------------------------------------------------------------------------
@@ -1306,52 +1438,52 @@ func (this *Region) XorRectangle(rectangle *RectangleInt) Status {
 //                                                          double tx,
 //                                                          double ty);
 func (this *Context) Translate(tx, ty float64) {
-	C.cairo_translate(this.C, C.double(tx), C.double(ty))
+	C.cairo_translate(this.c(), C.double(tx), C.double(ty))
 }
 
 // void                cairo_scale                         (cairo_t *cr,
 //                                                          double sx,
 //                                                          double sy);
 func (this *Context) Scale(sx, sy float64) {
-	C.cairo_scale(this.C, C.double(sx), C.double(sy))
+	C.cairo_scale(this.c(), C.double(sx), C.double(sy))
 }
 
 // void                cairo_rotate                        (cairo_t *cr,
 //                                                          double angle);
 func (this *Context) Rotate(angle float64) {
-	C.cairo_rotate(this.C, C.double(angle))
+	C.cairo_rotate(this.c(), C.double(angle))
 }
 
 // void                cairo_transform                     (cairo_t *cr,
 //                                                          const cairo_matrix_t *matrix);
 func (this *Context) Transform(matrix *Matrix) {
-	C.cairo_transform(this.C, matrix.c())
+	C.cairo_transform(this.c(), matrix.c())
 }
 
 // void                cairo_set_matrix                    (cairo_t *cr,
 //                                                          const cairo_matrix_t *matrix);
 func (this *Context) SetMatrix(matrix *Matrix) {
-	C.cairo_set_matrix(this.C, matrix.c())
+	C.cairo_set_matrix(this.c(), matrix.c())
 }
 
 // void                cairo_get_matrix                    (cairo_t *cr,
 //                                                          cairo_matrix_t *matrix);
 func (this *Context) GetMatrix() Matrix {
 	var matrix C.cairo_matrix_t
-	C.cairo_get_matrix(this.C, &matrix)
+	C.cairo_get_matrix(this.c(), &matrix)
 	return *(*Matrix)(unsafe.Pointer(&matrix))
 }
 
 // void                cairo_identity_matrix               (cairo_t *cr);
 func (this *Context) IdentityMatrix() {
-	C.cairo_identity_matrix(this.C)
+	C.cairo_identity_matrix(this.c())
 }
 
 // void                cairo_user_to_device                (cairo_t *cr,
 //                                                          double *x,
 //                                                          double *y);
 func (this *Context) UserToDevice(x, y float64) (float64, float64) {
-	C.cairo_user_to_device(this.C,
+	C.cairo_user_to_device(this.c(),
 		(*C.double)(unsafe.Pointer(&x)),
 		(*C.double)(unsafe.Pointer(&y)))
 	return x, y
@@ -1361,7 +1493,7 @@ func (this *Context) UserToDevice(x, y float64) (float64, float64) {
 //                                                          double *dx,
 //                                                          double *dy);
 func (this *Context) UserToDeviceDistance(dx, dy float64) (float64, float64) {
-	C.cairo_user_to_device_distance(this.C,
+	C.cairo_user_to_device_distance(this.c(),
 		(*C.double)(unsafe.Pointer(&dx)),
 		(*C.double)(unsafe.Pointer(&dy)))
 	return dx, dy
@@ -1371,7 +1503,7 @@ func (this *Context) UserToDeviceDistance(dx, dy float64) (float64, float64) {
 //                                                          double *x,
 //                                                          double *y);
 func (this *Context) DeviceToUser(x, y float64) (float64, float64) {
-	C.cairo_device_to_user(this.C,
+	C.cairo_device_to_user(this.c(),
 		(*C.double)(unsafe.Pointer(&x)),
 		(*C.double)(unsafe.Pointer(&y)))
 	return x, y
@@ -1381,7 +1513,7 @@ func (this *Context) DeviceToUser(x, y float64) (float64, float64) {
 //                                                          double *dx,
 //                                                          double *dy);
 func (this *Context) DeviceToUserDistance(dx, dy float64) (float64, float64) {
-	C.cairo_device_to_user_distance(this.C,
+	C.cairo_device_to_user_distance(this.c(),
 		(*C.double)(unsafe.Pointer(&dx)),
 		(*C.double)(unsafe.Pointer(&dy)))
 	return dx, dy
@@ -1442,27 +1574,27 @@ const (
 //                                                          cairo_font_weight_t weight);
 func (this *Context) SelectFontFace(family string, slant FontSlant, weight FontWeight) {
 	cfamily := C.CString(family)
-	C.cairo_select_font_face(this.C, cfamily, slant.c(), weight.c())
+	C.cairo_select_font_face(this.c(), cfamily, slant.c(), weight.c())
 	C.free(unsafe.Pointer(cfamily))
 }
 
 // void                cairo_set_font_size                 (cairo_t *cr,
 //                                                          double size);
 func (this *Context) SetFontSize(size float64) {
-	C.cairo_set_font_size(this.C, C.double(size))
+	C.cairo_set_font_size(this.c(), C.double(size))
 }
 
 // void                cairo_set_font_matrix               (cairo_t *cr,
 //                                                          const cairo_matrix_t *matrix);
 func (this *Context) SetFontMatrix(matrix *Matrix) {
-	C.cairo_set_font_matrix(this.C, matrix.c())
+	C.cairo_set_font_matrix(this.c(), matrix.c())
 }
 
 // void                cairo_get_font_matrix               (cairo_t *cr,
 //                                                          cairo_matrix_t *matrix);
 func (this *Context) GetFontMatrix() Matrix {
 	var matrix Matrix
-	C.cairo_get_font_matrix(this.C, matrix.c())
+	C.cairo_get_font_matrix(this.c(), matrix.c())
 	return matrix
 }
 
@@ -1482,7 +1614,7 @@ func (this *Context) GetFontMatrix() Matrix {
 //                                                          const char *utf8);
 func (this *Context) ShowText(utf8 string) {
 	cutf8 := C.CString(utf8)
-	C.cairo_show_text(this.C, cutf8)
+	C.cairo_show_text(this.c(), cutf8)
 	C.free(unsafe.Pointer(cutf8))
 }
 
@@ -1496,7 +1628,7 @@ func (this *Context) ShowGlyphs(glyphs []Glyph) {
 		first = glyphs[0].c()
 	}
 
-	C.cairo_show_glyphs(this.C, first, n)
+	C.cairo_show_glyphs(this.c(), first, n)
 }
 
 // TODO: Implement these
@@ -1533,6 +1665,154 @@ func (this *Context) ShowGlyphs(glyphs []Glyph) {
 //----------------------------------------------------------------------------
 
 //----------------------------------------------------------------------------
+// Font Options
+//----------------------------------------------------------------------------
+
+// typedef             cairo_font_options_t;
+type FontOptions struct {
+	C unsafe.Pointer
+}
+
+func (this *FontOptions) c() *C.cairo_font_options_t {
+	return (*C.cairo_font_options_t)(this.C)
+}
+
+func font_options_finalizer(this *FontOptions) {
+	C.cairo_font_options_destroy(this.c())
+}
+
+func FontOptionsWrap(c_un unsafe.Pointer) unsafe.Pointer {
+	c := (*C.cairo_font_options_t)(c_un)
+	font_options := &FontOptions{unsafe.Pointer(c)}
+	runtime.SetFinalizer(font_options, font_options_finalizer)
+	return unsafe.Pointer(font_options)
+}
+
+// cairo_font_options_t * cairo_font_options_create        (void);
+func NewFontOptions() *FontOptions {
+	return (*FontOptions)(FontOptionsWrap(unsafe.Pointer(C.cairo_font_options_create())))
+}
+
+// cairo_font_options_t * cairo_font_options_copy          (const cairo_font_options_t *original);
+func (this *FontOptions) Copy() *FontOptions {
+	return (*FontOptions)(FontOptionsWrap(unsafe.Pointer(C.cairo_font_options_copy(this.c()))))
+}
+
+// void                cairo_font_options_destroy          (cairo_font_options_t *options);
+
+// cairo_status_t      cairo_font_options_status           (cairo_font_options_t *options);
+func (this *FontOptions) Status() Status {
+	return Status(C.cairo_font_options_status(this.c()))
+}
+
+// void                cairo_font_options_merge            (cairo_font_options_t *options,
+//                                                          const cairo_font_options_t *other);
+func (this *FontOptions) Merge(other *FontOptions) {
+	C.cairo_font_options_merge(this.c(), other.c())
+}
+
+// unsigned long       cairo_font_options_hash             (const cairo_font_options_t *options);
+func (this *FontOptions) Hash() uint64 {
+	return uint64(C.cairo_font_options_hash(this.c()))
+}
+
+// cairo_bool_t        cairo_font_options_equal            (const cairo_font_options_t *options,
+//                                                          const cairo_font_options_t *other);
+func (this *FontOptions) Equal(other *FontOptions) bool {
+	return C.cairo_font_options_equal(this.c(), other.c()) != 0
+}
+
+// void                cairo_font_options_set_antialias    (cairo_font_options_t *options,
+//                                                          cairo_antialias_t antialias);
+func (this *FontOptions) SetAntialias(antialias Antialias) {
+	C.cairo_font_options_set_antialias(this.c(), antialias.c())
+}
+
+// cairo_antialias_t   cairo_font_options_get_antialias    (const cairo_font_options_t *options);
+func (this *FontOptions) GetAntialias() Antialias {
+	return Antialias(C.cairo_font_options_get_antialias(this.c()))
+}
+
+// enum                cairo_subpixel_order_t;
+type SubpixelOrder int
+
+const (
+	SubpixelOrderDefault SubpixelOrder = C.CAIRO_SUBPIXEL_ORDER_DEFAULT
+	SubpixelOrderRGB     SubpixelOrder = C.CAIRO_SUBPIXEL_ORDER_RGB
+	SubpixelOrderBGR     SubpixelOrder = C.CAIRO_SUBPIXEL_ORDER_BGR
+	SubpixelOrderVRGB    SubpixelOrder = C.CAIRO_SUBPIXEL_ORDER_VRGB
+	SubpixelOrderVBGR    SubpixelOrder = C.CAIRO_SUBPIXEL_ORDER_VBGR
+)
+
+func (this SubpixelOrder) c() C.cairo_subpixel_order_t {
+	return C.cairo_subpixel_order_t(this)
+}
+
+// void                cairo_font_options_set_subpixel_order
+//                                                         (cairo_font_options_t *options,
+//                                                          cairo_subpixel_order_t subpixel_order);
+func (this *FontOptions) SetSubpixelOrder(subpixel_order SubpixelOrder) {
+	C.cairo_font_options_set_subpixel_order(this.c(), subpixel_order.c())
+}
+
+// cairo_subpixel_order_t  cairo_font_options_get_subpixel_order
+//                                                         (const cairo_font_options_t *options);
+func (this *FontOptions) GetSubpixelOrder() SubpixelOrder {
+	return SubpixelOrder(C.cairo_font_options_get_subpixel_order(this.c()))
+}
+
+// enum                cairo_hint_style_t;
+type HintStyle int
+
+const (
+	HintStyleDefault HintStyle = C.CAIRO_HINT_STYLE_DEFAULT
+	HintStyleNone    HintStyle = C.CAIRO_HINT_STYLE_NONE
+	HintStyleSlight  HintStyle = C.CAIRO_HINT_STYLE_SLIGHT
+	HintStyleMedium  HintStyle = C.CAIRO_HINT_STYLE_MEDIUM
+	HintStyleFull    HintStyle = C.CAIRO_HINT_STYLE_FULL
+)
+
+func (this HintStyle) c() C.cairo_hint_style_t {
+	return C.cairo_hint_style_t(this)
+}
+
+// void                cairo_font_options_set_hint_style   (cairo_font_options_t *options,
+//                                                          cairo_hint_style_t hint_style);
+func (this *FontOptions) SetHintStyle(hint_style HintStyle) {
+	C.cairo_font_options_set_hint_style(this.c(), hint_style.c())
+}
+
+// cairo_hint_style_t  cairo_font_options_get_hint_style   (const cairo_font_options_t *options);
+func (this *FontOptions) GetHintStyle() HintStyle {
+	return HintStyle(C.cairo_font_options_get_hint_style(this.c()))
+}
+
+// enum                cairo_hint_metrics_t;
+type HintMetrics int
+
+const (
+	HintMetricsDefault HintMetrics = C.CAIRO_HINT_METRICS_DEFAULT
+	HintMetricsOff     HintMetrics = C.CAIRO_HINT_METRICS_OFF
+	HintMetricsOn      HintMetrics = C.CAIRO_HINT_METRICS_ON
+)
+
+func (this HintMetrics) c() C.cairo_hint_metrics_t {
+	return C.cairo_hint_metrics_t(this)
+}
+
+// void                cairo_font_options_set_hint_metrics (cairo_font_options_t *options,
+//                                                          cairo_hint_metrics_t hint_metrics);
+func (this *FontOptions) SetHintMetrics(hint_metrics HintMetrics) {
+	C.cairo_font_options_set_hint_metrics(this.c(), hint_metrics.c())
+}
+
+// cairo_hint_metrics_t  cairo_font_options_get_hint_metrics
+//                                                         (const cairo_font_options_t *options);
+func (this *FontOptions) GetHintMetrics() HintMetrics {
+	return HintMetrics(C.cairo_font_options_get_hint_metrics(this.c()))
+}
+
+//----------------------------------------------------------------------------
 // Device (TODO)
 //----------------------------------------------------------------------------
 
@@ -1556,25 +1836,30 @@ const (
 
 // typedef             cairo_surface_t;
 type SurfaceLike interface {
-	InheritedFromCairoSurface() *C.cairo_surface_t
+	InheritedFromCairoSurface() *Surface
 }
 
-type Surface struct{ C *C.cairo_surface_t }
+type Surface struct{ C unsafe.Pointer }
 type ImageSurface struct{ Surface }
 type PDFSurface struct{ Surface }
 
-func surface_finalizer(this *Surface) {
-	C.cairo_surface_set_user_data(this.C, &go_repr_cookie, nil, nil)
-	C.cairo_surface_destroy(this.C)
+func (this *Surface) c() *C.cairo_surface_t {
+	return (*C.cairo_surface_t)(this.C)
 }
 
-func SurfaceWrap(c *C.cairo_surface_t, grab bool) unsafe.Pointer {
+func surface_finalizer(this *Surface) {
+	C.cairo_surface_set_user_data(this.c(), &go_repr_cookie, nil, nil)
+	C.cairo_surface_destroy(this.c())
+}
+
+func SurfaceWrap(c_un unsafe.Pointer, grab bool) unsafe.Pointer {
+	c := (*C.cairo_surface_t)(c_un)
 	go_repr := C.cairo_surface_get_user_data(c, &go_repr_cookie)
 	if go_repr != nil {
 		return unsafe.Pointer(go_repr)
 	}
 
-	surface := &Surface{c}
+	surface := &Surface{unsafe.Pointer(c)}
 	if grab {
 		C.cairo_pattern_reference(c)
 	}
@@ -1597,23 +1882,23 @@ func ensure_surface_type(c *C.cairo_surface_t, types ...SurfaceType) {
 }
 
 func ToSurface(like SurfaceLike) *Surface {
-	return (*Surface)(SurfaceWrap(like.InheritedFromCairoSurface(), true))
+	return (*Surface)(SurfaceWrap(unsafe.Pointer(like.InheritedFromCairoSurface().c()), true))
 }
 
 func ToImageSurface(like SurfaceLike) *ImageSurface {
-	c := like.InheritedFromCairoSurface()
+	c := like.InheritedFromCairoSurface().c()
 	ensure_surface_type(c, SurfaceTypeImage)
-	return (*ImageSurface)(SurfaceWrap(c, true))
+	return (*ImageSurface)(SurfaceWrap(unsafe.Pointer(c), true))
 }
 
 func ToPDFSurface(like SurfaceLike) *PDFSurface {
-	c := like.InheritedFromCairoSurface()
+	c := like.InheritedFromCairoSurface().c()
 	ensure_surface_type(c, SurfaceTypePDF)
-	return (*PDFSurface)(SurfaceWrap(c, true))
+	return (*PDFSurface)(SurfaceWrap(unsafe.Pointer(c), true))
 }
 
-func (this *Surface) InheritedFromCairoSurface() *C.cairo_surface_t {
-	return this.C
+func (this *Surface) InheritedFromCairoSurface() *Surface {
+	return this
 }
 
 // enum                cairo_content_t;
@@ -1634,7 +1919,7 @@ func (this Content) c() C.cairo_content_t {
 //                                                          int width,
 //                                                          int height);
 func (this *Surface) CreateSimilar(content Content, width, height int) *Surface {
-	return (*Surface)(SurfaceWrap(C.cairo_surface_create_similar(this.C, content.c(), C.int(width), C.int(height)), false))
+	return (*Surface)(SurfaceWrap(unsafe.Pointer(C.cairo_surface_create_similar(this.c(), content.c(), C.int(width), C.int(height))), false))
 }
 
 // cairo_surface_t *   cairo_surface_create_for_rectangle  (cairo_surface_t *target,
@@ -1643,8 +1928,8 @@ func (this *Surface) CreateSimilar(content Content, width, height int) *Surface 
 //                                                          double width,
 //                                                          double height);
 func (this *Surface) CreateForRectangle(x, y, width, height float64) *Surface {
-	return (*Surface)(SurfaceWrap(C.cairo_surface_create_for_rectangle(this.C,
-		C.double(x), C.double(y), C.double(width), C.double(height)), false))
+	return (*Surface)(SurfaceWrap(unsafe.Pointer(C.cairo_surface_create_for_rectangle(this.c(),
+		C.double(x), C.double(y), C.double(width), C.double(height))), false))
 }
 
 // cairo_surface_t *   cairo_surface_reference             (cairo_surface_t *surface);
@@ -1652,17 +1937,17 @@ func (this *Surface) CreateForRectangle(x, y, width, height float64) *Surface {
 
 // cairo_status_t      cairo_surface_status                (cairo_surface_t *surface);
 func (this *Surface) Status() Status {
-	return Status(C.cairo_surface_status(this.C))
+	return Status(C.cairo_surface_status(this.c()))
 }
 
 // void                cairo_surface_finish                (cairo_surface_t *surface);
 func (this *Surface) Finish() {
-	C.cairo_surface_finish(this.C)
+	C.cairo_surface_finish(this.c())
 }
 
 // void                cairo_surface_flush                 (cairo_surface_t *surface);
 func (this *Surface) Flush() {
-	C.cairo_surface_flush(this.C)
+	C.cairo_surface_flush(this.c())
 }
 
 // TODO: Implement these
@@ -1672,12 +1957,12 @@ func (this *Surface) Flush() {
 
 // cairo_content_t     cairo_surface_get_content           (cairo_surface_t *surface);
 func (this *Surface) GetContent() Content {
-	return Content(C.cairo_surface_get_content(this.C))
+	return Content(C.cairo_surface_get_content(this.c()))
 }
 
 // void                cairo_surface_mark_dirty            (cairo_surface_t *surface);
 func (this *Surface) MarkDirty() {
-	C.cairo_surface_mark_dirty(this.C)
+	C.cairo_surface_mark_dirty(this.c())
 }
 
 // void                cairo_surface_mark_dirty_rectangle  (cairo_surface_t *surface,
@@ -1686,7 +1971,7 @@ func (this *Surface) MarkDirty() {
 //                                                          int width,
 //                                                          int height);
 func (this *Surface) MarkDirtyRectangle(x, y, width, height int) {
-	C.cairo_surface_mark_dirty_rectangle(this.C,
+	C.cairo_surface_mark_dirty_rectangle(this.c(),
 		C.int(x), C.int(y), C.int(width), C.int(height))
 }
 
@@ -1694,14 +1979,14 @@ func (this *Surface) MarkDirtyRectangle(x, y, width, height int) {
 //                                                          double x_offset,
 //                                                          double y_offset);
 func (this *Surface) SetDeviceOffset(x_offset, y_offset float64) {
-	C.cairo_surface_set_device_offset(this.C, C.double(x_offset), C.double(y_offset))
+	C.cairo_surface_set_device_offset(this.c(), C.double(x_offset), C.double(y_offset))
 }
 
 // void                cairo_surface_get_device_offset     (cairo_surface_t *surface,
 //                                                          double *x_offset,
 //                                                          double *y_offset);
 func (this *Surface) GetDeviceOffset() (x_offset, y_offset float64) {
-	C.cairo_surface_get_device_offset(this.C,
+	C.cairo_surface_get_device_offset(this.c(),
 		(*C.double)(unsafe.Pointer(&x_offset)),
 		(*C.double)(unsafe.Pointer(&y_offset)))
 	return
@@ -1712,7 +1997,7 @@ func (this *Surface) GetDeviceOffset() (x_offset, y_offset float64) {
 //                                                          double x_pixels_per_inch,
 //                                                          double y_pixels_per_inch);
 func (this *Surface) SetFallbackResolution(x_pixels_per_inch, y_pixels_per_inch float64) {
-	C.cairo_surface_set_fallback_resolution(this.C, C.double(x_pixels_per_inch), C.double(y_pixels_per_inch))
+	C.cairo_surface_set_fallback_resolution(this.c(), C.double(x_pixels_per_inch), C.double(y_pixels_per_inch))
 }
 
 // void                cairo_surface_get_fallback_resolution
@@ -1720,7 +2005,7 @@ func (this *Surface) SetFallbackResolution(x_pixels_per_inch, y_pixels_per_inch 
 //                                                          double *x_pixels_per_inch,
 //                                                          double *y_pixels_per_inch);
 func (this *Surface) GetFallbackResolution() (x_pixels_per_inch, y_pixels_per_inch float64) {
-	C.cairo_surface_get_fallback_resolution(this.C,
+	C.cairo_surface_get_fallback_resolution(this.c(),
 		(*C.double)(unsafe.Pointer(&x_pixels_per_inch)),
 		(*C.double)(unsafe.Pointer(&y_pixels_per_inch)))
 	return
@@ -1762,7 +2047,7 @@ func (this SurfaceType) c() C.cairo_surface_type_t {
 
 // cairo_surface_type_t  cairo_surface_get_type            (cairo_surface_t *surface);
 func (this *Surface) GetType() SurfaceType {
-	return SurfaceType(C.cairo_surface_get_type(this.C))
+	return SurfaceType(C.cairo_surface_get_type(this.c()))
 }
 
 // TODO: Implement these
@@ -1776,17 +2061,17 @@ func (this *Surface) GetType() SurfaceType {
 
 // void                cairo_surface_copy_page             (cairo_surface_t *surface);
 func (this *Surface) CopyPage() {
-	C.cairo_surface_copy_page(this.C)
+	C.cairo_surface_copy_page(this.c())
 }
 
 // void                cairo_surface_show_page             (cairo_surface_t *surface);
 func (this *Surface) ShowPage() {
-	C.cairo_surface_show_page(this.C)
+	C.cairo_surface_show_page(this.c())
 }
 
 // cairo_bool_t        cairo_surface_has_show_text_glyphs  (cairo_surface_t *surface);
 func (this *Surface) HasShowTextGlyphs() bool {
-	return C.cairo_surface_has_show_text_glyphs(this.C) != 0
+	return C.cairo_surface_has_show_text_glyphs(this.c()) != 0
 }
 
 // TODO: Implement these
@@ -1831,7 +2116,7 @@ func (this Format) StrideForWidth(width int) int {
 //                                                          int width,
 //                                                          int height);
 func NewImageSurface(format Format, width, height int) *ImageSurface {
-	return (*ImageSurface)(SurfaceWrap(C.cairo_image_surface_create(format.c(), C.int(width), C.int(height)), false))
+	return (*ImageSurface)(SurfaceWrap(unsafe.Pointer(C.cairo_image_surface_create(format.c(), C.int(width), C.int(height))), false))
 }
 
 // TODO: Implement this (need a way to keep GC from freeing the 'data')
@@ -1846,22 +2131,22 @@ func NewImageSurface(format Format, width, height int) *ImageSurface {
 
 // cairo_format_t      cairo_image_surface_get_format      (cairo_surface_t *surface);
 func (this *ImageSurface) GetFormat() Format {
-	return Format(C.cairo_image_surface_get_format(this.C))
+	return Format(C.cairo_image_surface_get_format(this.c()))
 }
 
 // int                 cairo_image_surface_get_width       (cairo_surface_t *surface);
 func (this *ImageSurface) GetWidth() int {
-	return int(C.cairo_image_surface_get_width(this.C))
+	return int(C.cairo_image_surface_get_width(this.c()))
 }
 
 // int                 cairo_image_surface_get_height      (cairo_surface_t *surface);
 func (this *ImageSurface) GetHeight() int {
-	return int(C.cairo_image_surface_get_height(this.C))
+	return int(C.cairo_image_surface_get_height(this.c()))
 }
 
 // int                 cairo_image_surface_get_stride      (cairo_surface_t *surface);
 func (this *ImageSurface) GetStride() int {
-	return int(C.cairo_image_surface_get_stride(this.C))
+	return int(C.cairo_image_surface_get_stride(this.c()))
 }
 
 //----------------------------------------------------------------------------
@@ -1871,7 +2156,7 @@ func (this *ImageSurface) GetStride() int {
 // cairo_surface_t *   cairo_image_surface_create_from_png (const char *filename);
 func NewImageSurfaceFromPNG(filename string) *ImageSurface {
 	cfilename := C.CString(filename)
-	surface := (*ImageSurface)(SurfaceWrap(C.cairo_image_surface_create_from_png(cfilename), false))
+	surface := (*ImageSurface)(SurfaceWrap(unsafe.Pointer(C.cairo_image_surface_create_from_png(cfilename)), false))
 	C.free(unsafe.Pointer(cfilename))
 	return surface
 }
@@ -1902,14 +2187,14 @@ func io_reader_wrapper(reader_up unsafe.Pointer, data_up unsafe.Pointer, length 
 //                                                         (cairo_read_func_t read_func,
 //                                                          void *closure);
 func NewImageSurfaceFromPNGStream(r io.Reader) *ImageSurface {
-	return (*ImageSurface)(SurfaceWrap(C._cairo_image_surface_create_from_png_stream(unsafe.Pointer(&r)), false))
+	return (*ImageSurface)(SurfaceWrap(unsafe.Pointer(C._cairo_image_surface_create_from_png_stream(unsafe.Pointer(&r))), false))
 }
 
 // cairo_status_t      cairo_surface_write_to_png          (cairo_surface_t *surface,
 //                                                          const char *filename);
 func (this *ImageSurface) WriteToPNG(filename string) Status {
 	cfilename := C.CString(filename)
-	status := C.cairo_surface_write_to_png(this.C, cfilename)
+	status := C.cairo_surface_write_to_png(this.c(), cfilename)
 	C.free(unsafe.Pointer(cfilename))
 	return Status(status)
 }
@@ -1940,7 +2225,7 @@ func io_writer_wrapper(writer_up unsafe.Pointer, data_up unsafe.Pointer, length 
 //                                                          cairo_write_func_t write_func,
 //                                                          void *closure);
 func (this *ImageSurface) WriteToPNGStream(w io.Writer) Status {
-	return Status(C._cairo_surface_write_to_png_stream(this.C, unsafe.Pointer(&w)))
+	return Status(C._cairo_surface_write_to_png_stream(this.c(), unsafe.Pointer(&w)))
 }
 
 //----------------------------------------------------------------------------
@@ -1953,7 +2238,7 @@ func (this *ImageSurface) WriteToPNGStream(w io.Writer) Status {
 //                                                          double height_in_points);
 func NewPDFSurface(filename string, width_in_points, height_in_points float64) *PDFSurface {
 	cfilename := C.CString(filename)
-	surface := (*PDFSurface)(SurfaceWrap(C.cairo_pdf_surface_create(cfilename, C.double(width_in_points), C.double(height_in_points)), false))
+	surface := (*PDFSurface)(SurfaceWrap(unsafe.Pointer(C.cairo_pdf_surface_create(cfilename, C.double(width_in_points), C.double(height_in_points))), false))
 	C.free(unsafe.Pointer(cfilename))
 	return surface
 }
@@ -1963,8 +2248,8 @@ func NewPDFSurface(filename string, width_in_points, height_in_points float64) *
 //                                                          double width_in_points,
 //                                                          double height_in_points);
 func NewPDFSurfaceForStream(w io.Writer, width_in_points, height_in_points float64) *PDFSurface {
-	surface := (*PDFSurface)(SurfaceWrap(C._cairo_pdf_surface_create_for_stream(unsafe.Pointer(&w),
-		C.double(width_in_points), C.double(height_in_points)), false))
+	surface := (*PDFSurface)(SurfaceWrap(unsafe.Pointer(C._cairo_pdf_surface_create_for_stream(unsafe.Pointer(&w),
+		C.double(width_in_points), C.double(height_in_points))), false))
 	return surface
 }
 
@@ -1972,7 +2257,7 @@ func NewPDFSurfaceForStream(w io.Writer, width_in_points, height_in_points float
 //                                                         (cairo_surface_t *surface,
 //                                                          cairo_pdf_version_t version);
 func (this *PDFSurface) RestrictToVersion(version PDFVersion) {
-	C.cairo_pdf_surface_restrict_to_version(this.C, version.c())
+	C.cairo_pdf_surface_restrict_to_version(this.c(), version.c())
 }
 
 // enum                cairo_pdf_version_t;
@@ -2013,7 +2298,7 @@ func (this PDFVersion) String() string {
 //                                                          double width_in_points,
 //                                                          double height_in_points);
 func (this *PDFSurface) SetSize(width_in_points, height_in_points float64) {
-	C.cairo_pdf_surface_set_size(this.C, C.double(width_in_points), C.double(height_in_points))
+	C.cairo_pdf_surface_set_size(this.c(), C.double(width_in_points), C.double(height_in_points))
 }
 
 //----------------------------------------------------------------------------
