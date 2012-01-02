@@ -120,10 +120,10 @@ func context_finalizer(this *Context) {
 	C.cairo_destroy(this.C)
 }
 
-func ContextWrap(c *C.cairo_t, grab bool) *Context {
+func ContextWrap(c *C.cairo_t, grab bool) unsafe.Pointer {
 	go_repr := C.cairo_get_user_data(c, &go_repr_cookie)
 	if go_repr != nil {
-		return (*Context)(go_repr)
+		return unsafe.Pointer(go_repr)
 	}
 
 	context := &Context{c}
@@ -136,12 +136,12 @@ func ContextWrap(c *C.cairo_t, grab bool) *Context {
 	if status != C.CAIRO_STATUS_SUCCESS {
 		panic("failed to set user data, out of memory?")
 	}
-	return context
+	return unsafe.Pointer(context)
 }
 
 // cairo_t *           cairo_create                        (cairo_surface_t *target);
 func NewContext(target SurfaceLike) *Context {
-	return ContextWrap(C.cairo_create(target.InheritedFromCairoSurface()), false)
+	return (*Context)(ContextWrap(C.cairo_create(target.InheritedFromCairoSurface()), false))
 }
 
 // cairo_t *           cairo_reference                     (cairo_t *cr);
@@ -626,10 +626,10 @@ func path_finalizer(this *Path) {
 	C.cairo_path_destroy(this.C)
 }
 
-func PathWrap(c *C.cairo_path_t) *Path {
+func PathWrap(c *C.cairo_path_t) unsafe.Pointer {
 	path := &Path{c}
 	runtime.SetFinalizer(path, path_finalizer)
-	return path
+	return unsafe.Pointer(path)
 }
 
 // TODO: Implement?
@@ -647,12 +647,12 @@ const (
 
 // cairo_path_t *      cairo_copy_path                     (cairo_t *cr);
 func (this *Context) CopyPath() *Path {
-	return PathWrap(C.cairo_copy_path(this.C))
+	return (*Path)(PathWrap(C.cairo_copy_path(this.C)))
 }
 
 // cairo_path_t *      cairo_copy_path_flat                (cairo_t *cr);
 func (this *Context) CopyPathFlat() *Path {
-	return PathWrap(C.cairo_copy_path_flat(this.C))
+	return (*Path)(PathWrap(C.cairo_copy_path_flat(this.C)))
 }
 
 // void                cairo_path_destroy                  (cairo_path_t *path);
@@ -1147,23 +1147,23 @@ func region_finalizer(this *Region) {
 	C.cairo_region_destroy(this.C)
 }
 
-func RegionWrap(c *C.cairo_region_t, grab bool) *Region {
+func RegionWrap(c *C.cairo_region_t, grab bool) unsafe.Pointer {
 	if grab {
 		C.cairo_region_reference(c)
 	}
 	region := &Region{c}
 	runtime.SetFinalizer(region, region_finalizer)
-	return region
+	return unsafe.Pointer(region)
 }
 
 // cairo_region_t *    cairo_region_create                 (void);
 func NewRegion() *Region {
-	return RegionWrap(C.cairo_region_create(), false)
+	return (*Region)(RegionWrap(C.cairo_region_create(), false))
 }
 
 // cairo_region_t *    cairo_region_create_rectangle       (const cairo_rectangle_int_t *rectangle);
 func NewRegionRectangle(rectangle *RectangleInt) *Region {
-	return RegionWrap(C.cairo_region_create_rectangle(rectangle.c()), false)
+	return (*Region)(RegionWrap(C.cairo_region_create_rectangle(rectangle.c()), false))
 }
 
 // cairo_region_t *    cairo_region_create_rectangles      (const cairo_rectangle_int_t *rects,
@@ -1174,12 +1174,12 @@ func NewRegionRectangles(rects []RectangleInt) *Region {
 	if count > 0 {
 		first = rects[0].c()
 	}
-	return RegionWrap(C.cairo_region_create_rectangles(first, count), false)
+	return (*Region)(RegionWrap(C.cairo_region_create_rectangles(first, count), false))
 }
 
 // cairo_region_t *    cairo_region_copy                   (const cairo_region_t *original);
 func (this *Region) Copy() *Region {
-	return RegionWrap(C.cairo_region_copy(this.C), false)
+	return (*Region)(RegionWrap(C.cairo_region_copy(this.C), false))
 }
 
 // cairo_region_t *    cairo_region_reference              (cairo_region_t *region);
