@@ -90,6 +90,8 @@
 		]
 	},
 	"renames": {
+		"InfoBar.AddButton": "_AddButton",
+
 		"Dialog.AddButton": "_AddButton",
 		"Dialog.Run": "_Run",
 

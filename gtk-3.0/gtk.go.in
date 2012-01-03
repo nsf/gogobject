@@ -85,6 +85,27 @@ func NewTreeViewColumnWithAttributes(title string, renderer CellRendererLike, at
 }
 
 //----------------------------------------------------------------------------
+// InfoBar
+//----------------------------------------------------------------------------
+
+func NewInfoBarWithButtons(buttons ...interface{}) *InfoBar {
+	bar := NewInfoBar()
+	for_pairs(buttons, func(key, value interface{}) {
+		text, ok := key.(string)
+		panic_if_not_type(ok, "string", key)
+		response, ok := value.(ResponseType)
+		panic_if_not_type(ok, "ResponseType", value)
+		bar.AddButton(text, response)
+	})
+
+	return bar
+}
+
+func (this *InfoBar) AddButton(text string, response ResponseType) *Widget {
+	return this._AddButton(text, int(response))
+}
+
+//----------------------------------------------------------------------------
 // Dialog
 //----------------------------------------------------------------------------
 
@@ -130,6 +151,25 @@ func (this *Dialog) Run() ResponseType {
 // MessageDialog
 //----------------------------------------------------------------------------
 
+func NewMessageDialog(parent0 WindowLike, flags0 DialogFlags, type0 MessageType,
+		buttons0 ButtonsType, format string, args ...interface{}) *MessageDialog {
+	var parent1 *C.GtkWindow
+	var flags1 C.GtkDialogFlags
+	var type1 C.GtkMessageType
+	var buttons1 C.GtkButtonsType
+	if parent0 != nil {
+		parent1 = parent0.InheritedFromGtkWindow()
+	}
+	flags1 = C.GtkDialogFlags(flags0)
+	type1 = C.GtkMessageType(type0)
+	buttons1 = C.GtkButtonsType(buttons0)
+	ret1 := C.gtk_message_dialog_new(parent1, flags1, type1, buttons1, nil)
+	var ret2 *MessageDialog
+	ret2 = (*MessageDialog)(_GObjectGrab(unsafe.Pointer(ret1)))
+	ret2.SetProperty("text", fmt.Sprintf(format, args...))
+	return ret2
+}
+
 func NewMessageDialogWithMarkup(parent0 WindowLike, flags0 DialogFlags, type0 MessageType,
 		buttons0 ButtonsType, format string, args ...interface{}) *MessageDialog {
 	var parent1 *C.GtkWindow
@@ -147,6 +187,16 @@ func NewMessageDialogWithMarkup(parent0 WindowLike, flags0 DialogFlags, type0 Me
 	ret2 = (*MessageDialog)(_GObjectGrab(unsafe.Pointer(ret1)))
 	ret2.SetMarkup(fmt.Sprintf(format, args...))
 	return ret2
+}
+
+func (this *Dialog) FormatSecondaryText(format string, args ...interface{}) {
+	this.SetProperty("secondary-use-markup", false)
+	this.SetProperty("secondary-text", fmt.Sprintf(format, args...))
+}
+
+func (this *Dialog) FormatSecondaryMarkup(format string, args ...interface{}) {
+	this.SetProperty("secondary-use-markup", true)
+	this.SetProperty("secondary-text", fmt.Sprintf(format, args...))
 }
 
 //----------------------------------------------------------------------------

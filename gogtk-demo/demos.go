@@ -8,11 +8,8 @@ import (
 	"./spinner"
 	"./expander"
 	"./color_selector"
+	"./info_bar"
 )
-
-type DemoApp interface {
-	Do(mainwin *gtk.Window) *gtk.Window
-}
 
 type DemoFunc func(mainwin *gtk.Window) *gtk.Window
 
@@ -30,4 +27,5 @@ var demos = []*DemoDesc{
 	{Title: "Spinner",        Filename: "spinner.go",        Func: spinner.Do},
 	{Title: "Expander",       Filename: "expander.go",       Func: expander.Do},
 	{Title: "Color Selector", Filename: "color_selector.go", Func: color_selector.Do},
+	{Title: "Info bar",       Filename: "info_bar.go",       Func: info_bar.Do},
 }

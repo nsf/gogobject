@@ -7,6 +7,7 @@ DEMOS=\
 	spinner.go \
 	expander.go \
 	color_selector.go \
+	info_bar.go \
 
 
 PREREQ=$(patsubst %.go,%.$O,$(DEMOS))
