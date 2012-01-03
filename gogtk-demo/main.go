@@ -55,6 +55,10 @@ func create_tree_view() *gtk.TreeView {
 			style = pango.StyleItalic
 		}
 
+		if app.(DemoFunc) == nil {
+			return
+		}
+
 		model.Set(&iter, style_column, style)
 		w := app.(DemoFunc)(gtk.ToWindow(treeview.GetToplevel()))
 		if w != nil {
