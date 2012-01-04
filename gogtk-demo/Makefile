@@ -9,6 +9,7 @@ DEMOS=\
 	color_selector.go \
 	info_bar.go \
 	entry_buffer.go \
+	pickers.go \
 
 
 PREREQ=$(patsubst %.go,%.$O,$(DEMOS))
