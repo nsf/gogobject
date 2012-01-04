@@ -15,7 +15,7 @@ const (
 	style_column
 )
 
-func create_tree_view() *gtk.TreeView {
+func create_tree_view() *gtk.Widget {
 	model := gtk.NewTreeStore(
 		gobject.String,      // title
 		gobject.String,      // filename
@@ -23,10 +23,10 @@ func create_tree_view() *gtk.TreeView {
 		gobject.Int,         // style
 	)
 
-	treeview := gtk.NewTreeViewWithModel(model)
+	tree_view := gtk.NewTreeViewWithModel(model)
 	selection := treeview.GetSelection()
 	selection.SetMode(gtk.SelectionModeBrowse)
-	treeview.SetSizeRequest(200, -1)
+	tree_view.SetSizeRequest(200, -1)
 
 	for _, demo := range demos {
 		iter := model.Append(nil, demo.Title, demo.Filename, demo.Func, pango.StyleNormal)
@@ -39,13 +39,13 @@ func create_tree_view() *gtk.TreeView {
 	c := gtk.NewTreeViewColumnWithAttributes("Widget (double click for demo)", r,
 		"text", title_column,
 		"style", style_column)
-	treeview.AppendColumn(c)
+	tree_view.AppendColumn(c)
 
 	iter, _ := model.GetIterFirst()
 	selection.SelectIter(&iter)
 
 	// TODO: selection.Connect("changed", ...)
-	treeview.Connect("row-activated", func(treeview *gtk.TreeView, path *gtk.TreePath) {
+	tree_view.Connect("row-activated", func(tree_view *gtk.TreeView, path *gtk.TreePath) {
 		iter, _ := model.GetIter(path)
 		var app interface{}
 		var style pango.Style
@@ -61,7 +61,7 @@ func create_tree_view() *gtk.TreeView {
 		}
 
 		model.Set(&iter, style_column, style)
-		w := app.(DemoFunc)(gtk.ToWindow(treeview.GetToplevel()))
+		w := app.(DemoFunc)(gtk.ToWindow(tree_view.GetToplevel()))
 		if w != nil {
 			w.Connect("destroy", func() {
 				var style pango.Style
@@ -72,12 +72,20 @@ func create_tree_view() *gtk.TreeView {
 			})
 		}
 	})
-	treeview.CollapseAll()
-	treeview.SetHeadersVisible(false)
+	tree_view.CollapseAll()
+	tree_view.SetHeadersVisible(false)
 
-	// HERE
+	scrolled_window := gtk.NewScrolledWindow(nil, nil)
+	scrolled_window.SetPolicy(gtk.PolicyTypeNever, gtk.PolicyTypeAutomatic)
+	scrolled_window.Add(tree_view)
 
-	return treeview
+	label := gtk.NewLabel("Widget (double click for demo)")
+
+	nb := gtk.NewNotebook()
+	nb.AppendPage(scrolled_window, label)
+	tree_view.GrabFocus()
+
+	return gtk.ToWidget(nb)
 }
 
 func create_text(is_source bool) (*gtk.ScrolledWindow, *gtk.TextBuffer) {
@@ -101,7 +109,7 @@ func create_text(is_source bool) (*gtk.ScrolledWindow, *gtk.TextBuffer) {
 	return sw, buf
 }
 
-func NewNotebookPage(nb *gtk.Notebook, w gtk.WidgetLike, label string) {
+func new_notebook_page(nb *gtk.Notebook, w gtk.WidgetLike, label string) {
 	l := gtk.NewLabelWithMnemonic(label)
 	nb.AppendPage(w, l)
 }
@@ -120,8 +128,8 @@ func main() {
 	window.Add(hbox)
 
 	// treeview
-	treeview := create_tree_view()
-	hbox.PackStart(treeview, false, false, 0)
+	tree_view := create_tree_view()
+	hbox.PackStart(tree_view, false, false, 0)
 
 	// notebook
 	notebook := gtk.NewNotebook()
@@ -129,7 +137,7 @@ func main() {
 
 	// info
 	sw, infobuf := create_text(false)
-	NewNotebookPage(notebook, sw, "_Info")
+	new_notebook_page(notebook, sw, "_Info")
 	tag := gtk.NewTextTag("title")
 	tag.SetProperty("font", "Sans 18")
 	infobuf.GetTagTable().Add(tag)
