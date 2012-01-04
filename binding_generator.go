@@ -285,20 +285,14 @@ func CForwardDeclarations() string {
 
 func GoUtils() string {
 	var out bytes.Buffer
-	var gobject string
-	var gtype string
+	var gobjectns string
 
-	if Config.Namespace == "GObject" {
-		gtype = "Type"
-		gobject = "Object"
-	} else {
-		gtype = "gobject.Type"
-		gobject = "gobject.Object"
+	if Config.Namespace != "GObject" {
+		gobjectns = "gobject."
 	}
 
 	GoUtilsTemplate.Execute(&out, map[string]interface{}{
-		"gobject": gobject,
-		"gtype":   gtype,
+		"gobjectns": gobjectns,
 		"namespace": Config.Namespace,
 		"add_object_utils": true,
 	})
@@ -372,14 +366,9 @@ func ProcessObjectInfo(oi *gi.ObjectInfo) {
 	name := oi.Name()
 	cgotype := CgoTypeForInterface(gi.ToBaseInfo(oi), TypePointer)
 
-	gtype := "gobject.Type"
-	if Config.Namespace == "GObject" {
-		gtype = "Type"
-	}
-
-	gobject := "gobject.Object"
-	if Config.Namespace == "GObject" {
-		gobject = "Object"
+	gobjectns := ""
+	if Config.Namespace != "GObject" {
+		gobjectns = "gobject."
 	}
 
 	var interfaces bytes.Buffer
@@ -401,9 +390,8 @@ func ProcessObjectInfo(oi *gi.ObjectInfo) {
 		"cprefix":    cprefix,
 		"cgotype":    cgotype,
 		"parent":     parent,
-		"gtype":      gtype,
 		"typeinit":   oi.TypeInit(),
-		"gobject":    gobject,
+		"gobjectns":  gobjectns,
 		"interfaces": interfaces.String(),
 	}))
 
@@ -935,23 +923,17 @@ func ProcessInterfaceInfo(ii *gi.InterfaceInfo) {
 	cprefix := gi.DefaultRepository().CPrefix(ii.Namespace())
 	cgotype := CgoTypeForInterface(gi.ToBaseInfo(ii), TypePointer)
 
-	gtype := "gobject.Type"
-	if Config.Namespace == "GObject" {
-		gtype = "Type"
-	}
-
-	gobject := "gobject.Object"
-	if Config.Namespace == "GObject" {
-		gobject = "Object"
+	gobjectns := ""
+	if Config.Namespace != "GObject" {
+		gobjectns = "gobject."
 	}
 
 	printf("%s\n", ExecuteTemplate(InterfaceTemplate, map[string]string{
 		"name":     name,
 		"cprefix":  cprefix,
 		"cgotype":  cgotype,
-		"gtype":    gtype,
 		"typeinit": ii.TypeInit(),
-		"gobject":  gobject,
+		"gobjectns": gobjectns,
 	}))
 
 	for i, n := 0, ii.NumMethod(); i < n; i++ {

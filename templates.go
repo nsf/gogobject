@@ -21,9 +21,14 @@ func _GObjectGrab(c unsafe.Pointer) unsafe.Pointer {
 	if c == nil {
 		return nil
 	}
-	obj := &[<.gobject>]{c}
+	obj := (*[<.gobjectns>]Object)([<.gobjectns>]GetGoRepr(c))
+	if obj != nil {
+		return unsafe.Pointer(obj)
+	}
+	obj = &[<.gobjectns>]Object{c}
 	C.g_object_ref_sink((*C.GObject)(obj.C))
 	_SetGObjectFinalizer(obj)
+	[<.gobjectns>]SetGoRepr(obj.C, unsafe.Pointer(obj))
 	return unsafe.Pointer(obj)
 }
 
@@ -32,29 +37,43 @@ func _GObjectWrap(c unsafe.Pointer) unsafe.Pointer {
 	if c == nil {
 		return nil
 	}
-	obj := &[<.gobject>]{c}
+	obj := (*[<.gobjectns>]Object)([<.gobjectns>]GetGoRepr(c))
+	if obj != nil {
+		return unsafe.Pointer(obj)
+	}
+	obj = &[<.gobjectns>]Object{c}
 	_SetGObjectFinalizer(obj)
+	[<.gobjectns>]SetGoRepr(obj.C, unsafe.Pointer(obj))
 	return unsafe.Pointer(obj)
 }
 
-func _GObjectGrabIfType(c unsafe.Pointer, t [<.gtype>]) unsafe.Pointer {
+func _GObjectGrabIfType(c unsafe.Pointer, t [<.gobjectns>]Type) unsafe.Pointer {
 	if c == nil {
 		return nil
 	}
-	obj := &[<.gobject>]{c}
+	hasrepr := true
+	obj := (*[<.gobjectns>]Object)([<.gobjectns>]GetGoRepr(c))
+	if obj == nil {
+		obj = &[<.gobjectns>]Object{c}
+		hasrepr = false
+	}
 	if obj.GetType().IsA(t) {
-		C.g_object_ref_sink((*C.GObject)(obj.C))
-		_SetGObjectFinalizer(obj)
+		if !hasrepr {
+			C.g_object_ref_sink((*C.GObject)(obj.C))
+			_SetGObjectFinalizer(obj)
+			[<.gobjectns>]SetGoRepr(obj.C, unsafe.Pointer(obj))
+		}
 		return unsafe.Pointer(obj)
 	}
 	return nil
 }
 
-func _GObjectFinalizer(obj *[<.gobject>]) {
+func _GObjectFinalizer(obj *[<.gobjectns>]Object) {
+	[<.gobjectns>]SetGoRepr(obj.C, nil)
 	C.g_object_unref((*C.GObject)(obj.C))
 }
 
-func _SetGObjectFinalizer(obj *[<.gobject>]) {
+func _SetGObjectFinalizer(obj *[<.gobjectns>]Object) {
 	runtime.SetFinalizer(obj, _GObjectFinalizer)
 }
 [<end>]
@@ -116,7 +135,7 @@ type [<.name>] struct {
 	[<.interfaces>]
 }
 
-func To[<.name>](objlike [<.gobject>]Like) *[<.name>] {
+func To[<.name>](objlike [<.gobjectns>]ObjectLike) *[<.name>] {
 	c := objlike.InheritedFromGObject()
 	if c == nil {
 		return nil
@@ -136,8 +155,8 @@ func (this0 *[<.name>]) InheritedFrom[<.cprefix>][<.name>]() [<.cgotype>] {
 	return ([<.cgotype>])(this0.C)
 }
 
-func (this0 *[<.name>]) GetStaticType() [<.gtype>] {
-	return [<.gtype>](C.[<.typeinit>]())
+func (this0 *[<.name>]) GetStaticType() [<.gobjectns>]Type {
+	return [<.gobjectns>]Type(C.[<.typeinit>]())
 }
 `)
 
@@ -149,13 +168,13 @@ type [<.name>]Like interface {
 }
 
 type [<.name>] struct {
-	[<.gobject>]
+	[<.gobjectns>]Object
 	[<.name>]Impl
 }
 
 type [<.name>]Impl struct {}
 
-func To[<.name>](objlike [<.gobject>]Like) *[<.name>] {
+func To[<.name>](objlike [<.gobjectns>]ObjectLike) *[<.name>] {
 	t := (*[<.name>]Impl)(nil).GetStaticType()
 	c := objlike.InheritedFromGObject()
 	obj := _GObjectGrabIfType(unsafe.Pointer(c), t)
@@ -167,11 +186,11 @@ func To[<.name>](objlike [<.gobject>]Like) *[<.name>] {
 
 func (this0 *[<.name>]Impl) Implements[<.cprefix>][<.name>]() [<.cgotype>] {
 	obj := uintptr(unsafe.Pointer(this0)) - unsafe.Sizeof(uintptr(0))
-	return ([<.cgotype>])((*[<.gobject>])(unsafe.Pointer(obj)).C)
+	return ([<.cgotype>])((*[<.gobjectns>]Object)(unsafe.Pointer(obj)).C)
 }
 
-func (this0 *[<.name>]Impl) GetStaticType() [<.gtype>] {
-	return [<.gtype>](C.[<.typeinit>]())
+func (this0 *[<.name>]Impl) GetStaticType() [<.gobjectns>]Type {
+	return [<.gobjectns>]Type(C.[<.typeinit>]())
 }
 
 `)

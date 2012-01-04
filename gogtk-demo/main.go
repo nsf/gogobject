@@ -24,7 +24,7 @@ func create_tree_view() *gtk.Widget {
 	)
 
 	tree_view := gtk.NewTreeViewWithModel(model)
-	selection := treeview.GetSelection()
+	selection := tree_view.GetSelection()
 	selection.SetMode(gtk.SelectionModeBrowse)
 	tree_view.SetSizeRequest(200, -1)
 
@@ -141,6 +141,10 @@ func main() {
 	tag := gtk.NewTextTag("title")
 	tag.SetProperty("font", "Sans 18")
 	infobuf.GetTagTable().Add(tag)
+
+	println(infobuf.GetTagTable())
+	println(infobuf.GetTagTable())
+	println(infobuf.GetTagTable())
 
 	window.ShowAll()
 	gdk.ThreadsEnter()

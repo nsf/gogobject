@@ -200,6 +200,21 @@ func (this *Dialog) FormatSecondaryMarkup(format string, args ...interface{}) {
 }
 
 //----------------------------------------------------------------------------
+// TextBuffer
+//----------------------------------------------------------------------------
+
+func (this *TextBuffer) CreateTag(tag_name string, properties ...interface{}) *TextTag {
+	tag := NewTextTag(tag_name)
+	for_pairs(properties, func(key, value interface{}) {
+		name, ok := key.(string)
+		panic_if_not_type(ok, "string", key)
+		tag.SetProperty(name, value)
+	})
+	this.GetTagTable().Add(tag)
+	return tag
+}
+
+//----------------------------------------------------------------------------
 // TreeStore
 //----------------------------------------------------------------------------
 

@@ -5,12 +5,16 @@ package gobject
 
 [<.GType>]
 
+
 [<.CUtils>]
 [<.CForwardDeclarations>]
 
 [<.GFree>]
 
 #include "gobject.h"
+
+extern uint32_t g_quark_from_string(const char*);
+extern void g_object_set_qdata(GObject*, uint32_t, void*);
 
 extern void g_type_init();
 extern void g_value_take_object(GValue*, void*);
@@ -28,6 +32,39 @@ import "reflect"
 [<.GoUtils>]
 
 [<.GoBindings>]
+
+//--------------------------------------------------------------
+// Quark
+//
+// TODO: probably it's a temporary place for this, quarks are
+// from glib
+//--------------------------------------------------------------
+
+type Quark uint32
+
+func NewQuarkFromString(s string) Quark {
+	cs := C.CString(s)
+	quark := C.g_quark_from_string(cs)
+	C.free(unsafe.Pointer(cs))
+	return Quark(quark)
+}
+
+// we use this one to store Go's representation of the GObject
+// as user data in that GObject once it was allocated. For the
+// sake of avoiding allocations.
+var go_repr Quark
+
+func init() {
+	go_repr = NewQuarkFromString("go-representation")
+}
+
+func GetGoRepr(obj unsafe.Pointer) unsafe.Pointer {
+	return C.g_object_get_qdata((*C.GObject)(obj), C.uint32_t(go_repr))
+}
+
+func SetGoRepr(obj unsafe.Pointer, gorepr unsafe.Pointer) {
+	C.g_object_set_qdata((*C.GObject)(obj), C.uint32_t(go_repr), gorepr)
+}
 
 //--------------------------------------------------------------
 // ParamSpec utils
@@ -808,6 +845,7 @@ func (this *ParamSpecVariant) GetStaticType() Type {
 //--------------------------------------------------------------
 // Object
 //--------------------------------------------------------------
+
 
 func (this *Object) GetType() Type {
 	return Type(C._g_object_type((*C.GObject)(this.C)))
