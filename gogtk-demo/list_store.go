@@ -1,5 +1,3 @@
-// TODO: spinner stuff
-
 package list_store
 
 import (
