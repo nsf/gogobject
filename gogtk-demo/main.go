@@ -4,6 +4,7 @@ import (
 	"gobject/gobject-2.0"
 	"gobject/gdk-3.0"
 	"gobject/gtk-3.0"
+	"gobject/gdkpixbuf-2.0"
 	"gobject/pango-1.0"
 	"os"
 )
@@ -14,6 +15,9 @@ const (
 	func_column
 	style_column
 )
+
+var infobuf *gtk.TextBuffer
+var sourcebuf *gtk.TextBuffer
 
 func create_tree_view() *gtk.Widget {
 	model := gtk.NewTreeStore(
@@ -109,14 +113,29 @@ func create_text(is_source bool) (*gtk.ScrolledWindow, *gtk.TextBuffer) {
 	return sw, buf
 }
 
-func new_notebook_page(nb *gtk.Notebook, w gtk.WidgetLike, label string) {
-	l := gtk.NewLabelWithMnemonic(label)
-	nb.AppendPage(w, l)
+func find_file(name string) string {
+	// TODO: no heuristic yet
+	return name
+}
+
+func setup_default_icon() {
+	filename := find_file("gtk-logo-rgb.gif")
+	pixbuf, err := gdkpixbuf.NewPixbufFromFile(filename)
+	if err != nil {
+		dialog := gtk.NewMessageDialog(nil, 0, gtk.MessageTypeError, gtk.ButtonsTypeClose,
+			"Failed to read icon file: %s", err)
+		dialog.Connect("response", func() { dialog.Destroy() })
+		dialog.ShowAll()
+	} else {
+		pixbuf = pixbuf.AddAlpha(true, 0xFF, 0xFF, 0xFF)
+		gtk.WindowSetDefaultIcon(pixbuf)
+	}
 }
 
 func main() {
 	gdk.ThreadsInit()
 	gtk.Init(os.Args)
+	setup_default_icon()
 	window := gtk.NewWindow(gtk.WindowTypeToplevel)
 	window.SetTitle("GoGTK Code Demos")
 	window.Connect("destroy", func() {
@@ -136,15 +155,27 @@ func main() {
 	hbox.PackStart(notebook, true, true, 0)
 
 	// info
-	sw, infobuf := create_text(false)
-	new_notebook_page(notebook, sw, "_Info")
-	tag := gtk.NewTextTag("title")
-	tag.SetProperty("font", "Sans 18")
-	infobuf.GetTagTable().Add(tag)
+	var sw *gtk.ScrolledWindow
+	sw, infobuf = create_text(false)
+	notebook.AppendPage(sw, gtk.NewLabelWithMnemonic("_Info"))
+	infobuf.CreateTag("title",
+		"font", "Sans 18")
 
-	println(infobuf.GetTagTable())
-	println(infobuf.GetTagTable())
-	println(infobuf.GetTagTable())
+	// source
+	sw, sourcebuf = create_text(true)
+	notebook.AppendPage(sw, gtk.NewLabelWithMnemonic("_Source"))
+	sourcebuf.CreateTag("comment",
+		"foreground", "DodgerBlue")
+	sourcebuf.CreateTag("type",
+		"foreground", "ForestGreen")
+	sourcebuf.CreateTag("string",
+		"foreground", "RosyBrown",
+		"weight", pango.WeightBold)
+	sourcebuf.CreateTag("control",
+		"foreground", "purple")
+	sourcebuf.CreateTag("function",
+		"weight", pango.WeightBold,
+		"foreground", "DarkGoldenrod4")
 
 	window.ShowAll()
 	gdk.ThreadsEnter()
