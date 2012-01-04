@@ -14,6 +14,7 @@ func CFuncForwardDeclaration(fi *gi.FunctionInfo, container *gi.BaseInfo) {
 	if _, declared := declared_c_funcs[symbol]; declared {
 		return
 	}
+
 	declared_c_funcs[symbol] = true
 
 	flags := fi.Flags()

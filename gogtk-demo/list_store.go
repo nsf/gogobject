@@ -4,7 +4,9 @@ package list_store
 
 import (
 	"gobject/gobject-2.0"
+	"gobject/gdk-3.0"
 	"gobject/gtk-3.0"
+	"time"
 )
 
 var window *gtk.Window
@@ -42,6 +44,33 @@ var data = []bug{
 	{true,  50939, "Normal",      "Add shift clicking to GtkTextView"},
 	{false, 6112,  "Enhancement", "netscape-like collapsable toolbars"},
 	{false, 1,     "Normal",      "First bug :=)"},
+}
+
+func pulse(ticker *time.Ticker, cancel chan int, list_store *gtk.ListStore) {
+	for {
+		select {
+		case <-ticker.C:
+			gdk.ThreadsEnter()
+
+			var pulse int
+			iter, _ := list_store.GetIterFirst()
+			list_store.Get(&iter, column_pulse, &pulse)
+
+			if pulse == 99999 {
+				pulse = 0
+			} else {
+				pulse++
+			}
+
+			list_store.Set(&iter,
+				column_pulse, pulse,
+				column_active, true)
+
+			gdk.ThreadsLeave()
+		case <-cancel:
+			return
+		}
+	}
 }
 
 func create_model() *gtk.ListStore {
@@ -126,9 +155,9 @@ func add_columns(treeview *gtk.TreeView, model *gtk.ListStore) {
 	treeview.AppendColumn(c)
 
 	// column for symbolic icon
-	r = gtk.NewCellRendererPixbuf()
-	// TODO: r.Set("follow-state", true)
-	c = gtk.NewTreeViewColumnWithAttributes("Symbolic icon", r,
+	pixbuf := gtk.NewCellRendererPixbuf()
+	pixbuf.SetProperty("follow-state", true)
+	c = gtk.NewTreeViewColumnWithAttributes("Symbolic icon", pixbuf,
 		"icon-name", column_icon,
 		"sensitive", column_sensitive)
 	c.SetSortColumnId(column_icon)
@@ -137,6 +166,9 @@ func add_columns(treeview *gtk.TreeView, model *gtk.ListStore) {
 
 func Do(mainwin *gtk.Window) *gtk.Window {
 	if window == nil {
+		ticker := time.NewTicker(80 * time.Millisecond)
+		cancel := make(chan int)
+
 		window = gtk.NewWindow(gtk.WindowTypeToplevel)
 		window.SetTitle("gtk.ListStore demo")
 		window.Connect("destroy", func() { window = nil })
@@ -167,6 +199,12 @@ func Do(mainwin *gtk.Window) *gtk.Window {
 
 		// finish & show
 		window.SetDefaultSize(280, 250)
+		window.Connect("delete-event", func() {
+			ticker.Stop()
+			cancel <- 0
+		})
+
+		go pulse(ticker, cancel, model)
 	}
 	if (!window.GetVisible()) {
 		window.ShowAll()

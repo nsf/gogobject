@@ -2,6 +2,7 @@ package main
 
 import (
 	"gobject/gobject-2.0"
+	"gobject/gdk-3.0"
 	"gobject/gtk-3.0"
 	"gobject/pango-1.0"
 	"os"
@@ -106,6 +107,7 @@ func NewNotebookPage(nb *gtk.Notebook, w gtk.WidgetLike, label string) {
 }
 
 func main() {
+	gdk.ThreadsInit()
 	gtk.Init(os.Args)
 	window := gtk.NewWindow(gtk.WindowTypeToplevel)
 	window.SetTitle("GoGTK Code Demos")
@@ -133,5 +135,7 @@ func main() {
 	infobuf.GetTagTable().Add(tag)
 
 	window.ShowAll()
+	gdk.ThreadsEnter()
 	gtk.Main()
+	gdk.ThreadsLeave()
 }
