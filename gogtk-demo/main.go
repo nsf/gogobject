@@ -6,6 +6,7 @@ import (
 	"gobject/gtk-3.0"
 	"gobject/gdkpixbuf-2.0"
 	"gobject/pango-1.0"
+	"io/ioutil"
 	"os"
 )
 
@@ -35,7 +36,7 @@ func create_tree_view() *gtk.Widget {
 	for _, demo := range demos {
 		iter := model.Append(nil, demo.Title, demo.Filename, demo.Func, pango.StyleNormal)
 		for _, cdemo := range demo.Children {
-			model.Append(&iter, cdemo.Title, demo.Filename, cdemo.Func, pango.StyleNormal)
+			model.Append(&iter, cdemo.Title, cdemo.Filename, cdemo.Func, pango.StyleNormal)
 		}
 	}
 
@@ -49,6 +50,18 @@ func create_tree_view() *gtk.Widget {
 	selection.SelectIter(&iter)
 
 	// TODO: selection.Connect("changed", ...)
+	selection.Connect("changed", func(selection *gtk.TreeSelection) {
+		_, iter, ok := selection.GetSelected()
+		if !ok {
+			return
+		}
+
+		var filename string
+		model.Get(&iter, filename_column, &filename)
+		if filename != "" {
+			load_file(filename)
+		}
+	})
 	tree_view.Connect("row-activated", func(tree_view *gtk.TreeView, path *gtk.TreePath) {
 		iter, _ := model.GetIter(path)
 		var app interface{}
@@ -105,6 +118,8 @@ func create_text(is_source bool) (*gtk.ScrolledWindow, *gtk.TextBuffer) {
 	tv.SetEditable(false)
 	tv.SetCursorVisible(false)
 	if is_source {
+		font_desc := pango.FontDescriptionFromString("monospace")
+		tv.OverrideFont(font_desc)
 		tv.SetWrapMode(gtk.WrapModeNone)
 	} else {
 		tv.SetWrapMode(gtk.WrapModeWord)
@@ -130,6 +145,37 @@ func setup_default_icon() {
 		pixbuf = pixbuf.AddAlpha(true, 0xFF, 0xFF, 0xFF)
 		gtk.WindowSetDefaultIcon(pixbuf)
 	}
+}
+
+var current_file string
+
+func load_file(filename string) {
+	if current_file == filename {
+		return
+	}
+
+	current_file = filename
+
+	beg, end := infobuf.GetBounds()
+	infobuf.Delete(&beg, &end)
+
+	beg, end = sourcebuf.GetBounds()
+	sourcebuf.Delete(&beg, &end)
+
+	filename_full := find_file(filename)
+	if filename_full == "" {
+		println("failed to find file: ", filename)
+		return
+	}
+
+	data, err := ioutil.ReadFile(filename_full)
+	if err != nil {
+		println("failed to read file: ", err.Error())
+		return
+	}
+
+	beg = sourcebuf.GetIterAtOffset(0)
+	sourcebuf.Insert(&beg, string(data), -1)
 }
 
 func main() {
@@ -178,6 +224,9 @@ func main() {
 		"foreground", "DarkGoldenrod4")
 
 	window.ShowAll()
+
+	load_file(demos[0].Filename)
+
 	gdk.ThreadsEnter()
 	gtk.Main()
 	gdk.ThreadsLeave()
