@@ -214,6 +214,34 @@ func (this *TextBuffer) CreateTag(tag_name string, properties ...interface{}) *T
 	return tag
 }
 
+func (this *TextBuffer) InsertWithTags(iter *TextIter, text string, length int, tags ...*TextTag) {
+	start_offset := iter.GetOffset()
+	this.Insert(iter, text, length)
+	if len(tags) == 0 {
+		return
+	}
+
+	start := this.GetIterAtOffset(start_offset)
+
+	for _, tag := range tags {
+		this.ApplyTag(tag, &start, iter)
+	}
+}
+
+func (this *TextBuffer) InsertWithTagsByName(iter *TextIter, text string, length int, tags ...string) {
+	start_offset := iter.GetOffset()
+	this.Insert(iter, text, length)
+	if len(tags) == 0 {
+		return
+	}
+
+	start := this.GetIterAtOffset(start_offset)
+
+	for _, tag := range tags {
+		this.ApplyTagByName(tag, &start, iter)
+	}
+}
+
 //----------------------------------------------------------------------------
 // TreeStore
 //----------------------------------------------------------------------------

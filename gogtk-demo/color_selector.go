@@ -1,3 +1,7 @@
+// Color Selector
+//
+// GtkColorSelection lets the user choose a color. GtkColorSelectionDialog is
+// a prebuilt dialog containing a GtkColorSelection.
 package color_selector
 
 import "gobject/gtk-3.0"

@@ -1,3 +1,7 @@
+// Pickers
+//
+// These widgets are mainly intended for use in preference dialogs.
+// They allow to select colors, fonts, files, directories and applications.
 package pickers
 
 import "gobject/gtk-3.0"

@@ -1,3 +1,7 @@
+// Expander
+//
+// GtkExpander allows to provide additional content that is initially hidden.
+// This is also known as "disclosure triangle".
 package expander
 
 import "gobject/gtk-3.0"

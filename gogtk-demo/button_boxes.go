@@ -1,3 +1,6 @@
+// Button Boxes
+//
+// The Button Box widgets are used to arrange buttons with padding.
 package button_boxes
 
 import "gobject/gtk-3.0"

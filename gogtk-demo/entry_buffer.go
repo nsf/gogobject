@@ -1,3 +1,6 @@
+// Entry/Entry Buffer
+//
+// GtkEntryBuffer provides the text content in a GtkEntry.
 package entry_buffer
 
 import "gobject/gtk-3.0"

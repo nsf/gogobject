@@ -1,3 +1,6 @@
+// Info bar
+//
+// Info bar widgets are used to report important messages to the user.
 package info_bar
 
 import "gobject/gtk-3.0"

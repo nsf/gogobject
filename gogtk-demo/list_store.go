@@ -1,3 +1,9 @@
+// Tree View/List Store
+//
+// The GtkListStore is used to store data in list form, to be used
+// later on by a GtkTreeView to display it. This demo builds a
+// simple GtkListStore and displays it. See the Stock Browser
+// demo for a more advanced example.
 package list_store
 
 import (

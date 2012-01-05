@@ -1,3 +1,6 @@
+// Spinner
+//
+// GtkSpinner allows to show that background activity is on-going.
 package spinner
 
 import "gobject/gtk-3.0"

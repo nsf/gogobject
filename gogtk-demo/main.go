@@ -9,9 +9,12 @@ import (
 	"io/ioutil"
 	"os"
 	"go/ast"
+	"go/doc"
 	"go/parser"
 	"go/token"
 	"go/scanner"
+	"strings"
+	"bytes"
 )
 
 const (
@@ -128,6 +131,8 @@ func create_text(is_source bool) (*gtk.ScrolledWindow, *gtk.TextBuffer) {
 		tv.SetWrapMode(gtk.WrapModeNone)
 	} else {
 		tv.SetWrapMode(gtk.WrapModeWord)
+		tv.SetPixelsAboveLines(2)
+		tv.SetPixelsBelowLines(2)
 	}
 
 	return sw, buf
@@ -165,14 +170,21 @@ var go_highlighter_idents = map[string]string{
 type go_highlighter struct {
 	fset *token.FileSet
 	buf *gtk.TextBuffer
+	offset int
 }
 
 func (this *go_highlighter) highlight(tag string, beg, end token.Pos) {
 	begp := this.fset.Position(beg)
 	endp := this.fset.Position(end)
 
-	begi := this.buf.GetIterAtOffset(begp.Offset)
-	endi := this.buf.GetIterAtOffset(endp.Offset)
+	bego := begp.Offset - this.offset
+	endo := endp.Offset - this.offset
+	if bego < 0 {
+		return
+	}
+
+	begi := this.buf.GetIterAtOffset(bego)
+	endi := this.buf.GetIterAtOffset(endo)
 
 	this.buf.ApplyTagByName(tag, &begi, &endi)
 }
@@ -231,16 +243,53 @@ func (this *go_highlighter) highlight_file(file *ast.File) {
 	}
 }
 
-func fontify() {
+func fontify(data []byte, offset int) {
 	fset := token.NewFileSet()
-	file, err := parser.ParseFile(fset, current_file, current_data, parser.ParseComments)
+	file, err := parser.ParseFile(fset, current_file, data, parser.ParseComments)
 	if err != nil {
 		println("failed to parse file: ", err.Error())
 		return
 	}
 
-	x := go_highlighter{ fset, sourcebuf }
+	x := go_highlighter{ fset, sourcebuf, offset }
 	x.highlight_file(file)
+}
+
+func set_info(info string) {
+	var para bytes.Buffer
+
+	iter := infobuf.GetStartIter()
+	lines := strings.Split(info, "\n")
+	for i, line := range lines {
+		switch i {
+		case 0:
+			infobuf.InsertWithTagsByName(&iter, line, -1, "title")
+			infobuf.Insert(&iter, "\n", -1)
+		case 1:
+			continue
+		default:
+			if line == "" {
+				// flush paragraph on empty lines
+				para.WriteString("\n")
+				infobuf.Insert(&iter, para.String(), -1)
+				para.Reset()
+				continue
+			}
+
+			// by default append to paragraph buffer
+			if para.Len() != 0 {
+				para.WriteString(" ")
+			}
+			para.WriteString(line)
+
+			// flush on last like as well:
+			if line != "" && i == len(lines)-1 {
+				para.WriteString("\n")
+				infobuf.Insert(&iter, para.String(), -1)
+				para.Reset()
+			}
+		}
+	}
 }
 
 func load_file(filename string) {
@@ -250,29 +299,46 @@ func load_file(filename string) {
 
 	current_file = filename
 
+	// clear info and source buffers
 	beg, end := infobuf.GetBounds()
 	infobuf.Delete(&beg, &end)
 
 	beg, end = sourcebuf.GetBounds()
 	sourcebuf.Delete(&beg, &end)
 
+	// find file
 	filename_full := find_file(filename)
 	if filename_full == "" {
 		println("failed to find file: ", filename)
 		return
 	}
 
-	var err error
-	current_data, err = ioutil.ReadFile(filename_full)
+	// load file
+	data, err := ioutil.ReadFile(filename_full)
 	if err != nil {
 		println("failed to read file: ", err.Error())
 		return
 	}
 
-	beg = sourcebuf.GetIterAtOffset(0)
-	sourcebuf.Insert(&beg, string(current_data), -1)
+	// figure out package info and starting offset
+	fset := token.NewFileSet()
+	file, err := parser.ParseFile(fset, current_file, data,
+		parser.ParseComments | parser.PackageClauseOnly)
+	if err != nil {
+		println("failed to parse package clause: ", err.Error())
+		return
+	}
 
-	fontify()
+	var offset int
+	if file.Doc != nil {
+		set_info(strings.TrimSpace(doc.CommentText(file.Doc)))
+		offset = fset.Position(file.Doc.End()).Offset + 1
+	}
+
+	beg = sourcebuf.GetStartIter()
+	sourcebuf.Insert(&beg, string(data[offset:]), -1)
+
+	fontify(data, offset)
 }
 
 func main() {
@@ -284,7 +350,7 @@ func main() {
 	window.Connect("destroy", func() {
 		gtk.MainQuit()
 	})
-	window.SetDefaultSize(800, 400)
+	window.SetDefaultSize(600, 400)
 
 	hbox := gtk.NewHBox(false, 3)
 	window.Add(hbox)
