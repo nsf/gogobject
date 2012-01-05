@@ -8,6 +8,10 @@ import (
 	"gobject/pango-1.0"
 	"io/ioutil"
 	"os"
+	"go/ast"
+	"go/parser"
+	"go/token"
+	"go/scanner"
 )
 
 const (
@@ -118,7 +122,8 @@ func create_text(is_source bool) (*gtk.ScrolledWindow, *gtk.TextBuffer) {
 	tv.SetEditable(false)
 	tv.SetCursorVisible(false)
 	if is_source {
-		font_desc := pango.FontDescriptionFromString("monospace")
+		font_desc := pango.FontDescriptionFromString(
+			"BitStream Vera Sans Mono, Monaco, Consolas, Courier New, monospace 9")
 		tv.OverrideFont(font_desc)
 		tv.SetWrapMode(gtk.WrapModeNone)
 	} else {
@@ -147,7 +152,96 @@ func setup_default_icon() {
 	}
 }
 
+var current_data []byte
 var current_file string
+
+var go_highlighter_idents = map[string]string{
+	"true": "predefined",
+	"false": "predefined",
+	"iota": "predefined",
+	"nil": "predefined",
+}
+
+type go_highlighter struct {
+	fset *token.FileSet
+	buf *gtk.TextBuffer
+}
+
+func (this *go_highlighter) highlight(tag string, beg, end token.Pos) {
+	begp := this.fset.Position(beg)
+	endp := this.fset.Position(end)
+
+	begi := this.buf.GetIterAtOffset(begp.Offset)
+	endi := this.buf.GetIterAtOffset(endp.Offset)
+
+	this.buf.ApplyTagByName(tag, &begi, &endi)
+}
+
+func (this *go_highlighter) highlight_file(file *ast.File) {
+	var s scanner.Scanner
+	fset := token.NewFileSet()
+	s.Init(fset.AddFile(current_file, fset.Base(), len(current_data)), current_data, nil, 0)
+	for {
+		pos, tok, str := s.Scan()
+		if tok == token.EOF {
+			break
+		}
+
+		if tok.IsKeyword() {
+			this.highlight("keyword", pos, pos + token.Pos(len(str)))
+		}
+	}
+
+	ast.Inspect(file, func(node ast.Node) bool {
+		switch n := node.(type) {
+		case *ast.BasicLit:
+			switch n.Kind {
+			case token.STRING, token.CHAR:
+				this.highlight("string", n.Pos(), n.End())
+			case token.INT, token.FLOAT, token.IMAG:
+				this.highlight("number", n.Pos(), n.End())
+			}
+		case *ast.Ident:
+			if tag, ok := go_highlighter_idents[n.Name]; ok {
+				this.highlight(tag, n.Pos(), n.End())
+				break
+			}
+
+			if n.Obj != nil && n.Obj.Pos() == n.Pos() {
+				if n.Obj.Kind == ast.Fun {
+					this.highlight("function", n.Pos(), n.End())
+				} else {
+					this.highlight("declaration", n.Pos(), n.End())
+				}
+			}
+		case *ast.CallExpr:
+			switch f := n.Fun.(type) {
+			case *ast.Ident:
+				this.highlight("funcall", f.Pos(), f.End())
+			case *ast.SelectorExpr:
+				this.highlight("funcall", f.Sel.Pos(), f.Sel.End())
+			}
+		}
+
+		return true
+	})
+
+	for _, cg := range file.Comments {
+		this.highlight("comment", cg.Pos(), cg.End())
+	}
+}
+
+func fontify() {
+	fset := token.NewFileSet()
+	file, err := parser.ParseFile(fset, current_file, current_data, parser.ParseComments)
+	if err != nil {
+		println("failed to parse file: ", err.Error())
+		return
+	}
+
+	x := go_highlighter{ fset, sourcebuf }
+	x.highlight_file(file)
+}
 
 func load_file(filename string) {
 	if current_file == filename {
@@ -168,14 +262,17 @@ func load_file(filename string) {
 		return
 	}
 
-	data, err := ioutil.ReadFile(filename_full)
+	var err error
+	current_data, err = ioutil.ReadFile(filename_full)
 	if err != nil {
 		println("failed to read file: ", err.Error())
 		return
 	}
 
 	beg = sourcebuf.GetIterAtOffset(0)
-	sourcebuf.Insert(&beg, string(data), -1)
+	sourcebuf.Insert(&beg, string(current_data), -1)
+
+	fontify()
 }
 
 func main() {
@@ -210,18 +307,28 @@ func main() {
 	// source
 	sw, sourcebuf = create_text(true)
 	notebook.AppendPage(sw, gtk.NewLabelWithMnemonic("_Source"))
+
 	sourcebuf.CreateTag("comment",
-		"foreground", "DodgerBlue")
-	sourcebuf.CreateTag("type",
-		"foreground", "ForestGreen")
-	sourcebuf.CreateTag("string",
-		"foreground", "RosyBrown",
+		"foreground", "#0066FF")
+	sourcebuf.CreateTag("declaration",
+		"foreground", "#318495")
+	sourcebuf.CreateTag("funcall",
+		"foreground", "#3C4C72",
 		"weight", pango.WeightBold)
-	sourcebuf.CreateTag("control",
-		"foreground", "purple")
+	sourcebuf.CreateTag("string",
+		"foreground", "#036A07")
+	sourcebuf.CreateTag("keyword",
+		"weight", pango.WeightBold,
+		"foreground", "#0707FF")
 	sourcebuf.CreateTag("function",
 		"weight", pango.WeightBold,
-		"foreground", "DarkGoldenrod4")
+		"foreground", "#0000A2")
+	sourcebuf.CreateTag("number",
+		"weight", pango.WeightBold,
+		"foreground", "#C5060B")
+	sourcebuf.CreateTag("predefined",
+		"weight", pango.WeightBold,
+		"foreground", "#585CF6")
 
 	window.ShowAll()
 
