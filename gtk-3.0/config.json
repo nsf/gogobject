@@ -2,6 +2,12 @@
 	"namespace": "Gtk",
 	"version": "3.0",
 	"blacklist": {
+		"structdefs": [
+			// implemented manually
+			"ActionEntry",
+			"RadioActionEntry",
+			"ToggleActionEntry"
+		],
 		"callbacks": [
 			"AccelMapForeach",
 			"RcPropertyParser", // uses glib.String

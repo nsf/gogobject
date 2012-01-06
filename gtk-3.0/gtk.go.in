@@ -321,3 +321,88 @@ func (this *TreeModelImpl) Get(iter *TreeIter, columnspecs ...interface{}) {
 		gvalue.Unset()
 	})
 }
+
+//----------------------------------------------------------------------------
+// ActionGroup and related structs
+//----------------------------------------------------------------------------
+
+type ActionEntry struct {
+	Name string
+	StockId string
+	Label string
+	Accelerator string
+	Tooltip string
+	Callback interface{}
+}
+
+type ToggleActionEntry struct {
+	Name string
+	StockId string
+	Label string
+	Accelerator string
+	Tooltip string
+	Callback interface{}
+	IsActive bool
+}
+
+type RadioActionEntry struct {
+	Name string
+	StockId string
+	Label string
+	Accelerator string
+	Tooltip string
+	Value int
+}
+
+func (this *ActionGroup) AddActions(actions []ActionEntry) {
+	for i := range actions {
+		a := &actions[i]
+		action := NewAction(a.Name, a.Label, a.Tooltip, a.StockId)
+		if a.Callback != nil {
+			action.Connect("activate", a.Callback)
+		}
+		this.AddActionWithAccel(action, a.Accelerator)
+	}
+}
+
+func (this *ActionGroup) AddToggleActions(actions []ToggleActionEntry) {
+	for i := range actions {
+		a := &actions[i]
+		action := NewToggleAction(a.Name, a.Label, a.Tooltip, a.StockId)
+		action.SetActive(a.IsActive)
+		if a.Callback != nil {
+			action.Connect("activate", a.Callback)
+		}
+		this.AddActionWithAccel(action, a.Accelerator)
+	}
+}
+
+func (this *ActionGroup) AddRadioActions(actions []RadioActionEntry, value int, on_change interface{}) {
+	if len(actions) == 0 {
+		return
+	}
+
+	var group *C.GSList
+	var first_action *RadioAction
+
+	for i := range actions {
+		a := &actions[i]
+		action := NewRadioAction(a.Name, a.Label, a.Tooltip, a.StockId, a.Value)
+		if i == 0 {
+			first_action = action
+		}
+
+		C.gtk_radio_action_set_group(action.InheritedFromGtkRadioAction(), group)
+		group = C.gtk_radio_action_get_group(action.InheritedFromGtkRadioAction())
+
+		if a.Value == value {
+			action.SetActive(true)
+		}
+
+		this.AddActionWithAccel(action, a.Accelerator)
+	}
+
+	if on_change != nil {
+		first_action.Connect("changed", on_change)
+	}
+}

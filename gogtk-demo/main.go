@@ -244,6 +244,7 @@ func (this *go_highlighter) highlight_file(file *ast.File) {
 }
 
 func fontify(data []byte, offset int) {
+	// TODO: utf8 unaware
 	fset := token.NewFileSet()
 	file, err := parser.ParseFile(fset, current_file, data, parser.ParseComments)
 	if err != nil {
