@@ -77,9 +77,9 @@ Implemented:
  - Object hierarchy, upcasting, downcasting
  - Methods
  - Signals/Slots (gobject.Object.Connect and closure marshaling)
+ - Properties
 
 TODO:
- - Properties
  - Overriding virtual methods by defining a derived type (for custom widgets)
  - ...
 
@@ -122,3 +122,31 @@ Implemented:
 
 TODO:
  - Providing custom interfaces implementations from Go
+
+
+3. STRUCTURES
+
+
+Structures are implemented simply as byte blobs. The size should match the real
+C struct size, but gobject-introspection at the moment provides wrong size in
+some cases (no support for C bit fields). Also it is possible to override C
+structures definitions if it's necessary, see gdk.RGBA for example.
+
+Structs memory management problem is complicated. At the moment no memory
+management is being done and in most cases structs are allocated on the stack as
+values (Go supports that, it makes sense). For many structs like TreeIter or
+TextIter it's a perfect variant, but it is possible that there are other structs
+which are dynamically allocated by gobject-based library and are in a form of
+boxed value. It is uncertain how it is possible to make a line here, between
+structs which require dynamic memory management and structs which are ok with
+stack storage.
+
+3.1. Status
+
+Implemented:
+ - Structs as byte blobs
+ - Struct methods
+
+TODO:
+ - Make a final decision about structs memory management
+ - Makes sense to generate structs with fields, at least selectively.
