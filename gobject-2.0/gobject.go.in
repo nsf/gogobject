@@ -66,43 +66,36 @@ func init() {
 // to implement).
 
 // First some utils
-func _GParamSpecFinalizer(pspec *ParamSpec) {
+func param_spec_finalizer(pspec *ParamSpec) {
 	C.g_param_spec_unref((*C.GParamSpec)(pspec.C))
 }
 
-func _SetGParamSpecFinalizer(pspec *ParamSpec) {
-	runtime.SetFinalizer(pspec, _GParamSpecFinalizer)
+func set_param_spec_finalizer(pspec *ParamSpec) {
+	runtime.SetFinalizer(pspec, param_spec_finalizer)
 }
 
-func _GParamSpecGrabIfType(c unsafe.Pointer, t Type) unsafe.Pointer {
+func ParamSpecGrabIfType(c unsafe.Pointer, t Type) unsafe.Pointer {
 	if c == nil {
 		return nil
 	}
 	obj := &ParamSpec{c}
 	if obj.GetType().IsA(t) {
 		C.g_param_spec_ref_sink((*C.GParamSpec)(obj.C))
-		_SetGParamSpecFinalizer(obj)
+		set_param_spec_finalizer(obj)
 		return unsafe.Pointer(obj)
 	}
 	return nil
 }
 
-func _GParamSpecGrab(c unsafe.Pointer) unsafe.Pointer {
+func ParamSpecWrap(c unsafe.Pointer, grab bool) unsafe.Pointer {
 	if c == nil {
 		return nil
 	}
 	obj := &ParamSpec{c}
-	C.g_param_spec_ref_sink((*C.GParamSpec)(obj.C))
-	_SetGParamSpecFinalizer(obj)
-	return unsafe.Pointer(obj)
-}
-
-func _GParamSpecWrap(c unsafe.Pointer) unsafe.Pointer {
-	if c == nil {
-		return nil
+	if grab {
+		C.g_param_spec_ref_sink((*C.GParamSpec)(obj.C))
 	}
-	obj := &ParamSpec{c}
-	_SetGParamSpecFinalizer(obj)
+	set_param_spec_finalizer(obj)
 	return unsafe.Pointer(obj)
 }
 
@@ -121,7 +114,7 @@ type ParamSpec struct {
 func ToParamSpec(pspeclike ParamSpecLike) *ParamSpec {
 	t := (*ParamSpec)(nil).GetStaticType()
 	c := pspeclike.InheritedFromGParamSpec()
-	obj := _GParamSpecGrabIfType(unsafe.Pointer(c), t)
+	obj := ParamSpecGrabIfType(unsafe.Pointer(c), t)
 	if obj != nil {
 		return (*ParamSpec)(obj)
 	}
@@ -159,7 +152,7 @@ type ParamSpecBoolean struct {
 func ToParamSpecBoolean(pspeclike ParamSpecBooleanLike) *ParamSpecBoolean {
 	t := (*ParamSpecBoolean)(nil).GetStaticType()
 	c := pspeclike.InheritedFromGParamSpecBoolean()
-	obj := _GParamSpecGrabIfType(unsafe.Pointer(c), t)
+	obj := ParamSpecGrabIfType(unsafe.Pointer(c), t)
 	if obj != nil {
 		return (*ParamSpecBoolean)(obj)
 	}
@@ -189,7 +182,7 @@ type ParamSpecBoxed struct {
 func ToParamSpecBoxed(pspeclike ParamSpecBoxedLike) *ParamSpecBoxed {
 	t := (*ParamSpecBoxed)(nil).GetStaticType()
 	c := pspeclike.InheritedFromGParamSpecBoxed()
-	obj := _GParamSpecGrabIfType(unsafe.Pointer(c), t)
+	obj := ParamSpecGrabIfType(unsafe.Pointer(c), t)
 	if obj != nil {
 		return (*ParamSpecBoxed)(obj)
 	}
@@ -219,7 +212,7 @@ type ParamSpecChar struct {
 func ToParamSpecChar(pspeclike ParamSpecCharLike) *ParamSpecChar {
 	t := (*ParamSpecChar)(nil).GetStaticType()
 	c := pspeclike.InheritedFromGParamSpecChar()
-	obj := _GParamSpecGrabIfType(unsafe.Pointer(c), t)
+	obj := ParamSpecGrabIfType(unsafe.Pointer(c), t)
 	if obj != nil {
 		return (*ParamSpecChar)(obj)
 	}
@@ -249,7 +242,7 @@ type ParamSpecDouble struct {
 func ToParamSpecDouble(pspeclike ParamSpecDoubleLike) *ParamSpecDouble {
 	t := (*ParamSpecDouble)(nil).GetStaticType()
 	c := pspeclike.InheritedFromGParamSpecDouble()
-	obj := _GParamSpecGrabIfType(unsafe.Pointer(c), t)
+	obj := ParamSpecGrabIfType(unsafe.Pointer(c), t)
 	if obj != nil {
 		return (*ParamSpecDouble)(obj)
 	}
@@ -279,7 +272,7 @@ type ParamSpecEnum struct {
 func ToParamSpecEnum(pspeclike ParamSpecEnumLike) *ParamSpecEnum {
 	t := (*ParamSpecEnum)(nil).GetStaticType()
 	c := pspeclike.InheritedFromGParamSpecEnum()
-	obj := _GParamSpecGrabIfType(unsafe.Pointer(c), t)
+	obj := ParamSpecGrabIfType(unsafe.Pointer(c), t)
 	if obj != nil {
 		return (*ParamSpecEnum)(obj)
 	}
@@ -309,7 +302,7 @@ type ParamSpecFlags struct {
 func ToParamSpecFlags(pspeclike ParamSpecFlagsLike) *ParamSpecFlags {
 	t := (*ParamSpecFlags)(nil).GetStaticType()
 	c := pspeclike.InheritedFromGParamSpecFlags()
-	obj := _GParamSpecGrabIfType(unsafe.Pointer(c), t)
+	obj := ParamSpecGrabIfType(unsafe.Pointer(c), t)
 	if obj != nil {
 		return (*ParamSpecFlags)(obj)
 	}
@@ -339,7 +332,7 @@ type ParamSpecFloat struct {
 func ToParamSpecFloat(pspeclike ParamSpecFloatLike) *ParamSpecFloat {
 	t := (*ParamSpecFloat)(nil).GetStaticType()
 	c := pspeclike.InheritedFromGParamSpecFloat()
-	obj := _GParamSpecGrabIfType(unsafe.Pointer(c), t)
+	obj := ParamSpecGrabIfType(unsafe.Pointer(c), t)
 	if obj != nil {
 		return (*ParamSpecFloat)(obj)
 	}
@@ -369,7 +362,7 @@ type ParamSpecGType struct {
 func ToParamSpecGType(pspeclike ParamSpecGTypeLike) *ParamSpecGType {
 	t := (*ParamSpecGType)(nil).GetStaticType()
 	c := pspeclike.InheritedFromGParamSpecGType()
-	obj := _GParamSpecGrabIfType(unsafe.Pointer(c), t)
+	obj := ParamSpecGrabIfType(unsafe.Pointer(c), t)
 	if obj != nil {
 		return (*ParamSpecGType)(obj)
 	}
@@ -399,7 +392,7 @@ type ParamSpecInt struct {
 func ToParamSpecInt(pspeclike ParamSpecIntLike) *ParamSpecInt {
 	t := (*ParamSpecInt)(nil).GetStaticType()
 	c := pspeclike.InheritedFromGParamSpecInt()
-	obj := _GParamSpecGrabIfType(unsafe.Pointer(c), t)
+	obj := ParamSpecGrabIfType(unsafe.Pointer(c), t)
 	if obj != nil {
 		return (*ParamSpecInt)(obj)
 	}
@@ -429,7 +422,7 @@ type ParamSpecInt64 struct {
 func ToParamSpecInt64(pspeclike ParamSpecInt64Like) *ParamSpecInt64 {
 	t := (*ParamSpecInt64)(nil).GetStaticType()
 	c := pspeclike.InheritedFromGParamSpecInt64()
-	obj := _GParamSpecGrabIfType(unsafe.Pointer(c), t)
+	obj := ParamSpecGrabIfType(unsafe.Pointer(c), t)
 	if obj != nil {
 		return (*ParamSpecInt64)(obj)
 	}
@@ -459,7 +452,7 @@ type ParamSpecLong struct {
 func ToParamSpecLong(pspeclike ParamSpecLongLike) *ParamSpecLong {
 	t := (*ParamSpecLong)(nil).GetStaticType()
 	c := pspeclike.InheritedFromGParamSpecLong()
-	obj := _GParamSpecGrabIfType(unsafe.Pointer(c), t)
+	obj := ParamSpecGrabIfType(unsafe.Pointer(c), t)
 	if obj != nil {
 		return (*ParamSpecLong)(obj)
 	}
@@ -489,7 +482,7 @@ type ParamSpecObject struct {
 func ToParamSpecObject(pspeclike ParamSpecObjectLike) *ParamSpecObject {
 	t := (*ParamSpecObject)(nil).GetStaticType()
 	c := pspeclike.InheritedFromGParamSpecObject()
-	obj := _GParamSpecGrabIfType(unsafe.Pointer(c), t)
+	obj := ParamSpecGrabIfType(unsafe.Pointer(c), t)
 	if obj != nil {
 		return (*ParamSpecObject)(obj)
 	}
@@ -519,7 +512,7 @@ type ParamSpecOverride struct {
 func ToParamSpecOverride(pspeclike ParamSpecOverrideLike) *ParamSpecOverride {
 	t := (*ParamSpecOverride)(nil).GetStaticType()
 	c := pspeclike.InheritedFromGParamSpecOverride()
-	obj := _GParamSpecGrabIfType(unsafe.Pointer(c), t)
+	obj := ParamSpecGrabIfType(unsafe.Pointer(c), t)
 	if obj != nil {
 		return (*ParamSpecOverride)(obj)
 	}
@@ -549,7 +542,7 @@ type ParamSpecParam struct {
 func ToParamSpecParam(pspeclike ParamSpecParamLike) *ParamSpecParam {
 	t := (*ParamSpecParam)(nil).GetStaticType()
 	c := pspeclike.InheritedFromGParamSpecParam()
-	obj := _GParamSpecGrabIfType(unsafe.Pointer(c), t)
+	obj := ParamSpecGrabIfType(unsafe.Pointer(c), t)
 	if obj != nil {
 		return (*ParamSpecParam)(obj)
 	}
@@ -579,7 +572,7 @@ type ParamSpecPointer struct {
 func ToParamSpecPointer(pspeclike ParamSpecPointerLike) *ParamSpecPointer {
 	t := (*ParamSpecPointer)(nil).GetStaticType()
 	c := pspeclike.InheritedFromGParamSpecPointer()
-	obj := _GParamSpecGrabIfType(unsafe.Pointer(c), t)
+	obj := ParamSpecGrabIfType(unsafe.Pointer(c), t)
 	if obj != nil {
 		return (*ParamSpecPointer)(obj)
 	}
@@ -609,7 +602,7 @@ type ParamSpecString struct {
 func ToParamSpecString(pspeclike ParamSpecStringLike) *ParamSpecString {
 	t := (*ParamSpecString)(nil).GetStaticType()
 	c := pspeclike.InheritedFromGParamSpecString()
-	obj := _GParamSpecGrabIfType(unsafe.Pointer(c), t)
+	obj := ParamSpecGrabIfType(unsafe.Pointer(c), t)
 	if obj != nil {
 		return (*ParamSpecString)(obj)
 	}
@@ -639,7 +632,7 @@ type ParamSpecUChar struct {
 func ToParamSpecUChar(pspeclike ParamSpecUCharLike) *ParamSpecUChar {
 	t := (*ParamSpecUChar)(nil).GetStaticType()
 	c := pspeclike.InheritedFromGParamSpecUChar()
-	obj := _GParamSpecGrabIfType(unsafe.Pointer(c), t)
+	obj := ParamSpecGrabIfType(unsafe.Pointer(c), t)
 	if obj != nil {
 		return (*ParamSpecUChar)(obj)
 	}
@@ -669,7 +662,7 @@ type ParamSpecUInt struct {
 func ToParamSpecUInt(pspeclike ParamSpecUIntLike) *ParamSpecUInt {
 	t := (*ParamSpecUInt)(nil).GetStaticType()
 	c := pspeclike.InheritedFromGParamSpecUInt()
-	obj := _GParamSpecGrabIfType(unsafe.Pointer(c), t)
+	obj := ParamSpecGrabIfType(unsafe.Pointer(c), t)
 	if obj != nil {
 		return (*ParamSpecUInt)(obj)
 	}
@@ -699,7 +692,7 @@ type ParamSpecUInt64 struct {
 func ToParamSpecUInt64(pspeclike ParamSpecUInt64Like) *ParamSpecUInt64 {
 	t := (*ParamSpecUInt64)(nil).GetStaticType()
 	c := pspeclike.InheritedFromGParamSpecUInt64()
-	obj := _GParamSpecGrabIfType(unsafe.Pointer(c), t)
+	obj := ParamSpecGrabIfType(unsafe.Pointer(c), t)
 	if obj != nil {
 		return (*ParamSpecUInt64)(obj)
 	}
@@ -729,7 +722,7 @@ type ParamSpecULong struct {
 func ToParamSpecULong(pspeclike ParamSpecULongLike) *ParamSpecULong {
 	t := (*ParamSpecULong)(nil).GetStaticType()
 	c := pspeclike.InheritedFromGParamSpecULong()
-	obj := _GParamSpecGrabIfType(unsafe.Pointer(c), t)
+	obj := ParamSpecGrabIfType(unsafe.Pointer(c), t)
 	if obj != nil {
 		return (*ParamSpecULong)(obj)
 	}
@@ -759,7 +752,7 @@ type ParamSpecUnichar struct {
 func ToParamSpecUnichar(pspeclike ParamSpecUnicharLike) *ParamSpecUnichar {
 	t := (*ParamSpecUnichar)(nil).GetStaticType()
 	c := pspeclike.InheritedFromGParamSpecUnichar()
-	obj := _GParamSpecGrabIfType(unsafe.Pointer(c), t)
+	obj := ParamSpecGrabIfType(unsafe.Pointer(c), t)
 	if obj != nil {
 		return (*ParamSpecUnichar)(obj)
 	}
@@ -789,7 +782,7 @@ type ParamSpecValueArray struct {
 func ToParamSpecValueArray(pspeclike ParamSpecValueArrayLike) *ParamSpecValueArray {
 	t := (*ParamSpecValueArray)(nil).GetStaticType()
 	c := pspeclike.InheritedFromGParamSpecValueArray()
-	obj := _GParamSpecGrabIfType(unsafe.Pointer(c), t)
+	obj := ParamSpecGrabIfType(unsafe.Pointer(c), t)
 	if obj != nil {
 		return (*ParamSpecValueArray)(obj)
 	}
@@ -819,7 +812,7 @@ type ParamSpecVariant struct {
 func ToParamSpecVariant(pspeclike ParamSpecVariantLike) *ParamSpecVariant {
 	t := (*ParamSpecVariant)(nil).GetStaticType()
 	c := pspeclike.InheritedFromGParamSpecVariant()
-	obj := _GParamSpecGrabIfType(unsafe.Pointer(c), t)
+	obj := ParamSpecGrabIfType(unsafe.Pointer(c), t)
 	if obj != nil {
 		return (*ParamSpecVariant)(obj)
 	}
@@ -904,7 +897,7 @@ func (this *Object) FindProperty(name string) *ParamSpec {
 	cname := C.CString(name)
 	ret := C._g_object_find_property(this.InheritedFromGObject(), cname)
 	C.free(unsafe.Pointer(cname))
-	return (*ParamSpec)(_GParamSpecGrab(unsafe.Pointer(ret)))
+	return (*ParamSpec)(ParamSpecWrap(unsafe.Pointer(ret), true))
 }
 
 func (this *Object) SetProperty(name string, value interface{}) {
