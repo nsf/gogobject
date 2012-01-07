@@ -1,10 +1,4 @@
 {
 	"namespace": "GtkSource",
-	"version": "3.0",
-	"method-blacklist": {
-		"PrintCompositor": [
-			"draw_page",
-			"paginate"
-		]
-	}
+	"version": "3.0"
 }
