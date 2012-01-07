@@ -127,6 +127,8 @@ func cairo_marshaler(value *gobject.Value, t reflect.Type) (reflect.Value, bool)
 		panic("GValue is not transformable to " + t.String())
 	}
 
+	defer dst.Unset()
+
 	// TODO: is it correct that I should always grab here?
 	switch gtypedst {
 	case (*Context)(nil).GetStaticType():

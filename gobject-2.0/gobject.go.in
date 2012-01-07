@@ -1334,17 +1334,16 @@ func (this *Value) GetGoValue(t reflect.Type) reflect.Value {
 	case reflect.Ptr:
 		if t.Implements(objectlike) {
 			// at this point we're sure that this is a pointer to the ObjectLike
-			out = reflect.New(t.Elem())
-			st, ok := out.Interface().(StaticTyper)
+			out = reflect.New(t)
+			st, ok := out.Elem().Interface().(StaticTyper)
 			if !ok {
 				panic("ObjectLike type must implement StaticTyper as well")
 			}
 			dst.Init(st.GetStaticType())
 			transform()
-			obj := (*Object)(unsafe.Pointer(out.Pointer()))
-			obj.C = dst.GetObject()
-			C.g_object_ref_sink((*C.GObject)(obj.C))
-			set_object_finalizer(obj)
+			*(*unsafe.Pointer)(unsafe.Pointer(out.Pointer())) = ObjectWrap(dst.GetObject(), true)
+			dst.Unset()
+			out = out.Elem()
 		} else {
 			// cairo marshaler hook
 			if CairoMarshaler != nil {

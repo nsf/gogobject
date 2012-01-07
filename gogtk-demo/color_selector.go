@@ -8,6 +8,7 @@ import "gobject/gtk-3.0"
 import "gobject/gdk-3.0"
 import "gobject/cairo-1.0"
 import "gobject/gobject-2.0"
+import "runtime"
 
 var color gdk.RGBA
 var window *gtk.Window
@@ -36,6 +37,9 @@ func Do(mainwin *gtk.Window) *gtk.Window {
 		da.Connect("draw", func(da *gtk.DrawingArea, cr *cairo.Context) {
 			gdk.CairoSetSourceRgba(cr, &color)
 			cr.Paint()
+
+			// unfortunately I have to do this, otherwise it will die in pain
+			runtime.GC()
 		})
 
 		// set a minimum size
