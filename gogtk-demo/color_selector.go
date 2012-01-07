@@ -7,6 +7,7 @@ package color_selector
 import "gobject/gtk-3.0"
 import "gobject/gdk-3.0"
 import "gobject/cairo-1.0"
+import "gobject/gobject-2.0"
 
 var color gdk.RGBA
 var window *gtk.Window
@@ -27,7 +28,7 @@ func Do(mainwin *gtk.Window) *gtk.Window {
 
 		// Create the color swatch area
 
-		frame := gtk.NewFrame("")
+		frame := gtk.NewFrame(gobject.NilString)
 		frame.SetShadowType(gtk.ShadowTypeIn)
 		vbox.PackStart(frame, true, true, 0)
 

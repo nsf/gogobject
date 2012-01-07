@@ -34,6 +34,13 @@ import "reflect"
 [<.GoBindings>]
 
 //--------------------------------------------------------------
+// NilString
+//--------------------------------------------------------------
+
+// its value will stay the same forever, use the value directly if you like
+const NilString = "\x00"
+
+//--------------------------------------------------------------
 // Quark
 //
 // TODO: probably it's a temporary place for this, quarks are

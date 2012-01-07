@@ -4,6 +4,7 @@
 package entry_buffer
 
 import "gobject/gtk-3.0"
+import "gobject/gobject-2.0"
 
 var dialog *gtk.Dialog
 
@@ -25,7 +26,7 @@ func Do(mainwin *gtk.Window) *gtk.Window {
 		vbox.PackStart(label, false, false, 0)
 
 		// Create a buffer
-		buffer := gtk.NewEntryBuffer("", 0)
+		buffer := gtk.NewEntryBuffer(gobject.NilString, 0)
 
 		// Create our first entry
 		entry := gtk.NewEntryWithBuffer(buffer)

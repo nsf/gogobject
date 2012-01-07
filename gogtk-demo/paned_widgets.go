@@ -11,6 +11,7 @@
 // each side of each widget.
 package paned_widgets
 
+import "gobject/gobject-2.0"
 import "gobject/gtk-3.0"
 
 var window *gtk.Window
@@ -95,7 +96,7 @@ func Do(mainwin *gtk.Window) *gtk.Window {
 		hpaned := gtk.NewPaned(gtk.OrientationHorizontal)
 		vpaned.Add1(hpaned)
 
-		frame := gtk.NewFrame("")
+		frame := gtk.NewFrame(gobject.NilString)
 		frame.SetShadowType(gtk.ShadowTypeIn)
 		frame.SetSizeRequest(60, 60)
 		hpaned.Add1(frame)
@@ -103,12 +104,12 @@ func Do(mainwin *gtk.Window) *gtk.Window {
 		button := gtk.NewButtonWithMnemonic("_Hi there")
 		frame.Add(button)
 
-		frame = gtk.NewFrame("")
+		frame = gtk.NewFrame(gobject.NilString)
 		frame.SetShadowType(gtk.ShadowTypeIn)
 		frame.SetSizeRequest(80, 60)
 		hpaned.Add2(frame)
 
-		frame = gtk.NewFrame("")
+		frame = gtk.NewFrame(gobject.NilString)
 		frame.SetShadowType(gtk.ShadowTypeIn)
 		frame.SetSizeRequest(60, 80)
 		vpaned.Add2(frame)

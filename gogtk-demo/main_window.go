@@ -3,6 +3,7 @@
 // Demonstrates a typical application window with menubar, toolbar, statusbar.
 package main_window
 
+import "gobject/gobject-2.0"
 import "gobject/gtk-3.0"
 import "fmt"
 
@@ -48,18 +49,18 @@ var entries = []gtk.ActionEntry{
 	{ Name: "ShapeMenu",       Label: "_Shape" },
 	{ Name: "HelpMenu",        Label: "_Help" },
 
-	{ "New",    gtk.StockNew,    "_New",        "<control>N", "Create a new file", activate_action },
-	{ "Open",   gtk.StockOpen,   "_Open",       "<control>O", "Open a new file",   activate_action },
-	{ "Save",   gtk.StockSave,   "_Save",       "<control>S", "Save current file", activate_action },
-	{ "SaveAs", gtk.StockSave,   "Save _As...", "",           "Save to a file",    activate_action },
-	{ "Quit",   gtk.StockQuit,   "_Quit",       "<control>Q", "Quit",              activate_action },
-	{ "About",  "",              "_About",      "<control>A", "About",             about_cb },
-	{ "Logo",   "demo-gtk-logo", "",            "",           "GTK+",              activate_action },
+	{ "New",    gtk.StockNew,      "_New",            "<control>N",      "Create a new file", activate_action },
+	{ "Open",   gtk.StockOpen,     "_Open",           "<control>O",      "Open a new file",   activate_action },
+	{ "Save",   gtk.StockSave,     "_Save",           "<control>S",      "Save current file", activate_action },
+	{ "SaveAs", gtk.StockSave,     "Save _As...",     gobject.NilString, "Save to a file",    activate_action },
+	{ "Quit",   gtk.StockQuit,     "_Quit",           "<control>Q",      "Quit",              activate_action },
+	{ "About",  gobject.NilString, "_About",          "<control>A",      "About",             about_cb },
+	{ "Logo",   "demo-gtk-logo",   gobject.NilString, gobject.NilString, "GTK+",              activate_action },
 }
 
 var toggle_entries = []gtk.ToggleActionEntry{
-	{ "Bold",      gtk.StockBold, "_Bold",              "<control>B", "Bold",              activate_action, true },
-	{ "DarkTheme", "",            "_Prefer Dark Theme", "",           "Prefer Dark Theme", activate_action, false },
+	{ "Bold",      gtk.StockBold,     "_Bold",              "<control>B",      "Bold",              activate_action, true },
+	{ "DarkTheme", gobject.NilString, "_Prefer Dark Theme", gobject.NilString, "Prefer Dark Theme", activate_action, false },
 }
 
 const (
@@ -69,9 +70,9 @@ const (
 )
 
 var color_entries = []gtk.RadioActionEntry{
-	{ "Red",   "", "_Red",   "<control>R", "Blood", color_red },
-	{ "Green", "", "_Green", "<control>G", "Grass", color_green },
-	{ "Blue",  "", "_Blue",  "<control>B", "Sky",   color_blue },
+	{ "Red",   gobject.NilString, "_Red",   "<control>R", "Blood", color_red },
+	{ "Green", gobject.NilString, "_Green", "<control>G", "Grass", color_green },
+	{ "Blue",  gobject.NilString, "_Blue",  "<control>B", "Sky",   color_blue },
 }
 
 const (
@@ -81,9 +82,9 @@ const (
 )
 
 var shape_entries = []gtk.RadioActionEntry{
-	{ "Square",    "", "_Square",    "<control>S", "Square",    shape_square },
-	{ "Rectangle", "", "_Rectangle", "<control>R", "Rectangle", shape_rectangle },
-	{ "Oval",      "", "_Oval",      "<control>O", "Egg",       shape_oval },
+	{ "Square",    gobject.NilString, "_Square",    "<control>S", "Square",    shape_square },
+	{ "Rectangle", gobject.NilString, "_Rectangle", "<control>R", "Rectangle", shape_rectangle },
+	{ "Oval",      gobject.NilString, "_Oval",      "<control>O", "Egg",       shape_oval },
 }
 
 var ui_info = `
@@ -197,7 +198,7 @@ func Do(mainwin *gtk.Window) *gtk.Window {
 		// Create document
 		infobar = gtk.NewInfoBar()
 		infobar.SetNoShowAll(true)
-		messagelabel = gtk.NewLabel("")
+		messagelabel = gtk.NewLabel(gobject.NilString)
 		messagelabel.Show()
 		gtk.ToBox(infobar.GetContentArea()).PackStart(messagelabel, true, true, 0)
 		infobar.AddButton(gtk.StockOk, gtk.ResponseTypeOk)

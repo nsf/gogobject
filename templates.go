@@ -33,7 +33,7 @@ type _GError struct {
 }
 
 func _GoStringToGString(x string) *C.char {
-	if x == "" {
+	if x == "\x00" {
 		return nil
 	}
 	return C.CString(x)

@@ -20,4 +20,3 @@ Here's the short TODO list:
  - Think about adding "user_data" support for closures. At the moment my (nsf)
    opinion is that they are useless, because there are real language closures.
  - Go-gobject-gen needs a way to share code between gtk-2.0 and gtk-3.0.
- - Use special zero value for nil strings "\x00", add const gobject.NilString.
