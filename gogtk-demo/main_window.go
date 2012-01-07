@@ -1,7 +1,7 @@
 // Application main window
 //
 // Demonstrates a typical application window with menubar, toolbar, statusbar.
-package appwindow
+package main_window
 
 import "gobject/gtk-3.0"
 import "fmt"
@@ -219,8 +219,8 @@ func Do(mainwin *gtk.Window) *gtk.Window {
 		window.SetDefaultSize(200, 200)
 
 		contents := gtk.NewTextView()
-		contents.GrabFocus()
 		sw.Add(contents)
+		contents.GrabFocus()
 
 		// Create statusbar
 		statusbar := gtk.NewStatusbar()
@@ -243,7 +243,6 @@ func Do(mainwin *gtk.Window) *gtk.Window {
 		buffer.Connect("changed", update_statusbar)
 		buffer.Connect("mark_set", update_statusbar)
 		update_statusbar()
-
 	}
 
 	if !window.GetVisible() {

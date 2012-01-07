@@ -10,7 +10,7 @@ DEMOS=\
 	info_bar.go \
 	entry_buffer.go \
 	pickers.go \
-	appwindow.go \
+	main_window.go \
 
 
 PREREQ=$(patsubst %.go,%.$O,$(DEMOS))

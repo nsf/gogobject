@@ -11,7 +11,7 @@ import (
 	"./info_bar"
 	"./entry_buffer"
 	"./pickers"
-	"./appwindow"
+	"./main_window"
 )
 
 type DemoFunc func(mainwin *gtk.Window) *gtk.Window
@@ -24,7 +24,7 @@ type DemoDesc struct {
 }
 
 var demos = []*DemoDesc{
-	{Title: "Application main window", Filename: "appwindow.go",      Func: appwindow.Do},
+	{Title: "Application main window", Filename: "main_window.go",    Func: main_window.Do},
 	{Title: "Button Boxes",            Filename: "button_boxes.go",   Func: button_boxes.Do},
 	{Title: "Links",                   Filename: "links.go",          Func: links.Do},
 	{Title: "Spinner",                 Filename: "spinner.go",        Func: spinner.Do},
