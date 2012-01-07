@@ -12,6 +12,7 @@ import (
 	"./entry_buffer"
 	"./pickers"
 	"./main_window"
+	"./paned_widgets"
 )
 
 type DemoFunc func(mainwin *gtk.Window) *gtk.Window
@@ -38,4 +39,5 @@ var demos = []*DemoDesc{
 		{Title: "Entry Buffer", Filename: "entry_buffer.go", Func: entry_buffer.Do},
 	}},
 	{Title: "Pickers",                 Filename: "pickers.go",        Func: pickers.Do},
+	{Title: "Paned Widgets",           Filename: "paned_widgets.go",  Func: paned_widgets.Do},
 }

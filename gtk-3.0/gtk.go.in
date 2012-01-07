@@ -12,6 +12,8 @@ package gtk
 [<.GFree>]
 [<.GErrorFree>]
 
+#include "gtk.h"
+
 extern GtkWidget *gtk_message_dialog_new(GtkWindow*, GtkDialogFlags, GtkMessageType, GtkButtonsType, const char *msg);
 
 #cgo pkg-config: gtk+-3.0
@@ -404,4 +406,47 @@ func (this *ActionGroup) AddRadioActions(actions []RadioActionEntry, value int, 
 	if on_change != nil {
 		first_action.Connect("changed", on_change)
 	}
+}
+
+//----------------------------------------------------------------------------
+// Container
+//----------------------------------------------------------------------------
+
+func (this *Container) FindChildProperty(name string) *gobject.ParamSpec {
+	cname := C.CString(name)
+	ret := C._gtk_container_find_child_property(this.InheritedFromGtkContainer(), cname)
+	C.free(unsafe.Pointer(cname))
+	return (*gobject.ParamSpec)(gobject.ParamSpecWrap(unsafe.Pointer(ret), true))
+}
+
+func (this *Container) ChildGet(child WidgetLike, props ...interface{}) {
+	for_pairs(props, func(key, value interface{}) {
+		name, ok := key.(string)
+		panic_if_not_type(ok, "string", key)
+		pspec := this.FindChildProperty(name)
+		if pspec == nil {
+			panic("Container has no property with that name: " + name)
+		}
+		var gvalue gobject.Value
+		gvalue.Init(pspec.GetValueType())
+		this.ChildGetProperty(child, name, &gvalue)
+		gvalue.GetGoInterface(value)
+		gvalue.Unset()
+	})
+}
+
+func (this *Container) ChildSet(child WidgetLike, props ...interface{}) {
+	for_pairs(props, func(key, value interface{}) {
+		name, ok := key.(string)
+		panic_if_not_type(ok, "string", key)
+		pspec := this.FindProperty(name)
+		if pspec == nil {
+			panic("Container has no property with that name: " + name)
+		}
+		var gvalue gobject.Value
+		gvalue.Init(pspec.GetValueType())
+		gvalue.SetGoInterface(value)
+		this.ChildSetProperty(child, name, &gvalue)
+		gvalue.Unset()
+	})
 }
