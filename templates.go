@@ -13,71 +13,6 @@ const GErrorFree = `extern void g_error_free(GError*);`
 const GFree = `extern void g_free(void*);`
 
 var GoUtilsTemplate = MustTemplate(`
-[<if .add_object_utils>]
-// returns a new *gobject.Object casted to unsafe.Pointer, so that various
-// callers can cast it back to any inherited type, note that function sets
-// finalizer as well
-func _GObjectGrab(c unsafe.Pointer) unsafe.Pointer {
-	if c == nil {
-		return nil
-	}
-	obj := (*[<.gobjectns>]Object)([<.gobjectns>]GetGoRepr(c))
-	if obj != nil {
-		return unsafe.Pointer(obj)
-	}
-	obj = &[<.gobjectns>]Object{c}
-	C.g_object_ref_sink((*C.GObject)(obj.C))
-	_SetGObjectFinalizer(obj)
-	[<.gobjectns>]SetGoRepr(obj.C, unsafe.Pointer(obj))
-	return unsafe.Pointer(obj)
-}
-
-// same as above, but doesn't increment reference count
-func _GObjectWrap(c unsafe.Pointer) unsafe.Pointer {
-	if c == nil {
-		return nil
-	}
-	obj := (*[<.gobjectns>]Object)([<.gobjectns>]GetGoRepr(c))
-	if obj != nil {
-		return unsafe.Pointer(obj)
-	}
-	obj = &[<.gobjectns>]Object{c}
-	_SetGObjectFinalizer(obj)
-	[<.gobjectns>]SetGoRepr(obj.C, unsafe.Pointer(obj))
-	return unsafe.Pointer(obj)
-}
-
-func _GObjectGrabIfType(c unsafe.Pointer, t [<.gobjectns>]Type) unsafe.Pointer {
-	if c == nil {
-		return nil
-	}
-	hasrepr := true
-	obj := (*[<.gobjectns>]Object)([<.gobjectns>]GetGoRepr(c))
-	if obj == nil {
-		obj = &[<.gobjectns>]Object{c}
-		hasrepr = false
-	}
-	if obj.GetType().IsA(t) {
-		if !hasrepr {
-			C.g_object_ref_sink((*C.GObject)(obj.C))
-			_SetGObjectFinalizer(obj)
-			[<.gobjectns>]SetGoRepr(obj.C, unsafe.Pointer(obj))
-		}
-		return unsafe.Pointer(obj)
-	}
-	return nil
-}
-
-func _GObjectFinalizer(obj *[<.gobjectns>]Object) {
-	[<.gobjectns>]SetGoRepr(obj.C, nil)
-	C.g_object_unref((*C.GObject)(obj.C))
-}
-
-func _SetGObjectFinalizer(obj *[<.gobjectns>]Object) {
-	runtime.SetFinalizer(obj, _GObjectFinalizer)
-}
-[<end>]
-
 const alot = 999999
 
 type _GSList struct {
@@ -141,7 +76,7 @@ func To[<.name>](objlike [<.gobjectns>]ObjectLike) *[<.name>] {
 		return nil
 	}
 	t := (*[<.name>])(nil).GetStaticType()
-	obj := _GObjectGrabIfType(unsafe.Pointer(c), t)
+	obj := [<.gobjectns>]ObjectGrabIfType(unsafe.Pointer(c), t)
 	if obj != nil {
 		return (*[<.name>])(obj)
 	}
@@ -177,7 +112,7 @@ type [<.name>]Impl struct {}
 func To[<.name>](objlike [<.gobjectns>]ObjectLike) *[<.name>] {
 	t := (*[<.name>]Impl)(nil).GetStaticType()
 	c := objlike.InheritedFromGObject()
-	obj := _GObjectGrabIfType(unsafe.Pointer(c), t)
+	obj := [<.gobjectns>]ObjectGrabIfType(unsafe.Pointer(c), t)
 	if obj != nil {
 		return (*[<.name>])(obj)
 	}

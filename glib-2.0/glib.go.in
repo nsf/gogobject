@@ -14,5 +14,5 @@ import "C"
 import "unsafe"
 import "errors"
 
-[<.GoUtilsNoObject>]
+[<.GoUtils>]
 [<.GoBindings>]

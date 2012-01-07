@@ -16,7 +16,6 @@ package gio
 */
 import "C"
 import "unsafe"
-import "runtime"
 import "errors"
 
 import (

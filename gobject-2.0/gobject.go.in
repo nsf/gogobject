@@ -58,14 +58,6 @@ func init() {
 	go_repr = NewQuarkFromString("go-representation")
 }
 
-func GetGoRepr(obj unsafe.Pointer) unsafe.Pointer {
-	return C.g_object_get_qdata((*C.GObject)(obj), C.uint32_t(go_repr))
-}
-
-func SetGoRepr(obj unsafe.Pointer, gorepr unsafe.Pointer) {
-	C.g_object_set_qdata((*C.GObject)(obj), C.uint32_t(go_repr), gorepr)
-}
-
 //--------------------------------------------------------------
 // ParamSpec utils
 //--------------------------------------------------------------
@@ -846,6 +838,54 @@ func (this *ParamSpecVariant) GetStaticType() Type {
 // Object
 //--------------------------------------------------------------
 
+func object_finalizer(obj *Object) {
+	C.g_object_set_qdata((*C.GObject)(obj.C), C.uint32_t(go_repr), nil)
+	C.g_object_unref((*C.GObject)(obj.C))
+}
+
+func set_object_finalizer(obj *Object) {
+	runtime.SetFinalizer(obj, object_finalizer)
+}
+
+func ObjectWrap(c unsafe.Pointer, grab bool) unsafe.Pointer {
+	if c == nil {
+		return nil
+	}
+	obj := (*Object)(C.g_object_get_qdata((*C.GObject)(c), C.uint32_t(go_repr)))
+	if obj != nil {
+		return unsafe.Pointer(obj)
+	}
+	obj = &Object{c}
+	if grab {
+		C.g_object_ref_sink((*C.GObject)(obj.C))
+	}
+	set_object_finalizer(obj)
+	C.g_object_set_qdata((*C.GObject)(obj.C),
+		C.uint32_t(go_repr), unsafe.Pointer(obj))
+	return unsafe.Pointer(obj)
+}
+
+func ObjectGrabIfType(c unsafe.Pointer, t Type) unsafe.Pointer {
+	if c == nil {
+		return nil
+	}
+	hasrepr := true
+	obj := (*Object)(C.g_object_get_qdata((*C.GObject)(c), C.uint32_t(go_repr)))
+	if obj == nil {
+		obj = &Object{c}
+		hasrepr = false
+	}
+	if obj.GetType().IsA(t) {
+		if !hasrepr {
+			C.g_object_ref_sink((*C.GObject)(obj.C))
+			set_object_finalizer(obj)
+			C.g_object_set_qdata((*C.GObject)(obj.C),
+				C.uint32_t(go_repr), unsafe.Pointer(obj))
+		}
+		return unsafe.Pointer(obj)
+	}
+	return nil
+}
 
 func (this *Object) GetType() Type {
 	return Type(C._g_object_type((*C.GObject)(this.C)))
@@ -1304,7 +1344,7 @@ func (this *Value) GetGoValue(t reflect.Type) reflect.Value {
 			obj := (*Object)(unsafe.Pointer(out.Pointer()))
 			obj.C = dst.GetObject()
 			C.g_object_ref_sink((*C.GObject)(obj.C))
-			_SetGObjectFinalizer(obj)
+			set_object_finalizer(obj)
 		} else {
 			// cairo marshaler hook
 			if CairoMarshaler != nil {
@@ -1335,3 +1375,4 @@ func (this *Value) GetGoInterface(v interface{}) {
 	}
 	vp.Elem().Set(this.GetGoValue(vp.Type().Elem()))
 }
+

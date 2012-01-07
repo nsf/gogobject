@@ -16,7 +16,6 @@ package gdk
 */
 import "C"
 import "unsafe"
-import "runtime"
 import "errors"
 
 import (

@@ -15,7 +15,6 @@ package pango
 */
 import "C"
 import "unsafe"
-import "runtime"
 import "errors"
 
 // package dependencies

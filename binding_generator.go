@@ -285,27 +285,9 @@ func CForwardDeclarations() string {
 
 func GoUtils() string {
 	var out bytes.Buffer
-	var gobjectns string
-
-	if Config.Namespace != "GObject" {
-		gobjectns = "gobject."
-	}
-
-	GoUtilsTemplate.Execute(&out, map[string]interface{}{
-		"gobjectns": gobjectns,
-		"namespace": Config.Namespace,
-		"add_object_utils": true,
-	})
-
-	return out.String()
-}
-
-func GoUtilsNoObject() string {
-	var out bytes.Buffer
 
 	GoUtilsTemplate.Execute(&out, map[string]interface{}{
 		"namespace": Config.Namespace,
-		"add_object_utils": false,
 	})
 
 	return out.String()
@@ -341,7 +323,6 @@ func ProcessTemplate(tplstr string) {
 		"CForwardDeclarations": CForwardDeclarations(),
 		"GObjectRefUnref":      GObjectRefUnref,
 		"GoUtils":              GoUtils(),
-		"GoUtilsNoObject":      GoUtilsNoObject(),
 		"GoBindings":           GoBindings(),
 		"GErrorFree":           GErrorFree,
 		"GFree":                GFree,

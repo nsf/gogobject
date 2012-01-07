@@ -18,7 +18,6 @@ extern GtkWidget *gtk_message_dialog_new(GtkWindow*, GtkDialogFlags, GtkMessageT
 */
 import "C"
 import "unsafe"
-import "runtime"
 import "errors"
 import "fmt"
 
@@ -165,7 +164,7 @@ func NewMessageDialog(parent0 WindowLike, flags0 DialogFlags, type0 MessageType,
 	buttons1 = C.GtkButtonsType(buttons0)
 	ret1 := C.gtk_message_dialog_new(parent1, flags1, type1, buttons1, nil)
 	var ret2 *MessageDialog
-	ret2 = (*MessageDialog)(_GObjectGrab(unsafe.Pointer(ret1)))
+	ret2 = (*MessageDialog)(gobject.ObjectWrap(unsafe.Pointer(ret1), true))
 	ret2.SetProperty("text", fmt.Sprintf(format, args...))
 	return ret2
 }
@@ -184,7 +183,7 @@ func NewMessageDialogWithMarkup(parent0 WindowLike, flags0 DialogFlags, type0 Me
 	buttons1 = C.GtkButtonsType(buttons0)
 	ret1 := C.gtk_message_dialog_new(parent1, flags1, type1, buttons1, nil)
 	var ret2 *MessageDialog
-	ret2 = (*MessageDialog)(_GObjectGrab(unsafe.Pointer(ret1)))
+	ret2 = (*MessageDialog)(gobject.ObjectWrap(unsafe.Pointer(ret1), true))
 	ret2.SetMarkup(fmt.Sprintf(format, args...))
 	return ret2
 }

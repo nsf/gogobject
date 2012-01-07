@@ -176,13 +176,17 @@ func CgoToGoForInterface(bi *gi.BaseInfo, arg1, arg2 string, flags ConvFlags) st
 
 	switch bi.Type() {
 	case gi.INFO_TYPE_OBJECT, gi.INFO_TYPE_INTERFACE:
+		prefix := ""
+		if Config.Namespace != "GObject" {
+			prefix = "gobject."
+		}
 		gotype := GoTypeForInterface(bi, TypeReturn)
 		if flags&ConvOwnEverything != 0 {
-			printf("%s = (*%s)(_GObjectWrap(unsafe.Pointer(%s)))",
-				arg2, gotype, arg1)
+			printf("%s = (*%s)(%sObjectWrap(unsafe.Pointer(%s), false))",
+				arg2, gotype, prefix, arg1)
 		} else {
-			printf("%s = (*%s)(_GObjectGrab(unsafe.Pointer(%s)))",
-				arg2, gotype, arg1)
+			printf("%s = (*%s)(%sObjectWrap(unsafe.Pointer(%s), true))",
+				arg2, gotype, prefix, arg1)
 		}
 	case gi.INFO_TYPE_ENUM, gi.INFO_TYPE_FLAGS:
 		gotype := GoTypeForInterface(bi, TypeReturn)

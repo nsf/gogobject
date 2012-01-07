@@ -15,7 +15,6 @@ package gdkpixbuf
 */
 import "C"
 import "unsafe"
-import "runtime"
 import "errors"
 
 // package dependencies
