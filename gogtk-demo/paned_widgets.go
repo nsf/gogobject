@@ -19,8 +19,8 @@ var window *gtk.Window
 func toggle(child *gtk.Widget, toggle_shrink, toggle_resize bool) {
 	paned := gtk.ToPaned(child.GetParent())
 
-	// we can do that because there only one Go representation
-	// of each gobject
+	// we can do that because there's only one Go representation
+	// of every gobject
 	is_child1 := child == paned.GetChild1()
 
 	var resize, shrink bool
