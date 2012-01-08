@@ -1005,6 +1005,19 @@ func (this *Object) Connect(signal string, clo interface{}) {
 	C.free(unsafe.Pointer(csignal))
 }
 
+func (this *Object) ConnectMethod(signal string, clo interface{}, recv interface{}) {
+	var count int
+	csignal := C.CString(signal)
+	count = ccache.closures[unsafe.Pointer(&clo)]
+	ccache.closures[unsafe.Pointer(&clo)] = count + 1
+	count = ccache.receivers[unsafe.Pointer(&recv)]
+	ccache.receivers[unsafe.Pointer(&recv)] = count + 1
+	goclosure := C.g_goclosure_new(unsafe.Pointer(&clo), unsafe.Pointer(&recv))
+	C.g_signal_connect_closure(this.C, csignal, (*C.GClosure)(unsafe.Pointer(goclosure)), 0)
+	C.free(unsafe.Pointer(csignal))
+
+}
+
 func (this *Object) FindProperty(name string) *ParamSpec {
 	cname := C.CString(name)
 	ret := C._g_object_find_property(this.InheritedFromGObject(), cname)
@@ -1059,9 +1072,25 @@ var ccache = struct {
 
 //export g_goclosure_finalize_go
 func g_goclosure_finalize_go(goclosure_up unsafe.Pointer) {
+	var count int
+	var p unsafe.Pointer
 	goclosure := (*C.GGoClosure)(goclosure_up)
-	delete(ccache.closures, C.g_goclosure_get_func(goclosure))
-	delete(ccache.receivers, C.g_goclosure_get_recv(goclosure))
+
+	p = C.g_goclosure_get_func(goclosure)
+	count = ccache.closures[p]
+	if count <= 1 {
+		delete(ccache.closures, p)
+	} else {
+		ccache.closures[p] = count - 1
+	}
+
+	p = C.g_goclosure_get_recv(goclosure)
+	count = ccache.receivers[p]
+	if count <= 1 {
+		delete(ccache.receivers, p)
+	} else {
+		ccache.receivers[p] = count - 1
+	}
 }
 
 //export g_goclosure_marshal_go
