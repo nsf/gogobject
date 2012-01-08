@@ -131,6 +131,7 @@ func Do(mainwin *gtk.Window) *gtk.Window {
 		create_page4(assistant)
 
 		close_cancel := func() {
+			assistant.Destroy()
 			assistant = nil
 			progress_bar = nil
 		}
