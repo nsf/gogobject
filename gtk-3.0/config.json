@@ -2,6 +2,9 @@
 	"namespace": "Gtk",
 	"version": "3.0",
 	"blacklist": {
+		"structs": [
+			"StockItem" // implemented manually
+		],
 		"structdefs": [
 			// implemented manually
 			"ActionEntry",
@@ -30,10 +33,12 @@
 			"rc_property_parse_enum",
 			"rc_property_parse_flags",
 			"rc_property_parse_requisition",
-			"stock_add",
 			"print_run_page_setup_dialog",
 			"print_run_page_setup_dialog_async",
 			"init_with_args",
+			"stock_add", // implemented manually and renamed to StockAddItems (name clash)
+			"stock_lookup", // implemented manually
+			"stock_add_static", // doesn't make sense
 			"rc_parse_color",
 			"rc_parse_color_full",
 			"rc_parse_priority",

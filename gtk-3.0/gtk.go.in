@@ -480,3 +480,79 @@ func (this *Builder) ConnectSignals(recv interface{}) {
 		object.ConnectMethod(signal_name, meth.Func.Interface(), recv)
 	})
 }
+
+//----------------------------------------------------------------------------
+// StockItem
+//----------------------------------------------------------------------------
+
+type StockItem struct {
+	StockId string
+	Label string
+	Modifier gdk.ModifierType
+	Keyval uint32
+	TranslationDomain string
+}
+
+func (this *StockItem) alloc_c(c *_CStockItem) {
+	c.StockId = _GoStringToGString(this.StockId)
+	c.Label = _GoStringToGString(this.Label)
+	c.Modifier = C.GdkModifierType(this.Modifier)
+	c.Keyval = C.uint32_t(this.Keyval)
+	c.TranslationDomain = _GoStringToGString(this.TranslationDomain)
+}
+
+type _CStockItem struct {
+	StockId *C.char
+	Label *C.char
+	Modifier C.GdkModifierType
+	Keyval C.uint32_t
+	TranslationDomain *C.char
+}
+
+func (this *_CStockItem) free() {
+	if this.StockId != nil {
+		C.free(unsafe.Pointer(this.StockId))
+	}
+	if this.Label != nil {
+		C.free(unsafe.Pointer(this.Label))
+	}
+	if this.TranslationDomain != nil {
+		C.free(unsafe.Pointer(this.TranslationDomain))
+	}
+}
+
+func StockAddItems(items []StockItem) {
+	citems := make([]_CStockItem, len(items))
+	for i, item := range items {
+		item.alloc_c(&citems[i])
+		defer citems[i].free()
+	}
+
+	first := (*C.GtkStockItem)(unsafe.Pointer(&citems[0]))
+	C.gtk_stock_add(first, C.uint32_t(len(citems)))
+}
+
+func StockLookup(stock_id string) (StockItem, bool) {
+	var stockitem StockItem
+	var cstockitem _CStockItem
+	cstock_id := _GoStringToGString(stock_id)
+	ok := C.gtk_stock_lookup(cstock_id, (*C.GtkStockItem)(unsafe.Pointer(&cstockitem))) != 0
+	C.free(unsafe.Pointer(cstock_id))
+	if !ok {
+		return stockitem, false
+	}
+
+	if cstockitem.StockId != nil {
+		stockitem.StockId = C.GoString(cstockitem.StockId)
+	}
+	if cstockitem.Label != nil {
+		stockitem.Label = C.GoString(cstockitem.Label)
+	}
+	if cstockitem.TranslationDomain != nil {
+		stockitem.TranslationDomain = C.GoString(cstockitem.TranslationDomain)
+	}
+	stockitem.Keyval = uint32(cstockitem.Keyval)
+	stockitem.Modifier = gdk.ModifierType(cstockitem.Modifier)
+
+	return stockitem, true
+}

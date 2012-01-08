@@ -5,6 +5,7 @@ package main_window
 
 import "gobject/gobject-2.0"
 import "gobject/gtk-3.0"
+import "gobject/gdkpixbuf-2.0"
 import "fmt"
 
 var window *gtk.Window
@@ -132,8 +133,24 @@ func register_stock_icons() {
 		return
 	}
 
-	// TODO: Implement StockItem and StockAdd (rename it to StockAddItems due to consts clash)
+	items := []gtk.StockItem{
+		{"demo-gtk-logo", "_GTK!", 0, 0, gobject.NilString},
+	}
 	stock_icons_registered = true
+
+	gtk.StockAddItems(items)
+	factory := gtk.NewIconFactory()
+	factory.AddDefault()
+
+	pixbuf, err := gdkpixbuf.NewPixbufFromFile("gtk-logo-rgb.gif")
+	if err != nil {
+		println("failed to load GTK logo for toolbar")
+		return
+	}
+
+	transparent := pixbuf.AddAlpha(true, 0xFF, 0xFF, 0xFF)
+	icon_set := gtk.NewIconSetFromPixbuf(transparent)
+	factory.Add("demo-gtk-logo", icon_set)
 }
 
 func activate_radio_action(action *gtk.Action, current *gtk.RadioAction) {
