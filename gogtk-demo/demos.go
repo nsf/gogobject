@@ -13,6 +13,7 @@ import (
 	"./pickers"
 	"./main_window"
 	"./paned_widgets"
+	"./builder"
 )
 
 type DemoFunc func(mainwin *gtk.Window) *gtk.Window
@@ -26,6 +27,7 @@ type DemoDesc struct {
 
 var demos = []*DemoDesc{
 	{Title: "Application main window", Filename: "main_window.go",    Func: main_window.Do},
+	{Title: "Builder",                 Filename: "builder.go",        Func: builder.Do},
 	{Title: "Button Boxes",            Filename: "button_boxes.go",   Func: button_boxes.Do},
 	{Title: "Color Selector",          Filename: "color_selector.go", Func: color_selector.Do},
 	{Title: "Entry", Children: []*DemoDesc{

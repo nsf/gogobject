@@ -12,6 +12,7 @@ DEMOS=\
 	pickers.go \
 	main_window.go \
 	paned_widgets.go \
+	builder.go \
 
 
 PREREQ=$(patsubst %.go,%.$O,$(DEMOS))

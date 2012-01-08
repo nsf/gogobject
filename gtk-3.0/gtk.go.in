@@ -21,6 +21,7 @@ extern GtkWidget *gtk_message_dialog_new(GtkWindow*, GtkDialogFlags, GtkMessageT
 import "C"
 import "unsafe"
 import "errors"
+import "reflect"
 import "fmt"
 
 // package dependencies
@@ -458,5 +459,24 @@ func (this *Container) ChildSet(child WidgetLike, props ...interface{}) {
 		gvalue.SetGoInterface(value)
 		this.ChildSetProperty(child, name, &gvalue)
 		gvalue.Unset()
+	})
+}
+
+//----------------------------------------------------------------------------
+// Builder
+//----------------------------------------------------------------------------
+
+func (this *Builder) ConnectSignals(recv interface{}) {
+	t := reflect.TypeOf(recv)
+	this.ConnectSignalsFull(func(builder *Builder, object *gobject.Object, signal_name, handler_name string, connect_object *gobject.Object, flags gobject.ConnectFlags) {
+		// TODO: I'm ignoring here a lot is it ok?
+
+		meth, ok := t.MethodByName(handler_name)
+		if !ok {
+			println("could not find signal handler: '" + handler_name + "'")
+			return
+		}
+
+		object.ConnectMethod(signal_name, meth.Func.Interface(), recv)
 	})
 }

@@ -93,6 +93,9 @@
 		],
 		"Clipboard": [
 			"request_rich_text"
+		],
+		"Builder": [
+			"connect_signals" // custom implementation
 		]
 	},
 	"renames": {
