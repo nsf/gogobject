@@ -234,6 +234,15 @@ func (this *Context) c() *C.cairo_t {
 }
 
 func context_finalizer(this *Context) {
+	if gobject.FQueue.Push(unsafe.Pointer(this), context_finalizer2) {
+		return
+	}
+	C.cairo_set_user_data(this.c(), &go_repr_cookie, nil, nil)
+	C.cairo_destroy(this.c())
+}
+
+func context_finalizer2(this_un unsafe.Pointer) {
+	this := (*Context)(this_un)
 	C.cairo_set_user_data(this.c(), &go_repr_cookie, nil, nil)
 	C.cairo_destroy(this.c())
 }
@@ -746,6 +755,14 @@ func (this *Path) c() *C.cairo_path_t {
 }
 
 func path_finalizer(this *Path) {
+	if gobject.FQueue.Push(unsafe.Pointer(this), path_finalizer2) {
+		return
+	}
+	C.cairo_path_destroy(this.c())
+}
+
+func path_finalizer2(this_un unsafe.Pointer) {
+	this := (*Path)(this_un)
 	C.cairo_path_destroy(this.c())
 }
 
@@ -949,6 +966,15 @@ func (this *Pattern) c() *C.cairo_pattern_t {
 }
 
 func pattern_finalizer(this *Pattern) {
+	if gobject.FQueue.Push(unsafe.Pointer(this), pattern_finalizer2) {
+		return
+	}
+	C.cairo_pattern_set_user_data(this.c(), &go_repr_cookie, nil, nil)
+	C.cairo_pattern_destroy(this.c())
+}
+
+func pattern_finalizer2(this_un unsafe.Pointer) {
+	this := (*Pattern)(this_un)
 	C.cairo_pattern_set_user_data(this.c(), &go_repr_cookie, nil, nil)
 	C.cairo_pattern_destroy(this.c())
 }
@@ -1277,6 +1303,14 @@ func (this *Region) c() *C.cairo_region_t {
 }
 
 func region_finalizer(this *Region) {
+	if gobject.FQueue.Push(unsafe.Pointer(this), region_finalizer2) {
+		return
+	}
+	C.cairo_region_destroy(this.c())
+}
+
+func region_finalizer2(this_un unsafe.Pointer) {
+	this := (*Region)(this_un)
 	C.cairo_region_destroy(this.c())
 }
 
@@ -1680,6 +1714,14 @@ func (this *FontOptions) c() *C.cairo_font_options_t {
 }
 
 func font_options_finalizer(this *FontOptions) {
+	if gobject.FQueue.Push(unsafe.Pointer(this), font_options_finalizer2) {
+		return
+	}
+	C.cairo_font_options_destroy(this.c())
+}
+
+func font_options_finalizer2(this_un unsafe.Pointer) {
+	this := (*FontOptions)(this_un)
 	C.cairo_font_options_destroy(this.c())
 }
 
@@ -1850,6 +1892,15 @@ func (this *Surface) c() *C.cairo_surface_t {
 }
 
 func surface_finalizer(this *Surface) {
+	if gobject.FQueue.Push(unsafe.Pointer(this), surface_finalizer2) {
+		return
+	}
+	C.cairo_surface_set_user_data(this.c(), &go_repr_cookie, nil, nil)
+	C.cairo_surface_destroy(this.c())
+}
+
+func surface_finalizer2(this_un unsafe.Pointer) {
+	this := (*Surface)(this_un)
 	C.cairo_surface_set_user_data(this.c(), &go_repr_cookie, nil, nil)
 	C.cairo_surface_destroy(this.c())
 }
