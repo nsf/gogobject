@@ -54,6 +54,7 @@ GType _g_type_param_variant();
 
 GParamSpec *_g_object_find_property(GObject *object, const char *name);
 
-GGoClosure *g_goclosure_new(int32_t id, void **iface);
-int32_t g_goclosure_get_id(GGoClosure *clo);
-void g_goclosure_get_iface(GGoClosure *clo, void **out);
+// null recv is allowed
+GGoClosure *g_goclosure_new(void *func, void *recv);
+void *g_goclosure_get_func(GGoClosure *clo);
+void *g_goclosure_get_recv(GGoClosure *clo);

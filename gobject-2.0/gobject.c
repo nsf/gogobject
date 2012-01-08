@@ -4,8 +4,8 @@
 
 struct _GGoClosure {
 	GClosure closure;
-	int32_t id;
-	void *iface[2];
+	void *func;
+	void *recv;
 };
 
 GType _g_param_spec_type(GParamSpec *pspec) {
@@ -108,16 +108,15 @@ static void g_goclosure_marshal(GClosure *closure, GValue *return_value,
 			       (GValue*)param_values);
 }
 
-GGoClosure *g_goclosure_new(int32_t id, void **iface)
+GGoClosure *g_goclosure_new(void *func, void *recv)
 {
 	GClosure *closure;
 	GGoClosure *goclosure;
 
 	closure = g_closure_new_simple(sizeof(GGoClosure), 0);
 	goclosure = (GGoClosure*)closure;
-	goclosure->id = id;
-	goclosure->iface[0] = iface[0];
-	goclosure->iface[1] = iface[1];
+	goclosure->func = func;
+	goclosure->recv = recv;
 
 	g_closure_add_finalize_notifier(closure, 0, g_goclosure_finalize);
 	g_closure_set_marshal(closure, g_goclosure_marshal);
@@ -125,13 +124,12 @@ GGoClosure *g_goclosure_new(int32_t id, void **iface)
 	return goclosure;
 }
 
-int32_t g_goclosure_get_id(GGoClosure *clo) {
-	return clo->id;
+void *g_goclosure_get_func(GGoClosure *clo) {
+	return clo->func;
 }
 
-void g_goclosure_get_iface(GGoClosure *clo, void **out) {
-	out[0] = clo->iface[0];
-	out[1] = clo->iface[1];
+void *g_goclosure_get_recv(GGoClosure *clo) {
+	return clo->recv;
 }
 
 

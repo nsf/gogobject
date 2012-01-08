@@ -996,10 +996,11 @@ func (this *Object) GetType() Type {
 }
 
 func (this *Object) Connect(signal string, clo interface{}) {
+	var count int
 	csignal := C.CString(signal)
-	id := nextClosureID()
-	ccache.closures[id] = clo
-	goclosure := C.g_goclosure_new(C.int32_t(id), _GoInterfaceToCInterface(clo))
+	count = ccache.closures[unsafe.Pointer(&clo)]
+	ccache.closures[unsafe.Pointer(&clo)] = count + 1
+	goclosure := C.g_goclosure_new(unsafe.Pointer(&clo), nil)
 	C.g_signal_connect_closure(this.C, csignal, (*C.GClosure)(unsafe.Pointer(goclosure)), 0)
 	C.free(unsafe.Pointer(csignal))
 }
@@ -1041,27 +1042,26 @@ func (this *Object) GetProperty(name string, value interface{}) {
 	C.free(unsafe.Pointer(cname))
 }
 
+//--------------------------------------------------------------
+// Closures
+//--------------------------------------------------------------
+
 // closure cache
 var ccache = struct {
-	values   []reflect.Value
-	closures map[int32]interface{}
-	id       int32
+	values    []reflect.Value
+	closures  map[unsafe.Pointer]int
+	receivers map[unsafe.Pointer]int
 }{
 	make([]reflect.Value, 0, 10),
-	make(map[int32]interface{}),
-	0,
-}
-
-func nextClosureID() int32 {
-	id := ccache.id
-	ccache.id++
-	return id
+	make(map[unsafe.Pointer]int),
+	make(map[unsafe.Pointer]int),
 }
 
 //export g_goclosure_finalize_go
 func g_goclosure_finalize_go(goclosure_up unsafe.Pointer) {
 	goclosure := (*C.GGoClosure)(goclosure_up)
-	delete(ccache.closures, int32(C.g_goclosure_get_id(goclosure)))
+	delete(ccache.closures, C.g_goclosure_get_func(goclosure))
+	delete(ccache.receivers, C.g_goclosure_get_recv(goclosure))
 }
 
 //export g_goclosure_marshal_go
@@ -1070,22 +1070,35 @@ func g_goclosure_marshal_go(goclosure_up, ret_up unsafe.Pointer, nargs int32, ar
 	ret := (*Value)(ret_up)
 	args := (*(*[alot]Value)(args_up))[:nargs]
 
-	var iface [2]unsafe.Pointer
-	C.g_goclosure_get_iface(goclosure, (*unsafe.Pointer)(unsafe.Pointer(&iface)))
-	f := reflect.ValueOf(_CInterfaceToGoInterface(iface))
+	f := reflect.ValueOf(*(*interface{})(C.g_goclosure_get_func(goclosure)))
 	ft := f.Type()
+
+	var r reflect.Value
+	cr := C.g_goclosure_get_recv(goclosure)
+	if cr != nil {
+		r = reflect.ValueOf(*(*interface{})(C.g_goclosure_get_recv(goclosure)))
+	}
 
 	ccache.values = ccache.values[:0]
 	for i, n := 0, ft.NumIn(); i < n; i++ {
+		idx := i
+		if cr != nil {
+			idx--
+			if i == 0 {
+				ccache.values = append(ccache.values, r)
+				continue
+			}
+		}
+
 		in := ft.In(i)
 
 		// use default value, if there is not enough args
-		if len(args) <= i {
+		if len(args) <= idx {
 			ccache.values = append(ccache.values, reflect.New(in).Elem())
 			continue
 		}
 
-		v := args[i].GetGoValue(in)
+		v := args[idx].GetGoValue(in)
 		ccache.values = append(ccache.values, v)
 	}
 
