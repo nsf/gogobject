@@ -15,6 +15,7 @@ import (
 	"./paned_widgets"
 	"./builder"
 	"./assistant"
+	"./size_groups"
 )
 
 type DemoFunc func(mainwin *gtk.Window) *gtk.Window
@@ -40,6 +41,7 @@ var demos = []*DemoDesc{
 	{Title: "Links",                   Filename: "links.go",          Func: links.Do},
 	{Title: "Paned Widgets",           Filename: "paned_widgets.go",  Func: paned_widgets.Do},
 	{Title: "Pickers",                 Filename: "pickers.go",        Func: pickers.Do},
+	{Title: "Size Groups",             Filename: "size_groups.go",    Func: size_groups.Do},
 	{Title: "Spinner",                 Filename: "spinner.go",        Func: spinner.Do},
 	{Title: "Tree View", Children: []*DemoDesc{
 		{Title: "List Store", Filename: "list_store.go", Func: list_store.Do},

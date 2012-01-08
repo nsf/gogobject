@@ -14,6 +14,7 @@ DEMOS=\
 	paned_widgets.go \
 	builder.go \
 	assistant.go \
+	size_groups.go \
 
 
 PREREQ=$(patsubst %.go,%.$O,$(DEMOS))
