@@ -14,15 +14,19 @@ var assistant *gtk.Assistant
 var progress_bar *gtk.ProgressBar
 
 func on_assistant_apply() {
+	// Start a timer to simulate changes taking a few seconds to apply.
 	go func() {
 		for {
 			gdk.ThreadsEnter()
+
+			// Work, work, work...
 			fraction := progress_bar.GetFraction()
 			fraction += 0.05
 
 			if fraction < 1.0 {
 				progress_bar.SetFraction(fraction)
 			} else {
+				// Close automatically once changes are fully applied.
 				assistant.Destroy()
 				gdk.ThreadsLeave()
 				return
