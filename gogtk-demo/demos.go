@@ -17,6 +17,8 @@ import (
 	"./size_groups"
 	"./spinner"
 	"./stock_browser"
+	"./menus"
+	"./entry_completion"
 )
 
 type DemoFunc func(mainwin *gtk.Window) *gtk.Window
@@ -36,10 +38,12 @@ var demos = []*DemoDesc{
 	{Title: "Color Selector", Filename: "color_selector.go", Func: color_selector.Do},
 	{Title: "Entry", Children: []*DemoDesc{
 		{Title: "Entry Buffer", Filename: "entry_buffer.go", Func: entry_buffer.Do},
+		{Title: "Entry Completion", Filename: "entry_completion.go", Func: entry_completion.Do},
 	}},
 	{Title: "Expander", Filename: "expander.go", Func: expander.Do},
 	{Title: "Info bar", Filename: "info_bar.go", Func: info_bar.Do},
 	{Title: "Links", Filename: "links.go", Func: links.Do},
+	{Title: "Menus", Filename: "menus.go", Func: menus.Do},
 	{Title: "Paned Widgets", Filename: "paned_widgets.go", Func: paned_widgets.Do},
 	{Title: "Pickers", Filename: "pickers.go", Func: pickers.Do},
 	{Title: "Size Groups", Filename: "size_groups.go", Func: size_groups.Do},
