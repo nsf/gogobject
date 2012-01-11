@@ -7,8 +7,8 @@
 package list_store
 
 import (
-	"gobject/gobject-2.0"
 	"gobject/gdk-3.0"
+	"gobject/gobject-2.0"
 	"gobject/gtk-3.0"
 	"time"
 )
@@ -34,20 +34,20 @@ const (
 )
 
 var data = []bug{
-	{false, 60482, "Normal",      "scrollable notebooks and hidden tabs"},
-	{false, 60620, "Critical",    "gdk_window_clear_area (gdkwindow-win32.c) is not thread-safe"},
-	{false, 50214, "Major",       "Xft support does not clean up correctly"},
-	{true,  52877, "Major",       "GtkFileSelection needs a refresh method. "},
-	{false, 56070, "Normal",      "Can't click button after setting in sensitive"},
-	{true,  56355, "Normal",      "GtkLabel - Not all changes propagate correctly"},
-	{false, 50055, "Normal",      "Rework width/height computations for TreeView"},
-	{false, 58278, "Normal",      "gtk_dialog_set_response_sensitive () doesn't work"},
-	{false, 55767, "Normal",      "Getters for all setters"},
-	{false, 56925, "Normal",      "Gtkcalender size"},
-	{false, 56221, "Normal",      "Selectable label needs right-click copy menu"},
-	{true,  50939, "Normal",      "Add shift clicking to GtkTextView"},
-	{false, 6112,  "Enhancement", "netscape-like collapsable toolbars"},
-	{false, 1,     "Normal",      "First bug :=)"},
+	{false, 60482, "Normal", "scrollable notebooks and hidden tabs"},
+	{false, 60620, "Critical", "gdk_window_clear_area (gdkwindow-win32.c) is not thread-safe"},
+	{false, 50214, "Major", "Xft support does not clean up correctly"},
+	{true, 52877, "Major", "GtkFileSelection needs a refresh method. "},
+	{false, 56070, "Normal", "Can't click button after setting in sensitive"},
+	{true, 56355, "Normal", "GtkLabel - Not all changes propagate correctly"},
+	{false, 50055, "Normal", "Rework width/height computations for TreeView"},
+	{false, 58278, "Normal", "gtk_dialog_set_response_sensitive () doesn't work"},
+	{false, 55767, "Normal", "Getters for all setters"},
+	{false, 56925, "Normal", "Gtkcalender size"},
+	{false, 56221, "Normal", "Selectable label needs right-click copy menu"},
+	{true, 50939, "Normal", "Add shift clicking to GtkTextView"},
+	{false, 6112, "Enhancement", "netscape-like collapsable toolbars"},
+	{false, 1, "Normal", "First bug :=)"},
 }
 
 func pulse(ticker *time.Ticker, cancel chan int, list_store *gtk.ListStore) {
@@ -210,7 +210,7 @@ func Do(mainwin *gtk.Window) *gtk.Window {
 
 		go pulse(ticker, cancel, model)
 	}
-	if (!window.GetVisible()) {
+	if !window.GetVisible() {
 		window.ShowAll()
 	} else {
 		window.Destroy()

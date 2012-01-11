@@ -43,25 +43,25 @@ func about_cb() {
 }
 
 var entries = []gtk.ActionEntry{
-	{ Name: "FileMenu",        Label: "_File" },
-	{ Name: "OpenMenu",        Label: "_Open" },
-	{ Name: "PreferencesMenu", Label: "_Preferences" },
-	{ Name: "ColorMenu",       Label: "_Color" },
-	{ Name: "ShapeMenu",       Label: "_Shape" },
-	{ Name: "HelpMenu",        Label: "_Help" },
+	{Name: "FileMenu", Label: "_File"},
+	{Name: "OpenMenu", Label: "_Open"},
+	{Name: "PreferencesMenu", Label: "_Preferences"},
+	{Name: "ColorMenu", Label: "_Color"},
+	{Name: "ShapeMenu", Label: "_Shape"},
+	{Name: "HelpMenu", Label: "_Help"},
 
-	{ "New",    gtk.StockNew,      "_New",            "<control>N",      "Create a new file", activate_action },
-	{ "Open",   gtk.StockOpen,     "_Open",           "<control>O",      "Open a new file",   activate_action },
-	{ "Save",   gtk.StockSave,     "_Save",           "<control>S",      "Save current file", activate_action },
-	{ "SaveAs", gtk.StockSave,     "Save _As...",     gobject.NilString, "Save to a file",    activate_action },
-	{ "Quit",   gtk.StockQuit,     "_Quit",           "<control>Q",      "Quit",              activate_action },
-	{ "About",  gobject.NilString, "_About",          "<control>A",      "About",             about_cb },
-	{ "Logo",   "demo-gtk-logo",   gobject.NilString, gobject.NilString, "GTK+",              activate_action },
+	{"New", gtk.StockNew, "_New", "<control>N", "Create a new file", activate_action},
+	{"Open", gtk.StockOpen, "_Open", "<control>O", "Open a new file", activate_action},
+	{"Save", gtk.StockSave, "_Save", "<control>S", "Save current file", activate_action},
+	{"SaveAs", gtk.StockSave, "Save _As...", gobject.NilString, "Save to a file", activate_action},
+	{"Quit", gtk.StockQuit, "_Quit", "<control>Q", "Quit", activate_action},
+	{"About", gobject.NilString, "_About", "<control>A", "About", about_cb},
+	{"Logo", "demo-gtk-logo", gobject.NilString, gobject.NilString, "GTK+", activate_action},
 }
 
 var toggle_entries = []gtk.ToggleActionEntry{
-	{ "Bold",      gtk.StockBold,     "_Bold",              "<control>B",      "Bold",              activate_action, true },
-	{ "DarkTheme", gobject.NilString, "_Prefer Dark Theme", gobject.NilString, "Prefer Dark Theme", activate_action, false },
+	{"Bold", gtk.StockBold, "_Bold", "<control>B", "Bold", activate_action, true},
+	{"DarkTheme", gobject.NilString, "_Prefer Dark Theme", gobject.NilString, "Prefer Dark Theme", activate_action, false},
 }
 
 const (
@@ -71,9 +71,9 @@ const (
 )
 
 var color_entries = []gtk.RadioActionEntry{
-	{ "Red",   gobject.NilString, "_Red",   "<control>R", "Blood", color_red },
-	{ "Green", gobject.NilString, "_Green", "<control>G", "Grass", color_green },
-	{ "Blue",  gobject.NilString, "_Blue",  "<control>B", "Sky",   color_blue },
+	{"Red", gobject.NilString, "_Red", "<control>R", "Blood", color_red},
+	{"Green", gobject.NilString, "_Green", "<control>G", "Grass", color_green},
+	{"Blue", gobject.NilString, "_Blue", "<control>B", "Sky", color_blue},
 }
 
 const (
@@ -83,9 +83,9 @@ const (
 )
 
 var shape_entries = []gtk.RadioActionEntry{
-	{ "Square",    gobject.NilString, "_Square",    "<control>S", "Square",    shape_square },
-	{ "Rectangle", gobject.NilString, "_Rectangle", "<control>R", "Rectangle", shape_rectangle },
-	{ "Oval",      gobject.NilString, "_Oval",      "<control>O", "Egg",       shape_oval },
+	{"Square", gobject.NilString, "_Square", "<control>S", "Square", shape_square},
+	{"Rectangle", gobject.NilString, "_Rectangle", "<control>R", "Rectangle", shape_rectangle},
+	{"Oval", gobject.NilString, "_Oval", "<control>O", "Egg", shape_oval},
 }
 
 var ui_info = `
@@ -159,7 +159,7 @@ func activate_radio_action(action *gtk.Action, current *gtk.RadioAction) {
 	active := current.GetActive()
 	value := current.GetCurrentValue()
 	if active {
-		text := fmt.Sprintf("You activated radio action: \"%s\" of type \"%s\".\n" +
+		text := fmt.Sprintf("You activated radio action: \"%s\" of type \"%s\".\n"+
 			"Current value: %d", name, typename, value)
 		messagelabel.SetText(text)
 		infobar.SetMessageType(gtk.MessageType(value))

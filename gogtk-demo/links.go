@@ -9,15 +9,13 @@ import "gobject/gtk-3.0"
 
 var window *gtk.Window
 
-const label_text =
-`Some <a href="http://en.wikipedia.org/wiki/Text" title="plain text">text</a> may be marked up
+const label_text = `Some <a href="http://en.wikipedia.org/wiki/Text" title="plain text">text</a> may be marked up
 as hyperlinks, which can be clicked
 or activated via <a href="keynav">keynav</a>`
 
-const dialog_text =
-`The term <i>keynav</i> is a shorthand for ` +
-`keyboard navigation and refers to the process of using ` +
-`a program (exclusively) via keyboard input.`
+const dialog_text = `The term <i>keynav</i> is a shorthand for ` +
+	`keyboard navigation and refers to the process of using ` +
+	`a program (exclusively) via keyboard input.`
 
 func Do(mainwin *gtk.Window) *gtk.Window {
 	if window == nil {

@@ -1,20 +1,20 @@
 package main
 
 import (
-	"gobject/gobject-2.0"
-	"gobject/gdk-3.0"
-	"gobject/gtk-3.0"
-	"gobject/gdkpixbuf-2.0"
-	"gobject/pango-1.0"
-	"io/ioutil"
-	"os"
+	"bytes"
 	"go/ast"
 	"go/doc"
 	"go/parser"
-	"go/token"
 	"go/scanner"
+	"go/token"
+	"gobject/gdk-3.0"
+	"gobject/gdkpixbuf-2.0"
+	"gobject/gobject-2.0"
+	"gobject/gtk-3.0"
+	"gobject/pango-1.0"
+	"io/ioutil"
+	"os"
 	"strings"
-	"bytes"
 )
 
 const (
@@ -161,15 +161,15 @@ var current_data []byte
 var current_file string
 
 var go_highlighter_idents = map[string]string{
-	"true": "predefined",
+	"true":  "predefined",
 	"false": "predefined",
-	"iota": "predefined",
-	"nil": "predefined",
+	"iota":  "predefined",
+	"nil":   "predefined",
 }
 
 type go_highlighter struct {
-	fset *token.FileSet
-	buf *gtk.TextBuffer
+	fset   *token.FileSet
+	buf    *gtk.TextBuffer
 	offset int
 }
 
@@ -200,7 +200,7 @@ func (this *go_highlighter) highlight_file(file *ast.File) {
 		}
 
 		if tok.IsKeyword() {
-			this.highlight("keyword", pos, pos + token.Pos(len(str)))
+			this.highlight("keyword", pos, pos+token.Pos(len(str)))
 		}
 	}
 
@@ -252,7 +252,7 @@ func fontify(data []byte, offset int) {
 		return
 	}
 
-	x := go_highlighter{ fset, sourcebuf, offset }
+	x := go_highlighter{fset, sourcebuf, offset}
 	x.highlight_file(file)
 }
 
@@ -324,7 +324,7 @@ func load_file(filename string) {
 	// figure out package info and starting offset
 	fset := token.NewFileSet()
 	file, err := parser.ParseFile(fset, current_file, data,
-		parser.ParseComments | parser.PackageClauseOnly)
+		parser.ParseComments|parser.PackageClauseOnly)
 	if err != nil {
 		println("failed to parse package clause: ", err.Error())
 		return

@@ -60,7 +60,6 @@ func Do(mainwin *gtk.Window) *gtk.Window {
 			create_bbox(gtk.OrientationHorizontal, "End",
 				40, gtk.ButtonBoxStyleEnd), true, true, 5)
 
-
 		frame_vert := gtk.NewFrame("Vertical Button Boxes")
 		main_vbox.PackStart(frame_vert, true, true, 10)
 
@@ -82,7 +81,7 @@ func Do(mainwin *gtk.Window) *gtk.Window {
 				30, gtk.ButtonBoxStyleEnd), true, true, 5)
 	}
 
-	if (!window.GetVisible()) {
+	if !window.GetVisible() {
 		window.ShowAll()
 	} else {
 		window.Destroy()

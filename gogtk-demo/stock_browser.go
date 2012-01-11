@@ -17,19 +17,19 @@ import "strings"
 var window *gtk.Window
 
 type stock_item_info struct {
-	id string
-	item gtk.StockItem
+	id         string
+	item       gtk.StockItem
 	small_icon *gdkpixbuf.Pixbuf
-	constant string
-	accel_str string
+	constant   string
+	accel_str  string
 }
 
 type stock_item_display struct {
-	type_label *gtk.Label
-	constant_label *gtk.Label
-	id_label *gtk.Label
+	type_label        *gtk.Label
+	constant_label    *gtk.Label
+	id_label          *gtk.Label
 	label_accel_label *gtk.Label
-	icon_image *gtk.Image
+	icon_image        *gtk.Image
 }
 
 func id_to_constant(id string) string {
@@ -122,7 +122,7 @@ func get_largest_size(id string) int {
 
 	for _, size := range sizes {
 		w, h, _ := gtk.IconSizeLookup(size)
-		if w * h > best_pixels {
+		if w*h > best_pixels {
 			best_size = size
 			best_pixels = w * h
 		}
@@ -257,11 +257,11 @@ func Do(mainwin *gtk.Window) *gtk.Window {
 		frame.Add(vbox)
 
 		display := &stock_item_display{
-			type_label: gtk.NewLabel(gobject.NilString),
-			constant_label: gtk.NewLabel(gobject.NilString),
-			id_label: gtk.NewLabel(gobject.NilString),
+			type_label:        gtk.NewLabel(gobject.NilString),
+			constant_label:    gtk.NewLabel(gobject.NilString),
+			id_label:          gtk.NewLabel(gobject.NilString),
 			label_accel_label: gtk.NewLabel(gobject.NilString),
-			icon_image: gtk.NewImage(), // empty image
+			icon_image:        gtk.NewImage(), // empty image
 		}
 
 		vbox.PackStart(display.type_label, false, false, 0)

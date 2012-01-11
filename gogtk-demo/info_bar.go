@@ -33,7 +33,7 @@ func Do(mainwin *gtk.Window) *gtk.Window {
 
 		bar = gtk.NewInfoBarWithButtons(gtk.StockOk, gtk.ResponseTypeOk)
 		bar.Connect("response", func(info_bar *gtk.InfoBar, response_id gtk.ResponseType) {
-			dialog := gtk.NewMessageDialog(window, gtk.DialogFlagsModal | gtk.DialogFlagsDestroyWithParent,
+			dialog := gtk.NewMessageDialog(window, gtk.DialogFlagsModal|gtk.DialogFlagsDestroyWithParent,
 				gtk.MessageTypeInfo, gtk.ButtonsTypeOk, "You clicked a button on an info bar")
 
 			dialog.FormatSecondaryText("Your response has id %d", response_id)

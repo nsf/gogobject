@@ -42,7 +42,7 @@ func on_assistant_prepare() {
 	n_pages := assistant.GetNPages()
 	page_n := assistant.GetCurrentPage()
 
-	title := fmt.Sprintf("Sample assistant (%d of %d)", page_n + 1, n_pages)
+	title := fmt.Sprintf("Sample assistant (%d of %d)", page_n+1, n_pages)
 	assistant.SetTitle(title)
 
 	// The fourth page (counting from zero) is the progress page.  The

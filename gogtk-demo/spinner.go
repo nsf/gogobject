@@ -64,4 +64,3 @@ func Do(mainwin *gtk.Window) *gtk.Window {
 
 	return gtk.ToWindow(dialog)
 }
-
