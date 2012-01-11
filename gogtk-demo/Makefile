@@ -15,6 +15,7 @@ DEMOS=\
 	builder.go \
 	assistant.go \
 	size_groups.go \
+	stock_browser.go \
 
 
 PREREQ=$(patsubst %.go,%.$O,$(DEMOS))

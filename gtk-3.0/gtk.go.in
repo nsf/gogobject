@@ -96,6 +96,18 @@ func NewTreeViewColumnWithAttributes(title string, renderer CellRendererLike, at
 	return c
 }
 
+func (this *TreeViewColumn) SetAttributes(renderer CellRendererLike, attrs ...interface{}) {
+	this.ClearAttributes(renderer)
+	for_pairs(attrs, func(key, value interface{}) {
+		attr_name, ok := key.(string)
+		panic_if_not_type(ok, "string", key)
+		attr_col, ok := value.(int)
+		panic_if_not_type(ok, "int", value)
+
+		this.AddAttribute(renderer, attr_name, attr_col)
+	})
+}
+
 //----------------------------------------------------------------------------
 // InfoBar
 //----------------------------------------------------------------------------
