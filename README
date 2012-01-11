@@ -14,7 +14,7 @@ gobject-introspection    1.30.0
 atk                      2.2.0
 cairo                    1.10.2
 gdk2/gtk2                2.24.8
-gdk2/gtk2                3.2.3
+gdk3/gtk3                3.2.3
 gdk-pixbuf2              2.24.1
 glib2                    2.30.2
 gtksourceview3           3.2.3
