@@ -62,6 +62,7 @@ func _[<.namespace>]_go_callback_cleanup(gofunc unsafe.Pointer) {
 
 var ObjectTemplate = MustTemplate(`
 type [<.name>]Like interface {
+	[<.parentlike>]
 	InheritedFrom[<.cprefix>][<.name>]() [<.cgotype>]
 }
 

@@ -334,12 +334,14 @@ func ProcessTemplate(tplstr string) {
 
 func ProcessObjectInfo(oi *gi.ObjectInfo) {
 	parent := "C unsafe.Pointer"
+	parentlike := ""
 	if p := oi.Parent(); p != nil {
 		parent = ""
 		if ns := p.Namespace(); ns != Config.Namespace {
 			parent += strings.ToLower(ns) + "."
 		}
 		parent += p.Name()
+		parentlike = parent + "Like"
 	}
 
 	// interface that this class and its subclasses implement
@@ -371,6 +373,7 @@ func ProcessObjectInfo(oi *gi.ObjectInfo) {
 		"cprefix":    cprefix,
 		"cgotype":    cgotype,
 		"parent":     parent,
+		"parentlike": parentlike,
 		"typeinit":   oi.TypeInit(),
 		"gobjectns":  gobjectns,
 		"interfaces": interfaces.String(),
