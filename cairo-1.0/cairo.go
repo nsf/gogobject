@@ -65,7 +65,15 @@ func (*Surface) GetStaticType() gobject.Type {
 // cairo_gobject_rectangle_get_type (void);
 
 // cairo_gobject_scaled_font_get_type (void);
+func (*ScaledFont) GetStaticType() gobject.Type {
+	return gobject.Type(C.cairo_gobject_scaled_font_get_type())
+}
+
 // cairo_gobject_font_face_get_type (void);
+func (*FontFace) GetStaticType() gobject.Type {
+	return gobject.Type(C.cairo_gobject_font_face_get_type())
+}
+
 // cairo_gobject_font_options_get_type (void);
 func (*FontOptions) GetStaticType() gobject.Type {
 	return gobject.Type(C.cairo_gobject_font_options_get_type())
@@ -141,6 +149,10 @@ func cairo_marshaler(value *gobject.Value, t reflect.Type) (reflect.Value, bool)
 		*(*unsafe.Pointer)(unsafe.Pointer(out.Pointer())) = FontOptionsWrap(dst.GetBoxed())
 	case (*Region)(nil).GetStaticType():
 		*(*unsafe.Pointer)(unsafe.Pointer(out.Pointer())) = RegionWrap(dst.GetBoxed(), true)
+	case (*FontFace)(nil).GetStaticType():
+		*(*unsafe.Pointer)(unsafe.Pointer(out.Pointer())) = FontFaceWrap(dst.GetBoxed(), true)
+	case (*ScaledFont)(nil).GetStaticType():
+		*(*unsafe.Pointer)(unsafe.Pointer(out.Pointer())) = ScaledFontWrap(dst.GetBoxed(), true)
 	default:
 		return reflect.Value{}, false
 	}
@@ -248,6 +260,9 @@ func context_finalizer2(this_un unsafe.Pointer) {
 }
 
 func ContextWrap(c_un unsafe.Pointer, grab bool) unsafe.Pointer {
+	if c_un == nil {
+		return nil
+	}
 	c := (*C.cairo_t)(c_un)
 	go_repr := C.cairo_get_user_data(c, &go_repr_cookie)
 	if go_repr != nil {
@@ -767,6 +782,9 @@ func path_finalizer2(this_un unsafe.Pointer) {
 }
 
 func PathWrap(c_un unsafe.Pointer) unsafe.Pointer {
+	if c_un == nil {
+		return nil
+	}
 	c := (*C.cairo_path_t)(c_un)
 	path := &Path{unsafe.Pointer(c)}
 	runtime.SetFinalizer(path, path_finalizer)
@@ -888,10 +906,18 @@ func (this *Context) Rectangle(x, y, width, height float64) {
 	C.cairo_rectangle(this.c(), C.double(x), C.double(y), C.double(width), C.double(height))
 }
 
-// TODO: Implement
 // void                cairo_glyph_path                    (cairo_t *cr,
 //                                                          const cairo_glyph_t *glyphs,
 //                                                          int num_glyphs);
+func (this *Context) GlyphPath(glyphs []Glyph) {
+	var first *C.cairo_glyph_t
+	var n = C.int(len(glyphs))
+	if n > 0 {
+		first = glyphs[0].c()
+	}
+
+	C.cairo_glyph_path(this.c(), first, n)
+}
 
 // void                cairo_text_path                     (cairo_t *cr,
 //                                                          const char *utf8);
@@ -980,6 +1006,9 @@ func pattern_finalizer2(this_un unsafe.Pointer) {
 }
 
 func PatternWrap(c_un unsafe.Pointer, grab bool) unsafe.Pointer {
+	if c_un == nil {
+		return nil
+	}
 	c := (*C.cairo_pattern_t)(c_un)
 	go_repr := C.cairo_pattern_get_user_data(c, &go_repr_cookie)
 	if go_repr != nil {
@@ -1315,6 +1344,9 @@ func region_finalizer2(this_un unsafe.Pointer) {
 }
 
 func RegionWrap(c_un unsafe.Pointer, grab bool) unsafe.Pointer {
+	if c_un == nil {
+		return nil
+	}
 	c := (*C.cairo_region_t)(c_un)
 	if grab {
 		C.cairo_region_reference(c)
@@ -1697,8 +1729,268 @@ func (this *Context) ShowGlyphs(glyphs []Glyph) {
 // void                cairo_text_cluster_free             (cairo_text_cluster_t *clusters);
 
 //----------------------------------------------------------------------------
-// Fonts (TODO)
+// FontFace
 //----------------------------------------------------------------------------
+
+// typedef             cairo_font_face_t;
+type FontFace struct {
+	C unsafe.Pointer
+}
+
+func (this *FontFace) c() *C.cairo_font_face_t {
+	return (*C.cairo_font_face_t)(this.C)
+}
+
+func font_face_finalizer(this *FontFace) {
+	if gobject.FQueue.Push(unsafe.Pointer(this), font_face_finalizer2) {
+		return
+	}
+	C.cairo_font_face_destroy(this.c())
+}
+
+func font_face_finalizer2(this_un unsafe.Pointer) {
+	this := (*FontFace)(this_un)
+	C.cairo_font_face_destroy(this.c())
+}
+
+func FontFaceWrap(c_un unsafe.Pointer, grab bool) unsafe.Pointer {
+	if c_un == nil {
+		return nil
+	}
+	c := (*C.cairo_font_face_t)(c_un)
+	go_repr := C.cairo_font_face_get_user_data(c, &go_repr_cookie)
+	if go_repr != nil {
+		return unsafe.Pointer(go_repr)
+	}
+
+	font_face := &FontFace{unsafe.Pointer(c)}
+	if grab {
+		C.cairo_font_face_reference(c)
+	}
+	runtime.SetFinalizer(font_face, font_face_finalizer)
+
+	status := C.cairo_font_face_set_user_data(c, &go_repr_cookie, unsafe.Pointer(font_face), nil)
+	if status != C.CAIRO_STATUS_SUCCESS {
+		panic("failed to set user data, out of memory?")
+	}
+	return unsafe.Pointer(font_face)
+}
+
+// cairo_font_face_t * cairo_font_face_reference           (cairo_font_face_t *font_face);
+// void                cairo_font_face_destroy             (cairo_font_face_t *font_face);
+
+// cairo_status_t      cairo_font_face_status              (cairo_font_face_t *font_face);
+func (this *FontFace) Status() Status {
+	return Status(C.cairo_font_face_status(this.c()))
+}
+
+// enum                cairo_font_type_t;
+type FontType int
+const (
+	FontTypeToy FontType = C.CAIRO_FONT_TYPE_TOY
+	FontTypeFT FontType = C.CAIRO_FONT_TYPE_FT
+	FontTypeWin32 FontType = C.CAIRO_FONT_TYPE_WIN32
+	FontTypeQuartz FontType = C.CAIRO_FONT_TYPE_QUARTZ
+	FontTypeUser FontType = C.CAIRO_FONT_TYPE_USER
+)
+
+// cairo_font_type_t   cairo_font_face_get_type            (cairo_font_face_t *font_face);
+func (this *FontFace) GetType() FontType {
+	return FontType(C.cairo_font_face_get_type(this.c()))
+}
+
+// unsigned int        cairo_font_face_get_reference_count (cairo_font_face_t *font_face);
+// cairo_status_t      cairo_font_face_set_user_data       (cairo_font_face_t *font_face,
+//                                                          const cairo_user_data_key_t *key,
+//                                                          void *user_data,
+//                                                          cairo_destroy_func_t destroy);
+// void *              cairo_font_face_get_user_data       (cairo_font_face_t *font_face,
+//                                                          const cairo_user_data_key_t *key);
+
+//----------------------------------------------------------------------------
+// ScaledFont
+//----------------------------------------------------------------------------
+
+// typedef             cairo_scaled_font_t;
+type ScaledFont struct {
+	C unsafe.Pointer
+}
+
+func (this *ScaledFont) c() *C.cairo_scaled_font_t {
+	return (*C.cairo_scaled_font_t)(this.C)
+}
+
+func scaled_font_finalizer(this *ScaledFont) {
+	if gobject.FQueue.Push(unsafe.Pointer(this), scaled_font_finalizer2) {
+		return
+	}
+	C.cairo_scaled_font_destroy(this.c())
+}
+
+func scaled_font_finalizer2(this_un unsafe.Pointer) {
+	this := (*ScaledFont)(this_un)
+	C.cairo_scaled_font_destroy(this.c())
+}
+
+func ScaledFontWrap(c_un unsafe.Pointer, grab bool) unsafe.Pointer {
+	if c_un == nil {
+		return nil
+	}
+	c := (*C.cairo_scaled_font_t)(c_un)
+	go_repr := C.cairo_scaled_font_get_user_data(c, &go_repr_cookie)
+	if go_repr != nil {
+		return unsafe.Pointer(go_repr)
+	}
+
+	scaled_font := &ScaledFont{unsafe.Pointer(c)}
+	if grab {
+		C.cairo_scaled_font_reference(c)
+	}
+	runtime.SetFinalizer(scaled_font, scaled_font_finalizer)
+
+	status := C.cairo_scaled_font_set_user_data(c, &go_repr_cookie, unsafe.Pointer(scaled_font), nil)
+	if status != C.CAIRO_STATUS_SUCCESS {
+		panic("failed to set user data, out of memory?")
+	}
+	return unsafe.Pointer(scaled_font)
+}
+
+// cairo_scaled_font_t * cairo_scaled_font_create          (cairo_font_face_t *font_face,
+//                                                          const cairo_matrix_t *font_matrix,
+//                                                          const cairo_matrix_t *ctm,
+//                                                          const cairo_font_options_t *options);
+func NewScaledFont(font_face *FontFace, font_matrix, ctm *Matrix, options *FontOptions) *ScaledFont {
+	return (*ScaledFont)(ScaledFontWrap(unsafe.Pointer(C.cairo_scaled_font_create(
+		font_face.c(), font_matrix.c(), ctm.c(), options.c())), false))
+
+}
+
+// cairo_scaled_font_t * cairo_scaled_font_reference       (cairo_scaled_font_t *scaled_font);
+// void                cairo_scaled_font_destroy           (cairo_scaled_font_t *scaled_font);
+
+// cairo_status_t      cairo_scaled_font_status            (cairo_scaled_font_t *scaled_font);
+func (this *ScaledFont) Status() Status {
+	return Status(C.cairo_scaled_font_status(this.c()))
+}
+
+//                     cairo_font_extents_t;
+type FontExtents struct {
+	Ascent float64
+	Descent float64
+	Height float64
+	MaxXAdvance float64
+	MaxYAdvance float64
+}
+
+func (this *FontExtents) c() *C.cairo_font_extents_t {
+	return (*C.cairo_font_extents_t)(unsafe.Pointer(this))
+}
+
+// void                cairo_scaled_font_extents           (cairo_scaled_font_t *scaled_font,
+//                                                          cairo_font_extents_t *extents);
+func (this *ScaledFont) Extents() (out FontExtents) {
+	C.cairo_scaled_font_extents(this.c(), out.c())
+	return
+}
+
+//                     cairo_text_extents_t;
+type TextExtents struct {
+	XBearing float64
+	YBearing float64
+	Width float64
+	Height float64
+	XAdvance float64
+	YAdvance float64
+}
+
+func (this *TextExtents) c() *C.cairo_text_extents_t {
+	return (*C.cairo_text_extents_t)(unsafe.Pointer(this))
+}
+
+// void                cairo_scaled_font_text_extents      (cairo_scaled_font_t *scaled_font,
+//                                                          const char *utf8,
+//                                                          cairo_text_extents_t *extents);
+func (this *ScaledFont) TextExtents(utf8 string) (out TextExtents) {
+	utf8c := C.CString(utf8)
+	C.cairo_scaled_font_text_extents(this.c(), utf8c, out.c())
+	C.free(unsafe.Pointer(utf8c))
+	return
+}
+
+// void                cairo_scaled_font_glyph_extents     (cairo_scaled_font_t *scaled_font,
+//                                                          const cairo_glyph_t *glyphs,
+//                                                          int num_glyphs,
+//                                                          cairo_text_extents_t *extents);
+func (this *ScaledFont) GlyphExtents(glyphs []Glyph) (out TextExtents) {
+	var first *C.cairo_glyph_t
+	var n = C.int(len(glyphs))
+	if n > 0 {
+		first = glyphs[0].c()
+	}
+
+	C.cairo_scaled_font_glyph_extents(this.c(), first, n, out.c())
+	return
+}
+
+// TODO
+// cairo_status_t      cairo_scaled_font_text_to_glyphs    (cairo_scaled_font_t *scaled_font,
+//                                                          double x,
+//                                                          double y,
+//                                                          const char *utf8,
+//                                                          int utf8_len,
+//                                                          cairo_glyph_t **glyphs,
+//                                                          int *num_glyphs,
+//                                                          cairo_text_cluster_t **clusters,
+//                                                          int *num_clusters,
+//                                                          cairo_text_cluster_flags_t *cluster_flags);
+
+// cairo_font_face_t * cairo_scaled_font_get_font_face     (cairo_scaled_font_t *scaled_font);
+func (this *ScaledFont) GetFontFace() *FontFace {
+	return (*FontFace)(FontFaceWrap(unsafe.Pointer(C.cairo_scaled_font_get_font_face(this.c())), true))
+}
+
+// void                cairo_scaled_font_get_font_options  (cairo_scaled_font_t *scaled_font,
+//                                                          cairo_font_options_t *options);
+func (this *ScaledFont) GetFontOptions() *FontOptions {
+	fo := NewFontOptions()
+	C.cairo_scaled_font_get_font_options(this.c(), fo.c())
+	return fo
+}
+
+// void                cairo_scaled_font_get_font_matrix   (cairo_scaled_font_t *scaled_font,
+//                                                          cairo_matrix_t *font_matrix);
+func (this *ScaledFont) GetFontMatrix() (out Matrix) {
+	C.cairo_scaled_font_get_font_matrix(this.c(), out.c())
+	return
+}
+
+// void                cairo_scaled_font_get_ctm           (cairo_scaled_font_t *scaled_font,
+//                                                          cairo_matrix_t *ctm);
+func (this *ScaledFont) GetCTM() (out Matrix) {
+	C.cairo_scaled_font_get_ctm(this.c(), out.c())
+	return
+}
+
+// void                cairo_scaled_font_get_scale_matrix  (cairo_scaled_font_t *scaled_font,
+//                                                          cairo_matrix_t *scale_matrix);
+func (this *ScaledFont) GetScaleMatrix() (out Matrix) {
+	C.cairo_scaled_font_get_scale_matrix(this.c(), out.c())
+	return
+}
+
+// cairo_font_type_t   cairo_scaled_font_get_type          (cairo_scaled_font_t *scaled_font);
+func (this *ScaledFont) GetType() FontType {
+	return FontType(C.cairo_scaled_font_get_type(this.c()))
+}
+
+// unsigned int        cairo_scaled_font_get_reference_count
+//                                                         (cairo_scaled_font_t *scaled_font);
+// cairo_status_t      cairo_scaled_font_set_user_data     (cairo_scaled_font_t *scaled_font,
+//                                                          const cairo_user_data_key_t *key,
+//                                                          void *user_data,
+//                                                          cairo_destroy_func_t destroy);
+// void *              cairo_scaled_font_get_user_data     (cairo_scaled_font_t *scaled_font,
+//                                                          const cairo_user_data_key_t *key);
 
 //----------------------------------------------------------------------------
 // Font Options
@@ -1726,6 +2018,9 @@ func font_options_finalizer2(this_un unsafe.Pointer) {
 }
 
 func FontOptionsWrap(c_un unsafe.Pointer) unsafe.Pointer {
+	if c_un == nil {
+		return nil
+	}
 	c := (*C.cairo_font_options_t)(c_un)
 	font_options := &FontOptions{unsafe.Pointer(c)}
 	runtime.SetFinalizer(font_options, font_options_finalizer)
@@ -1906,6 +2201,9 @@ func surface_finalizer2(this_un unsafe.Pointer) {
 }
 
 func SurfaceWrap(c_un unsafe.Pointer, grab bool) unsafe.Pointer {
+	if c_un == nil {
+		return nil
+	}
 	c := (*C.cairo_surface_t)(c_un)
 	go_repr := C.cairo_surface_get_user_data(c, &go_repr_cookie)
 	if go_repr != nil {

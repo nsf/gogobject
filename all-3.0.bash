@@ -22,6 +22,7 @@ build atk-1.0
 build gio-2.0
 build gdkpixbuf-2.0
 build pango-1.0
+build pangocairo-1.0
 build gdk-3.0
 build gtk-3.0
 build gtksource-3.0

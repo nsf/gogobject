@@ -67,7 +67,7 @@ func CairoCgoToGoForInterface(bi *gi.BaseInfo, arg1, arg2 string, flags ConvFlag
 		}
 
 		p("%s = (*cairo.%s)(cairo.%sWrap(unsafe.Pointer(%s)))", arg2, name, name, arg1)
-	case "Surface", "Region", "Pattern", "Context":
+	case "Surface", "Region", "Pattern", "Context", "FontFace", "ScaledFont":
 		if flags&ConvPointer == 0 {
 			panic("unexpected non-pointer type")
 		}
