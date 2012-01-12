@@ -68,8 +68,10 @@ func change_orientation(button *gtk.Widget, menubar *gtk.MenuBar) {
 	orientation := parent.GetOrientation()
 	if orientation == gtk.OrientationVertical {
 		menubar.SetProperty("pack-direction", gtk.PackDirectionTtb)
+		parent.SetOrientation(gtk.OrientationHorizontal)
 	} else {
 		menubar.SetProperty("pack-direction", gtk.PackDirectionLtr)
+		parent.SetOrientation(gtk.OrientationVertical)
 	}
 }
 
