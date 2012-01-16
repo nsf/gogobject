@@ -1,11 +1,12 @@
 #include <glib-object.h>
 #include <stdint.h>
+#include <string.h>
 #include "gobject.h"
 
 struct _GGoClosure {
 	GClosure closure;
-	void *func;
-	void *recv;
+	void *func[2];
+	void *recv[2];
 };
 
 GType _g_param_spec_type(GParamSpec *pspec) {
@@ -89,6 +90,8 @@ GType _g_type_go_interface()
 	return go_interface_type;
 }
 
+//-----------------------------------------------------------------------------
+
 extern void g_goclosure_marshal_go(GGoClosure*, GValue*, int32_t, GValue*);
 extern void g_goclosure_finalize_go(GGoClosure*);
 
@@ -115,8 +118,12 @@ GGoClosure *g_goclosure_new(void *func, void *recv)
 
 	closure = g_closure_new_simple(sizeof(GGoClosure), 0);
 	goclosure = (GGoClosure*)closure;
-	goclosure->func = func;
-	goclosure->recv = recv;
+	memset(goclosure->func, 0, sizeof(void*)*2);
+	memset(goclosure->recv, 0, sizeof(void*)*2);
+	if (func)
+		memcpy(goclosure->func, func, sizeof(void*)*2);
+	if (recv)
+		memcpy(goclosure->recv, recv, sizeof(void*)*2);
 
 	g_closure_add_finalize_notifier(closure, 0, g_goclosure_finalize);
 	g_closure_set_marshal(closure, g_goclosure_marshal);
