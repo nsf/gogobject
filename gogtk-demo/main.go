@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"go/ast"
-	"go/doc"
 	"go/parser"
 	"go/scanner"
 	"go/token"
@@ -332,7 +331,7 @@ func load_file(filename string) {
 
 	var offset int
 	if file.Doc != nil {
-		set_info(strings.TrimSpace(doc.CommentText(file.Doc)))
+		set_info(strings.TrimSpace(file.Doc.Text()))
 		offset = fset.Position(file.Doc.End()).Offset + 1
 	}
 
