@@ -52,12 +52,12 @@ func _GoInterfaceToCInterface(iface interface{}) *unsafe.Pointer {
 	return (*unsafe.Pointer)(unsafe.Pointer(&iface))
 }
 
-var _cbcache = make(map[unsafe.Pointer]bool)
-
+[<if not .nocallbacks>]
 //export _[<.namespace>]_go_callback_cleanup
 func _[<.namespace>]_go_callback_cleanup(gofunc unsafe.Pointer) {
-	delete(_cbcache, gofunc)
+	[<.gobjectns>]Holder.Release(gofunc)
 }
+[<end>]
 `)
 
 var ObjectTemplate = MustTemplate(`

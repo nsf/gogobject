@@ -15,7 +15,8 @@
 		],
 		"functions": [],
 		"callbacks": [
-			"DestroyNotify"
+			// callbacks depend on gobject-2.0, glib shouldn't depened on gobject-2.0
+			// "DestroyNotify"
 		]
 	},
 	"blacklist": {

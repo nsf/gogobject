@@ -283,11 +283,13 @@ func CForwardDeclarations() string {
 	return out.String()
 }
 
-func GoUtils() string {
+func GoUtils(cb bool) string {
 	var out bytes.Buffer
 
 	GoUtilsTemplate.Execute(&out, map[string]interface{}{
+		"gobjectns": Config.Sys.GNS,
 		"namespace": Config.Namespace,
+		"nocallbacks": !cb,
 	})
 
 	return out.String()
@@ -322,7 +324,8 @@ func ProcessTemplate(tplstr string) {
 		"CUtils":               CUtils(),
 		"CForwardDeclarations": CForwardDeclarations(),
 		"GObjectRefUnref":      GObjectRefUnref,
-		"GoUtils":              GoUtils(),
+		"GoUtils":              GoUtils(true),
+		"GoUtilsNoCB":		GoUtils(false),
 		"GoBindings":           GoBindings(),
 		"GErrorFree":           GErrorFree,
 		"GFree":                GFree,
@@ -618,7 +621,7 @@ func ProcessCallbackInfo(ci *gi.CallableInfo) {
 		printf("%s0", arg.Name())
 	}
 	printf(")\n")
-	printf("\t_%s_go_callback_cleanup(%s0)\n", Config.Namespace,
+	printf("\t%sHolder.Release(%s0)\n", Config.Sys.GNS,
 		args[userdata].Name())
 	if ret := ci.ReturnType(); ret != nil && ret.Tag() != gi.TYPE_TAG_VOID {
 		printf("\treturn ret\n")
@@ -747,7 +750,7 @@ func ProcessFunctionInfo(fi *gi.FunctionInfo, container *gi.BaseInfo) {
 			bi := arg.TypeInfo.Interface()
 			if bi.Type() == gi.INFO_TYPE_CALLBACK {
 				if arg.ArgInfo.Scope() != gi.SCOPE_TYPE_CALL {
-					printf("\t_cbcache[%s1] = true\n", nm)
+					printf("\t%sHolder.Grab(%s1)\n", Config.Sys.GNS, nm)
 				}
 			}
 		}
