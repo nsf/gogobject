@@ -349,11 +349,6 @@ func ProcessObjectInfo(oi *gi.ObjectInfo) {
 	name := oi.Name()
 	cgotype := CgoTypeForInterface(gi.ToBaseInfo(oi), TypePointer)
 
-	gobjectns := ""
-	if Config.Namespace != "GObject" {
-		gobjectns = "gobject."
-	}
-
 	var interfaces bytes.Buffer
 	for i, n := 0, oi.NumInterface(); i < n; i++ {
 		ii := oi.Interface(i)
@@ -375,7 +370,7 @@ func ProcessObjectInfo(oi *gi.ObjectInfo) {
 		"parent":     parent,
 		"parentlike": parentlike,
 		"typeinit":   oi.TypeInit(),
-		"gobjectns":  gobjectns,
+		"gobjectns":  Config.Sys.GNS,
 		"interfaces": interfaces.String(),
 	}))
 
@@ -907,17 +902,12 @@ func ProcessInterfaceInfo(ii *gi.InterfaceInfo) {
 	cprefix := gi.DefaultRepository().CPrefix(ii.Namespace())
 	cgotype := CgoTypeForInterface(gi.ToBaseInfo(ii), TypePointer)
 
-	gobjectns := ""
-	if Config.Namespace != "GObject" {
-		gobjectns = "gobject."
-	}
-
 	printf("%s\n", ExecuteTemplate(InterfaceTemplate, map[string]string{
 		"name":     name,
 		"cprefix":  cprefix,
 		"cgotype":  cgotype,
 		"typeinit": ii.TypeInit(),
-		"gobjectns": gobjectns,
+		"gobjectns": Config.Sys.GNS,
 	}))
 
 	for i, n := 0, ii.NumMethod(); i < n; i++ {

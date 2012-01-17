@@ -33,6 +33,9 @@ var Config struct {
 		Whitelist       map[string]map[string]bool
 		MethodBlacklist map[string]map[string]bool
 		MethodWhitelist map[string]map[string]bool
+
+		// "gobject." if the current namespace is not GObject, "" otherwise
+		GNS string
 	} `json:"-"`
 }
 
@@ -145,6 +148,10 @@ func main() {
 	Config.Sys.Blacklist = MapListToMapMap(Config.Blacklist)
 	Config.Sys.MethodWhitelist = MapListToMapMap(Config.MethodWhitelist)
 	Config.Sys.MethodBlacklist = MapListToMapMap(Config.MethodBlacklist)
+
+	if Config.Namespace != "GObject" {
+		Config.Sys.GNS = "gobject."
+	}
 
 	// prepare main output
 	filename := filepath.Join(Config.Sys.Outdir,
