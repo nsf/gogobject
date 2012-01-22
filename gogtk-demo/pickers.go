@@ -24,8 +24,8 @@ func Do(mainwin *gtk.Window) *gtk.Window {
 
 		make_label := func(label string) *gtk.Label {
 			l := gtk.NewLabel(label)
-			l.SetHalign(gtk.AlignStart)
-			l.SetValign(gtk.AlignCenter)
+			l.SetHAlign(gtk.AlignStart)
+			l.SetVAlign(gtk.AlignCenter)
 			l.SetHExpand(true)
 			return l
 		}

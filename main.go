@@ -42,6 +42,7 @@ var Config struct {
 // global config file
 var GConfig struct {
 	DisguisedTypes []string `json:"disguised-types"`
+	WordSubst map[string]string `json:"word-subst"`
 
 	Sys struct {
 		DisguisedTypes map[string]bool

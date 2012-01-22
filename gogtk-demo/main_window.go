@@ -197,19 +197,19 @@ func Do(mainwin *gtk.Window) *gtk.Window {
 		mgr.InsertActionGroup(action_group, 0)
 		window.AddAccelGroup(mgr.GetAccelGroup())
 
-		_, err := mgr.AddUiFromString(ui_info, -1)
+		_, err := mgr.AddUIFromString(ui_info, -1)
 		if err != nil {
 			println("building menus failed: ", err.Error())
 		}
 
 		bar := mgr.GetWidget("/MenuBar")
 		bar.Show()
-		bar.SetHalign(gtk.AlignFill)
+		bar.SetHAlign(gtk.AlignFill)
 		table.Attach(bar, 0, 0, 1, 1)
 
 		bar = mgr.GetWidget("/ToolBar")
 		bar.Show()
-		bar.SetHalign(gtk.AlignFill)
+		bar.SetHAlign(gtk.AlignFill)
 		table.Attach(bar, 0, 1, 1, 1)
 
 		// Create document
@@ -221,15 +221,15 @@ func Do(mainwin *gtk.Window) *gtk.Window {
 		infobar.AddButton(gtk.StockOk, gtk.ResponseTypeOk)
 		infobar.Connect("response", func() { infobar.Hide() })
 
-		infobar.SetHalign(gtk.AlignFill)
+		infobar.SetHAlign(gtk.AlignFill)
 		table.Attach(infobar, 0, 2, 1, 1)
 
 		sw := gtk.NewScrolledWindow(nil, nil)
 		sw.SetPolicy(gtk.PolicyTypeAutomatic, gtk.PolicyTypeAutomatic)
 		sw.SetShadowType(gtk.ShadowTypeIn)
 
-		sw.SetHalign(gtk.AlignFill)
-		sw.SetValign(gtk.AlignFill)
+		sw.SetHAlign(gtk.AlignFill)
+		sw.SetVAlign(gtk.AlignFill)
 		sw.SetHExpand(true)
 		sw.SetVExpand(true)
 		table.Attach(sw, 0, 3, 1, 1)
@@ -242,7 +242,7 @@ func Do(mainwin *gtk.Window) *gtk.Window {
 
 		// Create statusbar
 		statusbar := gtk.NewStatusbar()
-		statusbar.SetHalign(gtk.AlignFill)
+		statusbar.SetHAlign(gtk.AlignFill)
 		table.Attach(statusbar, 0, 4, 1, 1)
 
 		// Show text widget info in the statusbar

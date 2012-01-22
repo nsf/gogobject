@@ -55,7 +55,7 @@ func id_to_constant(id string) string {
 func create_model() *gtk.TreeModel {
 	store := gtk.NewListStore(gobject.GoInterface, gobject.String)
 
-	ids := gtk.StockListIds()
+	ids := gtk.StockListIDs()
 	sort.Strings(ids)
 
 	for _, id := range ids {
@@ -66,7 +66,7 @@ func create_model() *gtk.TreeModel {
 			info.item = item
 		} else {
 			info.item.Label = gobject.NilString
-			info.item.StockId = gobject.NilString
+			info.item.StockID = gobject.NilString
 			info.item.Modifier = 0
 			info.item.Keyval = 0
 			info.item.TranslationDomain = gobject.NilString
@@ -249,7 +249,7 @@ func Do(mainwin *gtk.Window) *gtk.Window {
 		treeview.InsertColumnWithDataFunc(-1, "ID", r, id_set_func)
 
 		frame := gtk.NewFrame("Selected Item")
-		frame.SetValign(gtk.AlignStart)
+		frame.SetVAlign(gtk.AlignStart)
 		hbox.PackEnd(frame, false, false, 0)
 
 		vbox := gtk.NewBox(gtk.OrientationVertical, 8)

@@ -135,19 +135,19 @@ func add_columns(treeview *gtk.TreeView, model *gtk.ListStore) {
 	// column for bug numbers
 	r = gtk.NewCellRendererText()
 	c = gtk.NewTreeViewColumnWithAttributes("Bug number", r, "text", column_number)
-	c.SetSortColumnId(column_number)
+	c.SetSortColumnID(column_number)
 	treeview.AppendColumn(c)
 
 	// column for severities
 	r = gtk.NewCellRendererText()
 	c = gtk.NewTreeViewColumnWithAttributes("Severity", r, "text", column_severity)
-	c.SetSortColumnId(column_severity)
+	c.SetSortColumnID(column_severity)
 	treeview.AppendColumn(c)
 
 	// column for description
 	r = gtk.NewCellRendererText()
 	c = gtk.NewTreeViewColumnWithAttributes("Description", r, "text", column_description)
-	c.SetSortColumnId(column_description)
+	c.SetSortColumnID(column_description)
 	treeview.AppendColumn(c)
 
 	// column for spinner
@@ -155,7 +155,7 @@ func add_columns(treeview *gtk.TreeView, model *gtk.ListStore) {
 	c = gtk.NewTreeViewColumnWithAttributes("Spinning", r,
 		"pulse", column_pulse,
 		"active", column_active)
-	c.SetSortColumnId(column_pulse)
+	c.SetSortColumnID(column_pulse)
 	treeview.AppendColumn(c)
 
 	// column for symbolic icon
@@ -164,7 +164,7 @@ func add_columns(treeview *gtk.TreeView, model *gtk.ListStore) {
 	c = gtk.NewTreeViewColumnWithAttributes("Symbolic icon", pixbuf,
 		"icon-name", column_icon,
 		"sensitive", column_sensitive)
-	c.SetSortColumnId(column_icon)
+	c.SetSortColumnID(column_icon)
 	treeview.AppendColumn(c)
 }
 

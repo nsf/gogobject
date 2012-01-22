@@ -20,6 +20,11 @@ func LowerCaseToCamelCase(name string) string {
 	var out bytes.Buffer
 	for _, word := range strings.Split(name, "_") {
 		word = strings.ToLower(word)
+		if subst, ok := GConfig.WordSubst[word]; ok {
+			out.WriteString(subst)
+			continue
+		}
+
 		if word == "" {
 			out.WriteString("_")
 			continue

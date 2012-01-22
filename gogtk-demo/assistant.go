@@ -106,8 +106,8 @@ func create_page3(assistant *gtk.Assistant) {
 
 func create_page4(assistant *gtk.Assistant) {
 	progress_bar = gtk.NewProgressBar()
-	progress_bar.SetHalign(gtk.AlignCenter)
-	progress_bar.SetValign(gtk.AlignCenter)
+	progress_bar.SetHAlign(gtk.AlignCenter)
+	progress_bar.SetVAlign(gtk.AlignCenter)
 
 	progress_bar.Show()
 	assistant.AppendPage(progress_bar)

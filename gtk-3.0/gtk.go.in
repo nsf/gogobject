@@ -352,7 +352,7 @@ func (this *TreeModelImpl) Get(iter *TreeIter, columnspecs ...interface{}) {
 
 type ActionEntry struct {
 	Name string
-	StockId string
+	StockID string
 	Label string
 	Accelerator string
 	Tooltip string
@@ -361,7 +361,7 @@ type ActionEntry struct {
 
 type ToggleActionEntry struct {
 	Name string
-	StockId string
+	StockID string
 	Label string
 	Accelerator string
 	Tooltip string
@@ -371,7 +371,7 @@ type ToggleActionEntry struct {
 
 type RadioActionEntry struct {
 	Name string
-	StockId string
+	StockID string
 	Label string
 	Accelerator string
 	Tooltip string
@@ -381,7 +381,7 @@ type RadioActionEntry struct {
 func (this *ActionGroup) AddActions(actions []ActionEntry) {
 	for i := range actions {
 		a := &actions[i]
-		action := NewAction(a.Name, a.Label, a.Tooltip, a.StockId)
+		action := NewAction(a.Name, a.Label, a.Tooltip, a.StockID)
 		if a.Callback != nil {
 			action.Connect("activate", a.Callback)
 		}
@@ -392,7 +392,7 @@ func (this *ActionGroup) AddActions(actions []ActionEntry) {
 func (this *ActionGroup) AddToggleActions(actions []ToggleActionEntry) {
 	for i := range actions {
 		a := &actions[i]
-		action := NewToggleAction(a.Name, a.Label, a.Tooltip, a.StockId)
+		action := NewToggleAction(a.Name, a.Label, a.Tooltip, a.StockID)
 		action.SetActive(a.IsActive)
 		if a.Callback != nil {
 			action.Connect("activate", a.Callback)
@@ -411,7 +411,7 @@ func (this *ActionGroup) AddRadioActions(actions []RadioActionEntry, value int, 
 
 	for i := range actions {
 		a := &actions[i]
-		action := NewRadioAction(a.Name, a.Label, a.Tooltip, a.StockId, a.Value)
+		action := NewRadioAction(a.Name, a.Label, a.Tooltip, a.StockID, a.Value)
 		if i == 0 {
 			first_action = action
 		}
@@ -498,7 +498,7 @@ func (this *Builder) ConnectSignals(recv interface{}) {
 //----------------------------------------------------------------------------
 
 type StockItem struct {
-	StockId string
+	StockID string
 	Label string
 	Modifier gdk.ModifierType
 	Keyval uint32
@@ -506,7 +506,7 @@ type StockItem struct {
 }
 
 func (this *StockItem) alloc_c(c *_CStockItem) {
-	c.StockId = _GoStringToGString(this.StockId)
+	c.StockID = _GoStringToGString(this.StockID)
 	c.Label = _GoStringToGString(this.Label)
 	c.Modifier = C.GdkModifierType(this.Modifier)
 	c.Keyval = C.uint32_t(this.Keyval)
@@ -514,7 +514,7 @@ func (this *StockItem) alloc_c(c *_CStockItem) {
 }
 
 type _CStockItem struct {
-	StockId *C.char
+	StockID *C.char
 	Label *C.char
 	Modifier C.GdkModifierType
 	Keyval C.uint32_t
@@ -522,8 +522,8 @@ type _CStockItem struct {
 }
 
 func (this *_CStockItem) free() {
-	if this.StockId != nil {
-		C.free(unsafe.Pointer(this.StockId))
+	if this.StockID != nil {
+		C.free(unsafe.Pointer(this.StockID))
 	}
 	if this.Label != nil {
 		C.free(unsafe.Pointer(this.Label))
@@ -554,8 +554,8 @@ func StockLookup(stock_id string) (StockItem, bool) {
 		return stockitem, false
 	}
 
-	if cstockitem.StockId != nil {
-		stockitem.StockId = C.GoString(cstockitem.StockId)
+	if cstockitem.StockID != nil {
+		stockitem.StockID = C.GoString(cstockitem.StockID)
 	}
 	if cstockitem.Label != nil {
 		stockitem.Label = C.GoString(cstockitem.Label)

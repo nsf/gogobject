@@ -35,7 +35,7 @@ func Do(mainwin *gtk.Window) *gtk.Window {
 
 		da := gtk.NewDrawingArea()
 		da.Connect("draw", func(da *gtk.DrawingArea, cr *cairo.Context) {
-			gdk.CairoSetSourceRgba(cr, &color)
+			gdk.CairoSetSourceRGBA(cr, &color)
 			cr.Paint()
 
 			// unfortunately I have to do this, otherwise it will die in pain
@@ -47,20 +47,20 @@ func Do(mainwin *gtk.Window) *gtk.Window {
 		frame.Add(da)
 
 		button := gtk.NewButtonWithMnemonic("_Change the above color")
-		button.SetHalign(gtk.AlignEnd)
-		button.SetValign(gtk.AlignCenter)
+		button.SetHAlign(gtk.AlignEnd)
+		button.SetVAlign(gtk.AlignCenter)
 
 		vbox.PackStart(button, false, false, 0)
 		button.Connect("clicked", func() {
 			dialog := gtk.NewColorSelectionDialog("Changing color")
 			dialog.SetTransientFor(window)
 			colorsel := gtk.ToColorSelection(dialog.GetColorSelection())
-			colorsel.SetPreviousRgba(&color)
-			colorsel.SetCurrentRgba(&color)
+			colorsel.SetPreviousRGBA(&color)
+			colorsel.SetCurrentRGBA(&color)
 			colorsel.SetHasPalette(true)
 			response := dialog.Run()
 			if response == gtk.ResponseTypeOk {
-				color = colorsel.GetCurrentRgba()
+				color = colorsel.GetCurrentRGBA()
 				da.QueueDraw()
 			}
 			dialog.Destroy()

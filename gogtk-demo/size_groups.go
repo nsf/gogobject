@@ -29,8 +29,8 @@ func create_combo_box(strings []string) *gtk.ComboBoxText {
 
 func add_row(table *gtk.Grid, row int, size_group *gtk.SizeGroup, label_text string, options []string) {
 	label := gtk.NewLabelWithMnemonic(label_text)
-	label.SetHalign(gtk.AlignStart)
-	label.SetValign(gtk.AlignEnd)
+	label.SetHAlign(gtk.AlignStart)
+	label.SetVAlign(gtk.AlignEnd)
 	label.SetHExpand(true)
 	table.Attach(label, 0, row, 1, 1)
 
