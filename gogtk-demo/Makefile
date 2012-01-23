@@ -18,6 +18,7 @@ DEMOS=\
 	stock_browser.go \
 	menus.go \
 	entry_completion.go \
+	drawing_area.go \
 
 
 PREREQ=$(patsubst %.go,%.$O,$(DEMOS))
