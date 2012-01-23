@@ -5,6 +5,10 @@
 		"functions": [
 			"attribute_set_free",
 			"text_free_ranges"
+		],
+		"structs": [
+			"_RegistryClass",
+			"_Registry"
 		]
 	},
 	"method-blacklist": {

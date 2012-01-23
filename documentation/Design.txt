@@ -130,7 +130,13 @@ TODO:
 Structures are implemented simply as byte blobs. The size should match the real
 C struct size, but gobject-introspection at the moment provides wrong size in
 some cases (no support for C bit fields). Also it is possible to override C
-structures definitions if it's necessary, see gdk.RGBA for example.
+structures definitions if it's necessary.
+
+Fields for struct are generated as well. If it's required to wrap the field
+before using it, the wrapper method is generated instead. Name matches. For
+example gdk.EventMotion has method `Window() *Window` for accessing its `window`
+fields. But for simple things like float64 it has fields: `X` and `Y` as an
+example.
 
 Structs memory management problem is complicated. At the moment no memory
 management is being done and in most cases structs are allocated on the stack as
@@ -146,7 +152,8 @@ stack storage.
 Implemented:
  - Structs as byte blobs
  - Struct methods
+ - Struct fields
+ - Struct fields accessors
 
 TODO:
  - Make a final decision about structs memory management
- - Makes sense to generate structs with fields, at least selectively.

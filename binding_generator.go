@@ -410,7 +410,52 @@ func ProcessStructInfo(si *gi.StructInfo) {
 		case 0:
 			printf("type %s struct {}\n", name)
 		default:
-			printf("type %s struct { data [%d]byte }\n", name, size)
+			printf("type %s struct {\n", name)
+			offset := 0
+			for i, n := 0, si.NumField(); i < n; i++ {
+				field := si.Field(i)
+				fo := field.Offset()
+				ft := field.Type()
+				nm := field.Name()
+				if fo != offset {
+					pad := fo - offset
+					printf("\t_ [%d]byte\n", pad)
+					offset += pad
+				}
+				if TypeNeedsWrapper(ft) {
+					printf("\t%s0 %s\n", nm, CgoType(ft, TypeExact))
+				} else {
+					printf("\t%s %s\n", LowerCaseToCamelCase(nm),
+						GoType(ft, TypeExact))
+				}
+				offset += TypeSize(ft, TypeExact)
+			}
+			if size != offset {
+				printf("\t_ [%d]byte\n", size - offset)
+			}
+			printf("}\n")
+			//printf("type %s struct { data [%d]byte }\n", name, size)
+		}
+
+		// for each field that needs a wrapper, generate it
+		for i, n := 0, si.NumField(); i < n; i++ {
+			field := si.Field(i)
+			ft := field.Type()
+			nm := field.Name()
+
+			if !TypeNeedsWrapper(ft) {
+				continue
+			}
+
+			gotype := GoType(ft, TypeReturn)
+			printf("func (this0 *%s) %s() %s {\n",
+				name, LowerCaseToCamelCase(nm), gotype)
+			printf("\tvar %s1 %s\n", nm, gotype)
+			conv := CgoToGo(ft, "this0."+nm+"0", nm+"1",
+				ConvOwnNone)
+			printf("%s", PrintLinesWithIndent(conv))
+			printf("\treturn %s1\n", nm)
+			printf("}\n")
 		}
 	}
 
