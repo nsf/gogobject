@@ -23,9 +23,6 @@ pango                    1.29.4
 
 Here's the short TODO list:
  - Implement unions (GdkEvent is the main user)
- - Go through all the API and rename as many functions as possible, typical
-   examples are: SetHalign -> SetHAlign, .AddUiFromString -> .AddUIFromString,
-   etc.
  - Implement the rest of gogtk-demo.
  - Implement the rest of typeconv.go functionality. Both Go -> C and C -> Go.
  - Think about adding "user_data" support for closures. At the moment my (nsf)
