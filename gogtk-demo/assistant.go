@@ -28,6 +28,8 @@ func on_assistant_apply() {
 			} else {
 				// Close automatically once changes are fully applied.
 				assistant.Destroy()
+				assistant = nil
+				progress_bar = nil
 				gdk.ThreadsLeave()
 				return
 			}
