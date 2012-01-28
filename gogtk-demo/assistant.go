@@ -28,8 +28,6 @@ func on_assistant_apply() {
 			} else {
 				// Close automatically once changes are fully applied.
 				assistant.Destroy()
-				assistant = nil
-				progress_bar = nil
 				gdk.ThreadsLeave()
 				return
 			}
@@ -126,6 +124,10 @@ func Do(mainwin *gtk.Window) *gtk.Window {
 		assistant = gtk.NewAssistant()
 		assistant.SetDefaultSize(-1, 300)
 		assistant.SetScreen(mainwin.GetScreen())
+		assistant.Connect("destroy", func() {
+			assistant = nil
+			progress_bar = nil
+		})
 
 		create_page1(assistant)
 		create_page2(assistant)
@@ -134,8 +136,6 @@ func Do(mainwin *gtk.Window) *gtk.Window {
 
 		close_cancel := func() {
 			assistant.Destroy()
-			assistant = nil
-			progress_bar = nil
 		}
 		assistant.Connect("cancel", close_cancel)
 		assistant.Connect("close", close_cancel)
