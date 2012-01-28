@@ -35,8 +35,7 @@ func about_cb() {
 	// TODO: implement gtk_show_about_dialog and better about dialog
 	dialog := gtk.NewAboutDialog()
 	dialog.SetName("GoGTK Demo")
-	// TODO: change (C) to real copyright unicode symbol (need to fix syntax highlighting first)
-	dialog.SetCopyright("(C) Copyright 201x nsf <no.smile.face@gmail.com>")
+	dialog.SetCopyright("© Copyright 201x nsf <no.smile.face@gmail.com>")
 	dialog.SetWebsite("http://github.com/nsf/gogobject")
 	dialog.Connect("response", func() { dialog.Destroy() })
 	dialog.Show()

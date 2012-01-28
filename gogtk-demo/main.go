@@ -156,7 +156,6 @@ func setup_default_icon() {
 	}
 }
 
-var current_data []byte
 var current_file string
 
 var go_highlighter_idents = map[string]string{
@@ -167,31 +166,31 @@ var go_highlighter_idents = map[string]string{
 }
 
 type go_highlighter struct {
-	fset   *token.FileSet
-	buf    *gtk.TextBuffer
-	offset int
+	fset *token.FileSet
+	buf  *gtk.TextBuffer
+	file *ast.File
+	data []byte
 }
 
 func (this *go_highlighter) highlight(tag string, beg, end token.Pos) {
 	begp := this.fset.Position(beg)
 	endp := this.fset.Position(end)
 
-	bego := begp.Offset - this.offset
-	endo := endp.Offset - this.offset
-	if bego < 0 {
+	begc, endc := begp.Column-1, endp.Column-1
+	begl, endl := begp.Line-1, endp.Line-1
+	if begl < 0 {
 		return
 	}
 
-	begi := this.buf.GetIterAtOffset(bego)
-	endi := this.buf.GetIterAtOffset(endo)
-
+	begi := this.buf.GetIterAtLineOffset(begl, begc)
+	endi := this.buf.GetIterAtLineOffset(endl, endc)
 	this.buf.ApplyTagByName(tag, &begi, &endi)
 }
 
-func (this *go_highlighter) highlight_file(file *ast.File) {
+func (this *go_highlighter) highlight_file() {
 	var s scanner.Scanner
 	fset := token.NewFileSet()
-	s.Init(fset.AddFile(current_file, fset.Base(), len(current_data)), current_data, nil, 0)
+	s.Init(fset.AddFile(current_file, fset.Base(), len(this.data)), this.data, nil, 0)
 	for {
 		pos, tok, str := s.Scan()
 		if tok == token.EOF {
@@ -203,7 +202,7 @@ func (this *go_highlighter) highlight_file(file *ast.File) {
 		}
 	}
 
-	ast.Inspect(file, func(node ast.Node) bool {
+	ast.Inspect(this.file, func(node ast.Node) bool {
 		switch n := node.(type) {
 		case *ast.BasicLit:
 			switch n.Kind {
@@ -237,13 +236,12 @@ func (this *go_highlighter) highlight_file(file *ast.File) {
 		return true
 	})
 
-	for _, cg := range file.Comments {
+	for _, cg := range this.file.Comments {
 		this.highlight("comment", cg.Pos(), cg.End())
 	}
 }
 
-func fontify(data []byte, offset int) {
-	// TODO: utf8 unaware
+func fontify(data []byte) {
 	fset := token.NewFileSet()
 	file, err := parser.ParseFile(fset, current_file, data, parser.ParseComments)
 	if err != nil {
@@ -251,8 +249,8 @@ func fontify(data []byte, offset int) {
 		return
 	}
 
-	x := go_highlighter{fset, sourcebuf, offset}
-	x.highlight_file(file)
+	x := go_highlighter{fset, sourcebuf, file, data}
+	x.highlight_file()
 }
 
 func set_info(info string) {
@@ -332,13 +330,14 @@ func load_file(filename string) {
 	var offset int
 	if file.Doc != nil {
 		set_info(strings.TrimSpace(file.Doc.Text()))
-		offset = fset.Position(file.Doc.End()).Offset + 1
+		pos := fset.Position(file.Doc.End())
+		offset = pos.Offset + 1
 	}
 
 	beg = sourcebuf.GetStartIter()
 	sourcebuf.Insert(&beg, string(data[offset:]), -1)
 
-	fontify(data, offset)
+	fontify(data[offset:])
 }
 
 func main() {
