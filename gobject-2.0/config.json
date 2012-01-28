@@ -6,6 +6,7 @@
 		"callbacks": [],
 		"functions": [],
 		"objects": [
+			"Binding",
 			"Object",
 			"InitiallyUnowned"
 		]

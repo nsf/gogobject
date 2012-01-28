@@ -1085,6 +1085,18 @@ func (this *Object) GetProperty(name string, value interface{}) {
 	C.free(unsafe.Pointer(cname))
 }
 
+func ObjectBindProperty(source ObjectLike, source_property string, target ObjectLike, target_property string, flags BindingFlags) *Binding {
+	csource_property := C.CString(source_property)
+	ctarget_property := C.CString(target_property)
+	obj := C.g_object_bind_property(
+		unsafe.Pointer(source.InheritedFromGObject()), csource_property,
+		unsafe.Pointer(target.InheritedFromGObject()), ctarget_property,
+		C.GBindingFlags(flags))
+	C.free(unsafe.Pointer(csource_property))
+	C.free(unsafe.Pointer(ctarget_property))
+	return (*Binding)(ObjectWrap(unsafe.Pointer(obj), false))
+}
+
 //--------------------------------------------------------------
 // Closures
 //--------------------------------------------------------------
