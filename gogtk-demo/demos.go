@@ -20,6 +20,7 @@ import (
 	"./menus"
 	"./entry_completion"
 	"./drawing_area"
+	"./combo_boxes"
 )
 
 type DemoFunc func(mainwin *gtk.Window) *gtk.Window
@@ -37,6 +38,7 @@ var demos = []*DemoDesc{
 	{Title: "Builder", Filename: "builder.go", Func: builder.Do},
 	{Title: "Button Boxes", Filename: "button_boxes.go", Func: button_boxes.Do},
 	{Title: "Color Selector", Filename: "color_selector.go", Func: color_selector.Do},
+	{Title: "Combo boxes", Filename: "combo_boxes.go", Func: combo_boxes.Do},
 	{Title: "Drawing Area", Filename: "drawing_area.go", Func: drawing_area.Do},
 	{Title: "Entry", Children: []*DemoDesc{
 		{Title: "Entry Buffer", Filename: "entry_buffer.go", Func: entry_buffer.Do},
