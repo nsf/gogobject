@@ -1094,7 +1094,7 @@ func ObjectBindProperty(source ObjectLike, source_property string, target Object
 		C.GBindingFlags(flags))
 	C.free(unsafe.Pointer(csource_property))
 	C.free(unsafe.Pointer(ctarget_property))
-	return (*Binding)(ObjectWrap(unsafe.Pointer(obj), false))
+	return (*Binding)(ObjectWrap(unsafe.Pointer(obj), true))
 }
 
 //--------------------------------------------------------------
