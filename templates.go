@@ -94,6 +94,10 @@ func (this0 *[<.name>]) InheritedFrom[<.cprefix>][<.name>]() [<.cgotype>] {
 func (this0 *[<.name>]) GetStaticType() [<.gobjectns>]Type {
 	return [<.gobjectns>]Type(C.[<.typeinit>]())
 }
+
+func [<.name>]GetType() [<.gobjectns>]Type {
+	return (*[<.name>])(nil).GetStaticType()
+}
 `)
 
 // XXX: uses gc specific hack, expect problems on gccgo and/or ask developers
@@ -129,6 +133,9 @@ func (this0 *[<.name>]Impl) GetStaticType() [<.gobjectns>]Type {
 	return [<.gobjectns>]Type(C.[<.typeinit>]())
 }
 
+func [<.name>]GetType() [<.gobjectns>]Type {
+	return (*[<.name>]Impl)(nil).GetStaticType()
+}
 `)
 
 var CUtilsTemplate = MustTemplate(`

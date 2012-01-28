@@ -50,17 +50,21 @@ func (*Context) GetStaticType() gobject.Type {
 	return gobject.Type(C.cairo_gobject_context_get_type())
 }
 
+func ContextGetType() gobject.Type { return (*Context)(nil).GetStaticType() }
+
 // cairo_gobject_device_get_type (void);
 
 // cairo_gobject_pattern_get_type (void);
 func (*Pattern) GetStaticType() gobject.Type {
 	return gobject.Type(C.cairo_gobject_pattern_get_type())
 }
+func PatternGetType() gobject.Type { return (*Pattern)(nil).GetStaticType() }
 
 // cairo_gobject_surface_get_type (void);
 func (*Surface) GetStaticType() gobject.Type {
 	return gobject.Type(C.cairo_gobject_surface_get_type())
 }
+func SurfaceGetType() gobject.Type { return (*Surface)(nil).GetStaticType() }
 
 // cairo_gobject_rectangle_get_type (void);
 
@@ -68,16 +72,19 @@ func (*Surface) GetStaticType() gobject.Type {
 func (*ScaledFont) GetStaticType() gobject.Type {
 	return gobject.Type(C.cairo_gobject_scaled_font_get_type())
 }
+func ScaledFontGetType() gobject.Type { return (*ScaledFont)(nil).GetStaticType() }
 
 // cairo_gobject_font_face_get_type (void);
 func (*FontFace) GetStaticType() gobject.Type {
 	return gobject.Type(C.cairo_gobject_font_face_get_type())
 }
+func FontFaceGetType() gobject.Type { return (*FontFace)(nil).GetStaticType() }
 
 // cairo_gobject_font_options_get_type (void);
 func (*FontOptions) GetStaticType() gobject.Type {
 	return gobject.Type(C.cairo_gobject_font_options_get_type())
 }
+func FontOptionsGetType() gobject.Type { return (*FontOptions)(nil).GetStaticType() }
 
 // cairo_gobject_rectangle_int_get_type (void);
 
@@ -85,6 +92,7 @@ func (*FontOptions) GetStaticType() gobject.Type {
 func (*Region) GetStaticType() gobject.Type {
 	return gobject.Type(C.cairo_gobject_region_get_type())
 }
+func RegionGetType() gobject.Type { return (*Region)(nil).GetStaticType() }
 
 // TODO: No need for these?
 // enums
@@ -139,19 +147,19 @@ func cairo_marshaler(value *gobject.Value, t reflect.Type) (reflect.Value, bool)
 
 	// TODO: is it correct that I should always grab here?
 	switch gtypedst {
-	case (*Context)(nil).GetStaticType():
+	case ContextGetType():
 		*(*unsafe.Pointer)(unsafe.Pointer(out.Pointer())) = ContextWrap(dst.GetBoxed(), true)
-	case (*Pattern)(nil).GetStaticType():
+	case PatternGetType():
 		*(*unsafe.Pointer)(unsafe.Pointer(out.Pointer())) = PatternWrap(dst.GetBoxed(), true)
-	case (*Surface)(nil).GetStaticType():
+	case SurfaceGetType():
 		*(*unsafe.Pointer)(unsafe.Pointer(out.Pointer())) = SurfaceWrap(dst.GetBoxed(), true)
-	case (*FontOptions)(nil).GetStaticType():
+	case FontOptionsGetType():
 		*(*unsafe.Pointer)(unsafe.Pointer(out.Pointer())) = FontOptionsWrap(dst.GetBoxed())
-	case (*Region)(nil).GetStaticType():
+	case RegionGetType():
 		*(*unsafe.Pointer)(unsafe.Pointer(out.Pointer())) = RegionWrap(dst.GetBoxed(), true)
-	case (*FontFace)(nil).GetStaticType():
+	case FontFaceGetType():
 		*(*unsafe.Pointer)(unsafe.Pointer(out.Pointer())) = FontFaceWrap(dst.GetBoxed(), true)
-	case (*ScaledFont)(nil).GetStaticType():
+	case ScaledFontGetType():
 		*(*unsafe.Pointer)(unsafe.Pointer(out.Pointer())) = ScaledFontWrap(dst.GetBoxed(), true)
 	default:
 		return reflect.Value{}, false
