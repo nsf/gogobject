@@ -96,7 +96,11 @@ func NewTreeViewColumnWithAttributes(title string, renderer CellRendererLike, at
 	return c
 }
 
-func (this *TreeViewColumn) SetAttributes(renderer CellRendererLike, attrs ...interface{}) {
+//----------------------------------------------------------------------------
+// CellLayout
+//----------------------------------------------------------------------------
+
+func (this *CellLayoutImpl) SetAttributes(renderer CellRendererLike, attrs ...interface{}) {
 	this.ClearAttributes(renderer)
 	for_pairs(attrs, func(key, value interface{}) {
 		attr_name, ok := key.(string)
