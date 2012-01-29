@@ -21,6 +21,7 @@ DEMOS=\
 	drawing_area.go \
 	combo_boxes.go \
 	dialog.go \
+	search_entry.go \
 
 
 PREREQ=$(patsubst %.go,%.$O,$(DEMOS))

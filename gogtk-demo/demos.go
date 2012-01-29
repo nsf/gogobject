@@ -22,6 +22,7 @@ import (
 	"./drawing_area"
 	"./combo_boxes"
 	"./dialog"
+	"./search_entry"
 )
 
 type DemoFunc func(mainwin *gtk.Window) *gtk.Window
@@ -45,6 +46,7 @@ var demos = []*DemoDesc{
 	{Title: "Entry", Children: []*DemoDesc{
 		{Title: "Entry Buffer", Filename: "entry_buffer.go", Func: entry_buffer.Do},
 		{Title: "Entry Completion", Filename: "entry_completion.go", Func: entry_completion.Do},
+		{Title: "Search Entry", Filename: "search_entry.go", Func: search_entry.Do},
 	}},
 	{Title: "Expander", Filename: "expander.go", Func: expander.Do},
 	{Title: "Info bar", Filename: "info_bar.go", Func: info_bar.Do},
