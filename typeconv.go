@@ -79,7 +79,9 @@ func GoToCgoForInterface(bi *gi.BaseInfo, arg0, arg1 string, flags ConvFlags) st
 				arg1, ctype, arg0)
 		}
 	case gi.INFO_TYPE_CALLBACK:
-		printf("%s = unsafe.Pointer(&%s)", arg1, arg0)
+		printf("if %s != nil {\n", arg0)
+		printf("\t%s = unsafe.Pointer(&%s)", arg1, arg0)
+		printf("}")
 	}
 
 	return out.String()

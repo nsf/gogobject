@@ -119,25 +119,32 @@ func CFuncForwardDeclaration(fi *gi.FunctionInfo, container *gi.BaseInfo) {
 	printf(") {\n")
 
 	// body
-	printf("\t")
-	if ret := fi.ReturnType(); !(ret.Tag() == gi.TYPE_TAG_VOID && !ret.IsPointer()) {
-		printf("return ")
-	}
-	printf("%s(", symbol)
-	if flags&gi.FUNCTION_IS_METHOD != 0 {
-		printf("this")
-		if narg > 0 {
-			printf(", ")
+	defcall := func(argprint func(i int, t *gi.TypeInfo)) {
+		printf("\t\t")
+		if ret := fi.ReturnType(); !(ret.Tag() == gi.TYPE_TAG_VOID && !ret.IsPointer()) {
+			printf("return ")
 		}
-	}
-	for i, n := 0, narg; i < n; i++ {
-		arg := fi.Arg(i)
-		t := arg.Type()
-
-		if i != 0 {
-			printf(", ")
+		printf("%s(", symbol)
+		if flags&gi.FUNCTION_IS_METHOD != 0 {
+			printf("this")
+			if narg > 0 {
+				printf(", ")
+			}
 		}
+		for i, n := 0, narg; i < n; i++ {
+			arg := fi.Arg(i)
+			t := arg.Type()
 
+			if i != 0 {
+				printf(", ")
+			}
+
+			argprint(i, t)
+		}
+		printf(");\n")
+	}
+	printf("\tif (gofunc) {\n")
+	defcall(func(i int, t *gi.TypeInfo) {
 		switch i {
 		case closure_userdata:
 			printf("gofunc")
@@ -151,8 +158,17 @@ func CFuncForwardDeclaration(fi *gi.FunctionInfo, container *gi.BaseInfo) {
 		default:
 			printf("arg%d", i)
 		}
-	}
-	printf(");\n")
+	})
+	printf("\t} else {\n")
+	defcall(func(i int, t *gi.TypeInfo) {
+		switch i {
+		case closure_userdata, closure_destroy, closure_callback:
+			printf("0")
+		default:
+			printf("arg%d", i)
+		}
+	})
+	printf("\t}\n")
 	printf("}\n")
 }
 
