@@ -585,3 +585,11 @@ func StockLookup(stock_id string) (StockItem, bool) {
 
 	return stockitem, true
 }
+
+//----------------------------------------------------------------------------
+// Menu
+//----------------------------------------------------------------------------
+
+func (this *Menu) Popup(parent_menu_shell WidgetLike, parent_menu_item WidgetLike, func_ MenuPositionFunc, button int, activate_time int) {
+	this.PopupForDevice(nil, parent_menu_shell, parent_menu_item, func_, button, activate_time)
+}
