@@ -55,7 +55,6 @@ func create_tree_view() *gtk.Widget {
 	iter, _ := model.GetIterFirst()
 	selection.SelectIter(&iter)
 
-	// TODO: selection.Connect("changed", ...)
 	selection.Connect("changed", func(selection *gtk.TreeSelection) {
 		_, iter, ok := selection.GetSelected()
 		if !ok {
