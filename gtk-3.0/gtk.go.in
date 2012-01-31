@@ -593,3 +593,8 @@ func StockLookup(stock_id string) (StockItem, bool) {
 func (this *Menu) Popup(parent_menu_shell WidgetLike, parent_menu_item WidgetLike, func_ MenuPositionFunc, button int, activate_time int) {
 	this.PopupForDevice(nil, parent_menu_shell, parent_menu_item, func_, button, activate_time)
 }
+
+func (this *Menu) AttachToWidget(attach_widget0 WidgetLike) {
+	C.gtk_menu_attach_to_widget(this.InheritedFromGtkMenu(),
+		attach_widget0.InheritedFromGtkWidget(), nil)
+}

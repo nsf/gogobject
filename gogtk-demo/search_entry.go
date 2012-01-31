@@ -141,6 +141,26 @@ func create_search_menu() *gtk.Menu {
 	return menu
 }
 
+func entry_populate_popup(entry *gtk.Entry, menu *gtk.Menu) {
+	has_text := entry.GetTextLength() > 0
+
+	item := gtk.ToMenuItem(gtk.NewSeparatorMenuItem())
+	item.Show()
+	menu.Append(item)
+
+	item = gtk.NewMenuItemWithMnemonic("C_lear")
+	item.Show()
+	item.Connect("activate", func() { entry.SetText("") })
+	menu.Append(item)
+	item.SetSensitive(has_text)
+
+	search_menu := create_search_menu()
+	item = gtk.NewMenuItemWithLabel("Search by")
+	item.Show()
+	item.SetSubmenu(search_menu)
+	menu.Append(item)
+}
+
 func Do(mainwin *gtk.Window) *gtk.Window {
 	if dialog == nil {
 		msgqueue := make(chan int)
@@ -203,6 +223,7 @@ func Do(mainwin *gtk.Window) *gtk.Window {
 
 		// Create the menu
 		menu := create_search_menu()
+		menu.AttachToWidget(entry)
 
 		entry.Connect("icon-press", func(e *gtk.Entry, pos gtk.EntryIconPosition, ev *gdk.EventButton) {
 			if pos == gtk.EntryIconPositionPrimary {
@@ -217,8 +238,10 @@ func Do(mainwin *gtk.Window) *gtk.Window {
 			find_button.SetSensitive(has_text)
 		})
 		entry.Connect("activate", func() { msgqueue <- start_search_cmd })
+		entry.Connect("populate-popup", entry_populate_popup)
 
-		// TODO: demo is incomplete
+		button := dialog.GetWidgetForResponse(int(gtk.ResponseTypeNone))
+		button.GrabFocus()
 	}
 
 	if !dialog.GetVisible() {
