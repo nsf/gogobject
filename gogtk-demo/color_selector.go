@@ -34,12 +34,13 @@ func Do(mainwin *gtk.Window) *gtk.Window {
 		vbox.PackStart(frame, true, true, 0)
 
 		da := gtk.NewDrawingArea()
-		da.Connect("draw", func(da *gtk.DrawingArea, cr *cairo.Context) {
+		da.Connect("draw", func(da *gtk.DrawingArea, cr *cairo.Context) bool {
 			gdk.CairoSetSourceRGBA(cr, &color)
 			cr.Paint()
 
 			// unfortunately I have to do this, otherwise it will die in pain
 			runtime.GC()
+			return true
 		})
 
 		// set a minimum size

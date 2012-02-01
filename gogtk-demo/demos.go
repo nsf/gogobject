@@ -25,6 +25,7 @@ import (
 	"./search_entry"
 	"./iconview_edit"
 	"./iconview"
+	"./pixbufs"
 )
 
 type DemoFunc func(mainwin *gtk.Window) *gtk.Window
@@ -60,6 +61,7 @@ var demos = []*DemoDesc{
 	{Title: "Menus", Filename: "menus.go", Func: menus.Do},
 	{Title: "Paned Widgets", Filename: "paned_widgets.go", Func: paned_widgets.Do},
 	{Title: "Pickers", Filename: "pickers.go", Func: pickers.Do},
+	{Title: "Pixbufs", Filename: "pixbufs.go", Func: pixbufs.Do},
 	{Title: "Size Groups", Filename: "size_groups.go", Func: size_groups.Do},
 	{Title: "Spinner", Filename: "spinner.go", Func: spinner.Do},
 	{Title: "Stock Item and Icon Browser", Filename: "stock_browser.go", Func: stock_browser.Do},
