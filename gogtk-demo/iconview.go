@@ -97,6 +97,10 @@ func create_store() *gtk.ListStore {
 }
 
 func fill_store(store *gtk.ListStore) {
+	// temporary disable sorting
+	store.SetSortColumnID(-2, gtk.SortTypeAscending)
+	defer store.SetSortColumnID(-1, gtk.SortTypeAscending)
+
 	store.Clear()
 
 	dir, err := os.Open(parent)
