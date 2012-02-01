@@ -23,6 +23,7 @@ DEMOS=\
 	dialog.go \
 	search_entry.go \
 	iconview_edit.go \
+	iconview.go \
 
 
 PREREQ=$(patsubst %.go,%.$O,$(DEMOS)) common.$O
