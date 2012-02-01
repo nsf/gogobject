@@ -25,7 +25,7 @@ DEMOS=\
 	iconview_edit.go \
 
 
-PREREQ=$(patsubst %.go,%.$O,$(DEMOS))
+PREREQ=$(patsubst %.go,%.$O,$(DEMOS)) common.$O
 TARG=gogtk-demo
 GOFILES=\
 	main.go \
@@ -34,5 +34,8 @@ GOFILES=\
 
 include $(GOROOT)/src/Make.cmd
 
-%.$O: %.go
+%.$O: %.go common.$O
 	$(GC) -o $*.$O $*.go
+
+common.$O: common.go
+	$(GC) -o common.$O common.go

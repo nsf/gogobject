@@ -14,6 +14,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+	"./common"
 )
 
 const (
@@ -136,13 +137,8 @@ func create_text(is_source bool) (*gtk.ScrolledWindow, *gtk.TextBuffer) {
 	return sw, buf
 }
 
-func find_file(name string) string {
-	// TODO: no heuristic yet
-	return name
-}
-
 func setup_default_icon() {
-	filename := find_file("gtk-logo-rgb.gif")
+	filename := common.FindFile("gtk-logo-rgb.gif")
 	pixbuf, err := gdkpixbuf.NewPixbufFromFile(filename)
 	if err != nil {
 		dialog := gtk.NewMessageDialog(nil, 0, gtk.MessageTypeError, gtk.ButtonsTypeClose,
@@ -304,7 +300,7 @@ func load_file(filename string) {
 	sourcebuf.Delete(&beg, &end)
 
 	// find file
-	filename_full := find_file(filename)
+	filename_full := common.FindFile(filename)
 	if filename_full == "" {
 		println("failed to find file: ", filename)
 		return

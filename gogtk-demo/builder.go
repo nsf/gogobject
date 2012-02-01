@@ -4,6 +4,7 @@
 package builder
 
 import "gobject/gtk-3.0"
+import "./common"
 
 var window *gtk.Window
 var builder *gtk.Builder
@@ -24,7 +25,7 @@ func (*dummy) AboutActivate(action *gtk.Action) {
 func Do(mainwin *gtk.Window) *gtk.Window {
 	if window == nil {
 		builder = gtk.NewBuilder()
-		_, err := builder.AddFromFile("demo.ui")
+		_, err := builder.AddFromFile(common.FindFile("demo.ui"))
 		if err != nil {
 			println("ERROR: ", err.Error())
 			return nil

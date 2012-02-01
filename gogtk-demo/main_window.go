@@ -7,6 +7,7 @@ import "gobject/gobject-2.0"
 import "gobject/gtk-3.0"
 import "gobject/gdkpixbuf-2.0"
 import "fmt"
+import "./common"
 
 var window *gtk.Window
 var infobar *gtk.InfoBar
@@ -141,7 +142,7 @@ func register_stock_icons() {
 	factory := gtk.NewIconFactory()
 	factory.AddDefault()
 
-	pixbuf, err := gdkpixbuf.NewPixbufFromFile("gtk-logo-rgb.gif")
+	pixbuf, err := gdkpixbuf.NewPixbufFromFile(common.FindFile("gtk-logo-rgb.gif"))
 	if err != nil {
 		println("failed to load GTK logo for toolbar")
 		return
