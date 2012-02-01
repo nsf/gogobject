@@ -18,6 +18,7 @@ import "gobject/cairo-1.0"
 import "runtime"
 import "math"
 import "time"
+import "sync"
 import "./common"
 
 const frame_delay = 50
@@ -40,6 +41,7 @@ var images []*gdkpixbuf.Pixbuf
 var back_width int
 var back_height int
 
+var frame_lock sync.Mutex
 var frame *gdkpixbuf.Pixbuf
 var da *gtk.DrawingArea
 
@@ -70,8 +72,10 @@ func load_pixbufs() error {
 
 // Expose callback for the drawing area
 func draw_cb(widget *gtk.Widget, cr *cairo.Context) bool {
+	frame_lock.Lock()
 	gdk.CairoSetSourcePixbuf(cr, frame, 0, 0)
 	cr.Paint()
+	frame_lock.Unlock()
 
 	// without this call it leaks like crazy
 	runtime.GC()
@@ -120,10 +124,12 @@ func draw_one_frame() {
 		}
 
 		if dest, ok := gdk.RectangleIntersect(&r1, &r2); ok {
+			frame_lock.Lock()
 			image.Composite(frame,
 				int(dest.X), int(dest.Y), int(dest.Width), int(dest.Height),
 				xpos, ypos, k, k,
 				gdkpixbuf.InterpTypeNearest, int(alpha))
+			frame_lock.Unlock()
 		}
 	}
 
