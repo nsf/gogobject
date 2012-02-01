@@ -8,7 +8,6 @@ package iconview
 import "gobject/gtk-3.0"
 import "gobject/gobject-2.0"
 import "gobject/gdkpixbuf-2.0"
-import "io/ioutil"
 import "strings"
 import "path/filepath"
 import "os"
@@ -100,9 +99,15 @@ func create_store() *gtk.ListStore {
 func fill_store(store *gtk.ListStore) {
 	store.Clear()
 
-	entries, err := ioutil.ReadDir(parent)
+	dir, err := os.Open(parent)
 	if err != nil {
 		println(err.Error())
+		return
+	}
+	defer dir.Close()
+
+	entries, err := dir.Readdir(-1)
+	if err != nil {
 		return
 	}
 
