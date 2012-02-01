@@ -106,7 +106,7 @@ func fill_store(store *gtk.ListStore) {
 	}
 	defer dir.Close()
 
-	entries, err := dir.Readdir(-1)
+	entries, err := dir.Readdir(0)
 	if err != nil {
 		return
 	}
