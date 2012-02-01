@@ -1406,7 +1406,7 @@ func (this *Value) SetGoValue(v reflect.Value) {
 	transform := func() {
 		ok := this.Transform(&src)
 		if !ok {
-			panic("Go value is not transformable to " + valuetype.String())
+			panic("Go value (" + v.Type().String() + ") is not transformable to " + valuetype.String())
 		}
 	}
 
