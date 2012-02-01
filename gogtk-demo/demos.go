@@ -23,6 +23,7 @@ import (
 	"./combo_boxes"
 	"./dialog"
 	"./search_entry"
+	"./iconview_edit"
 )
 
 type DemoFunc func(mainwin *gtk.Window) *gtk.Window
@@ -49,6 +50,9 @@ var demos = []*DemoDesc{
 		{Title: "Search Entry", Filename: "search_entry.go", Func: search_entry.Do},
 	}},
 	{Title: "Expander", Filename: "expander.go", Func: expander.Do},
+	{Title: "Icon View", Children: []*DemoDesc{
+		{Title: "Editing and Drag-and-Drop", Filename: "iconview_edit.go", Func: iconview_edit.Do},
+	}},
 	{Title: "Info bar", Filename: "info_bar.go", Func: info_bar.Do},
 	{Title: "Links", Filename: "links.go", Func: links.Do},
 	{Title: "Menus", Filename: "menus.go", Func: menus.Do},
