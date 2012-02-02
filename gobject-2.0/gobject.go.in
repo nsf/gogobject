@@ -1096,6 +1096,13 @@ func ObjectBindProperty(source ObjectLike, source_property string, target Object
 	return (*Binding)(ObjectWrap(unsafe.Pointer(obj), true))
 }
 
+func (this *Object) Unref() {
+	runtime.SetFinalizer(this, nil)
+	C.g_object_set_qdata((*C.GObject)(this.C), C.uint32_t(go_repr), nil)
+	C.g_object_unref((*C.GObject)(this.C))
+	this.C = nil
+}
+
 //--------------------------------------------------------------
 // Closures
 //--------------------------------------------------------------

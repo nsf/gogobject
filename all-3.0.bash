@@ -12,12 +12,12 @@ build() {
 
 ./clean.bash
 
-make -C gi install
-make
+make -C gi install || error_exit
+make || error_exit
 build glib-2.0
 build gobject-2.0
 
-make -C cairo-1.0 install
+make -C cairo-1.0 install || error_exit
 build atk-1.0
 build gio-2.0
 build gdkpixbuf-2.0

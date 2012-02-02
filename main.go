@@ -75,6 +75,11 @@ func IsBlacklisted(section, entry string) bool {
 }
 
 func IsMethodBlacklisted(class, method string) bool {
+	// don't want to see these
+	if method == "ref" || method == "unref" {
+		return true
+	}
+
 	if classMap, ok := Config.Sys.MethodBlacklist[class]; ok {
 		if _, ok := classMap[method]; ok {
 			return true

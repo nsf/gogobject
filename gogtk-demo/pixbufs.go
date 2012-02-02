@@ -15,7 +15,6 @@ import "gobject/gtk-3.0"
 import "gobject/gdk-3.0"
 import "gobject/gdkpixbuf-2.0"
 import "gobject/cairo-1.0"
-import "runtime"
 import "math"
 import "time"
 import "sync"
@@ -77,8 +76,8 @@ func draw_cb(widget *gtk.Widget, cr *cairo.Context) bool {
 	cr.Paint()
 	frame_lock.Unlock()
 
-	// without this call it leaks like crazy
-	runtime.GC()
+	// unref explicitly, can't rely on GC here, leaks like crazy
+	cr.Unref()
 	return true
 }
 

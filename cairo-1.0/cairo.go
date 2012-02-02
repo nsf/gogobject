@@ -297,6 +297,12 @@ func NewContext(target SurfaceLike) *Context {
 
 // cairo_t *           cairo_reference                     (cairo_t *cr);
 // void                cairo_destroy                       (cairo_t *cr);
+func (this *Context) Unref() {
+	runtime.SetFinalizer(this, nil)
+	C.cairo_set_user_data(this.c(), &go_repr_cookie, nil, nil)
+	C.cairo_destroy(this.c())
+	this.C = nil
+}
 
 // cairo_status_t      cairo_status                        (cairo_t *cr);
 func (this *Context) Status() Status {
@@ -823,6 +829,11 @@ func (this *Context) CopyPathFlat() *Path {
 }
 
 // void                cairo_path_destroy                  (cairo_path_t *path);
+func (this *Path) Unref() {
+	runtime.SetFinalizer(this, nil)
+	C.cairo_path_destroy(this.c())
+	this.C = nil
+}
 
 // void                cairo_append_path                   (cairo_t *cr,
 //                                                          const cairo_path_t *path);
@@ -1226,6 +1237,12 @@ func (this *RadialGradient) GetRadialCircles() (x0, y0, r0, x1, y1, r1 float64) 
 
 // cairo_pattern_t *   cairo_pattern_reference             (cairo_pattern_t *pattern);
 // void                cairo_pattern_destroy               (cairo_pattern_t *pattern);
+func (this *Pattern) Unref() {
+	runtime.SetFinalizer(this, nil)
+	C.cairo_pattern_set_user_data(this.c(), &go_repr_cookie, nil, nil)
+	C.cairo_pattern_destroy(this.c())
+	this.C = nil
+}
 
 // cairo_status_t      cairo_pattern_status                (cairo_pattern_t *pattern);
 func (this *Pattern) Status() Status {
@@ -1392,6 +1409,11 @@ func (this *Region) Copy() *Region {
 
 // cairo_region_t *    cairo_region_reference              (cairo_region_t *region);
 // void                cairo_region_destroy                (cairo_region_t *region);
+func (this *Region) Unref() {
+	runtime.SetFinalizer(this, nil)
+	C.cairo_region_destroy(this.c())
+	this.C = nil
+}
 
 // cairo_status_t      cairo_region_status                 (const cairo_region_t *region);
 func (this *Region) Status() Status {
@@ -1786,6 +1808,11 @@ func FontFaceWrap(c_un unsafe.Pointer, grab bool) unsafe.Pointer {
 
 // cairo_font_face_t * cairo_font_face_reference           (cairo_font_face_t *font_face);
 // void                cairo_font_face_destroy             (cairo_font_face_t *font_face);
+func (this *FontFace) Unref() {
+	runtime.SetFinalizer(this, nil)
+	C.cairo_font_face_destroy(this.c())
+	this.C = nil
+}
 
 // cairo_status_t      cairo_font_face_status              (cairo_font_face_t *font_face);
 func (this *FontFace) Status() Status {
@@ -1875,6 +1902,11 @@ func NewScaledFont(font_face *FontFace, font_matrix, ctm *Matrix, options *FontO
 
 // cairo_scaled_font_t * cairo_scaled_font_reference       (cairo_scaled_font_t *scaled_font);
 // void                cairo_scaled_font_destroy           (cairo_scaled_font_t *scaled_font);
+func (this *ScaledFont) Unref() {
+	runtime.SetFinalizer(this, nil)
+	C.cairo_scaled_font_destroy(this.c())
+	this.C = nil
+}
 
 // cairo_status_t      cairo_scaled_font_status            (cairo_scaled_font_t *scaled_font);
 func (this *ScaledFont) Status() Status {
@@ -2046,6 +2078,12 @@ func (this *FontOptions) Copy() *FontOptions {
 }
 
 // void                cairo_font_options_destroy          (cairo_font_options_t *options);
+func (this *FontOptions) Unref() {
+	runtime.SetFinalizer(this, nil)
+	C.cairo_font_options_destroy(this.c())
+	this.C = nil
+}
+
 
 // cairo_status_t      cairo_font_options_status           (cairo_font_options_t *options);
 func (this *FontOptions) Status() Status {
@@ -2293,6 +2331,12 @@ func (this *Surface) CreateForRectangle(x, y, width, height float64) *Surface {
 
 // cairo_surface_t *   cairo_surface_reference             (cairo_surface_t *surface);
 // void                cairo_surface_destroy               (cairo_surface_t *surface);
+func (this *Surface) Unref() {
+	runtime.SetFinalizer(this, nil)
+	C.cairo_surface_set_user_data(this.c(), &go_repr_cookie, nil, nil)
+	C.cairo_surface_destroy(this.c())
+	this.C = nil
+}
 
 // cairo_status_t      cairo_surface_status                (cairo_surface_t *surface);
 func (this *Surface) Status() Status {
