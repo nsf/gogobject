@@ -19,10 +19,10 @@ import "unsafe"
 import "errors"
 
 import (
-	"gobject/gobject-2.0"
-	"gobject/cairo-1.0"
-	"gobject/gdkpixbuf-2.0"
-	"gobject/pango-1.0"
+	"github.com/nsf/gogobject/gobject-2.0"
+	"github.com/nsf/gogobject/cairo-1.0"
+	"github.com/nsf/gogobject/gdkpixbuf-2.0"
+	"github.com/nsf/gogobject/pango-1.0"
 )
 
 [<.GoUtils>]

@@ -37,7 +37,7 @@ import "unsafe"
 import "io"
 
 import (
-	"gobject/gobject-2.0"
+	"github.com/nsf/gogobject/gobject-2.0"
 )
 
 //----------------------------------------------------------------------------

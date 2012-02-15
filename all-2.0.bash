@@ -6,22 +6,15 @@ error_exit() {
 }
 
 build() {
-	./go-gobject-gen -config config.json $1
-	make -C $1 install || error_exit
+	./gogobject -config config.json $1
 }
 
-./clean.bash
+#./clean.bash
 
-make -C gi install || error_exit
-make || error_exit
-build glib-2.0
-build gobject-2.0
+go build || error_exit
 
-make -C cairo-1.0 install || error_exit
-build atk-1.0
-build gio-2.0
-build gdkpixbuf-2.0
-build pango-1.0
-build pangocairo-1.0
-build gdk-2.0
-build gtk-2.0
+for pkg in glib-2.0 gobject-2.0 cairo-1.0 atk-1.0 gio-2.0 gdkpixbuf-2.0 pango-1.0 pangocairo-1.0 gdk-2.0 gtk-2.0
+do
+	echo  "Installing $pkg"
+	go install "./${pkg}" || error_exit
+done

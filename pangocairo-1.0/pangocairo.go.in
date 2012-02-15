@@ -19,9 +19,9 @@ import "unsafe"
 
 // package dependencies
 import (
-	"gobject/cairo-1.0"
-	"gobject/gobject-2.0"
-	"gobject/pango-1.0"
+	"github.com/nsf/gogobject/cairo-1.0"
+	"github.com/nsf/gogobject/gobject-2.0"
+	"github.com/nsf/gogobject/pango-1.0"
 )
 
 [<.GoUtils>]

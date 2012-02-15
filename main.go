@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"gobject/gi"
+	"github.com/nsf/gogobject/gi"
 	"io/ioutil"
 	"os"
 	"path/filepath"

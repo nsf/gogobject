@@ -1,7 +1,7 @@
 package main
 
 import (
-	"gobject/gi"
+	"github.com/nsf/gogobject/gi"
 	"bytes"
 )
 

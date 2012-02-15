@@ -19,8 +19,8 @@ import "unsafe"
 import "errors"
 
 import (
-	"gobject/gobject-2.0"
-	"gobject/glib-2.0"
+	"github.com/nsf/gogobject/gobject-2.0"
+	"github.com/nsf/gogobject/glib-2.0"
 )
 
 [<.GoUtils>]
