@@ -5,7 +5,7 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"gobject/gi"
+	"github.com/nsf/gogobject/gi"
 	"strings"
 	"unsafe"
 )

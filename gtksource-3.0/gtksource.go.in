@@ -19,13 +19,13 @@ import "errors"
 
 // package dependencies
 import (
-	"gobject/gobject-2.0"
-	"gobject/gdkpixbuf-2.0"
-	"gobject/gdk-3.0"
-	"gobject/gtk-3.0"
-	"gobject/cairo-1.0"
-	"gobject/gio-2.0"
-	"gobject/atk-1.0"
+	"github.com/nsf/gogobject/gobject-2.0"
+	"github.com/nsf/gogobject/gdkpixbuf-2.0"
+	"github.com/nsf/gogobject/gdk-3.0"
+	"github.com/nsf/gogobject/gtk-3.0"
+	"github.com/nsf/gogobject/cairo-1.0"
+	"github.com/nsf/gogobject/gio-2.0"
+	"github.com/nsf/gogobject/atk-1.0"
 )
 
 [<.GoUtils>]
