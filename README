@@ -1,3 +1,12 @@
+--- !!! ---
+
+Just wanted to say, that the project is not dead. It's frozen due to the fact
+that the latest Go weekly got rid of makefiles. I'm working on replacement for
+that in a form of Go support for the waf build system. Should take less than a
+month and then I'll continue gogobject.
+
+--- !!! ---
+
 GObject-introspection based bindings generator for Go. Work in progress.
 
 See 'documentation' dir for details.
