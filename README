@@ -1,19 +1,15 @@
---- !!! ---
-
-Just wanted to say, that the project is not dead. It's frozen due to the fact
-that the latest Go weekly got rid of makefiles. I'm working on replacement for
-that in a form of Go support for the waf build system. Should take less than a
-month and then I'll continue gogobject.
-
---- !!! ---
-
 GObject-introspection based bindings generator for Go. Work in progress.
 
 See 'documentation' dir for details.
 
 
-Try building a set of bindings for gtk+-2.0 using all-2.0.bash script or for
-gtk+-3.0 using all-3.0.bash script.
+At the moment build system is capable of building gtk-3.0 set only. Try it that way:
+
+    ./waf configure build
+
+Build system is largely in alpha quality. It cannot install things (don't try
+`./waf install`), it doesn't track all of the dependencies and all that. All is
+a subject of ongoing work.
 
 
 GObject-introspection is a new project, therefore it requires the set of fairly

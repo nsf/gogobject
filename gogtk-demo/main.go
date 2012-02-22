@@ -14,7 +14,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
-	"./common"
+	"./gogtk-demo/common"
 )
 
 const (

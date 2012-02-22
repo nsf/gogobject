@@ -10,8 +10,6 @@ package gdkpixbuf
 [<.GObjectRefUnref>]
 [<.GErrorFree>]
 [<.GFree>]
-
-#cgo pkg-config: gdk-pixbuf-2.0
 */
 import "C"
 import "unsafe"

@@ -30,8 +30,6 @@ extern int32_t fqueue_dispatcher(void*);
 static uint32_t _g_timeout_add_fqueue(uint32_t time) {
 	return g_timeout_add(time, fqueue_dispatcher, 0);
 }
-
-#cgo pkg-config: gobject-2.0
 */
 import "C"
 import "unsafe"
@@ -46,7 +44,7 @@ import "sync"
 //--------------------------------------------------------------
 // Holder
 //--------------------------------------------------------------
-// holy crap, what am I doing here...
+// holy crap, what am I doing here..
 
 type holder_key [2]unsafe.Pointer
 type holder_type map[holder_key]int

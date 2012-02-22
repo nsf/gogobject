@@ -10,8 +10,6 @@ package gtksource
 [<.GObjectRefUnref>]
 [<.GErrorFree>]
 [<.GFree>]
-
-#cgo pkg-config: gtksourceview-3.0
 */
 import "C"
 import "unsafe"

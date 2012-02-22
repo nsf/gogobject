@@ -10,8 +10,6 @@ package atk
 [<.GObjectRefUnref>]
 [<.GErrorFree>]
 [<.GFree>]
-
-#cgo pkg-config: atk
 */
 import "C"
 import "unsafe"

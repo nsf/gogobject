@@ -10,8 +10,6 @@ package gdk
 
 [<.GObjectRefUnref>]
 [<.GFree>]
-
-#cgo pkg-config: gdk-3.0
 */
 import "C"
 import "unsafe"

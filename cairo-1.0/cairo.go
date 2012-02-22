@@ -26,8 +26,6 @@ static cairo_surface_t *_cairo_pdf_surface_create_for_stream(void *closure, doub
 {
 	return cairo_pdf_surface_create_for_stream(io_writer_wrapper, closure, width_in_points, height_in_points);
 }
-
-#cgo pkg-config: cairo cairo-png cairo-pdf cairo-gobject
 */
 import "C"
 import "runtime"

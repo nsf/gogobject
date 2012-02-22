@@ -11,8 +11,6 @@ package gdk
 [<.GObjectRefUnref>]
 [<.GErrorFree>]
 [<.GFree>]
-
-#cgo pkg-config: gdk-2.0
 */
 import "C"
 import "unsafe"

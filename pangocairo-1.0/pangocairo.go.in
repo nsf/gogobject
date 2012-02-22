@@ -11,8 +11,6 @@ package pangocairo
 [<.GObjectRefUnref>]
 [<.GFree>]
 [<.GErrorFree>]
-
-#cgo pkg-config: pangocairo
 */
 import "C"
 import "unsafe"

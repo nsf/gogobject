@@ -11,7 +11,7 @@ import "gobject/gdkpixbuf-2.0"
 import "strings"
 import "path/filepath"
 import "os"
-import "./common"
+import "./gogtk-demo/common"
 
 var window *gtk.Window
 var file_pixbuf *gdkpixbuf.Pixbuf

@@ -7,7 +7,7 @@ import "gobject/gobject-2.0"
 import "gobject/gtk-3.0"
 import "gobject/gdkpixbuf-2.0"
 import "fmt"
-import "./common"
+import "./gogtk-demo/common"
 
 var window *gtk.Window
 var infobar *gtk.InfoBar

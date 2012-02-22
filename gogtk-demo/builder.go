@@ -4,7 +4,7 @@
 package builder
 
 import "gobject/gtk-3.0"
-import "./common"
+import "./gogtk-demo/common"
 
 var window *gtk.Window
 var builder *gtk.Builder

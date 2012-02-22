@@ -7,8 +7,6 @@ package glib
 
 [<.CUtils>]
 [<.CForwardDeclarations>]
-
-#cgo pkg-config: glib-2.0
 */
 import "C"
 import "unsafe"

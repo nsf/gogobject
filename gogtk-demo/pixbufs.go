@@ -18,7 +18,7 @@ import "gobject/cairo-1.0"
 import "math"
 import "time"
 import "sync"
-import "./common"
+import "./gogtk-demo/common"
 
 const frame_delay = 50
 const background_name = "background.jpg"

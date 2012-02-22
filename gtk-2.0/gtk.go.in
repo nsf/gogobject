@@ -13,8 +13,6 @@ package gtk
 [<.GErrorFree>]
 
 extern GtkWidget *gtk_message_dialog_new(GtkWindow*, GtkDialogFlags, GtkMessageType, GtkButtonsType, const char *msg);
-
-#cgo pkg-config: gtk+-2.0
 */
 import "C"
 import "unsafe"

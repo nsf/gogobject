@@ -13,6 +13,7 @@ import (
 )
 
 var GConfigPath = flag.String("config", "", "specify global config file")
+var OutputPath = flag.String("o", "", "specify alternative output path")
 
 // per namespace config file
 var Config struct {
@@ -27,7 +28,6 @@ var Config struct {
 	// variables that are calculated during the app execution
 	Sys struct {
 		Out             *bufio.Writer
-		Outdir          string
 		Package         string
 		Blacklist       map[string]map[string]bool
 		Whitelist       map[string]map[string]bool
@@ -132,8 +132,16 @@ func main() {
 		GConfig.Sys.DisguisedTypes = ListToMap(GConfig.DisguisedTypes)
 	}
 
+	in_filename := flag.Arg(0)
+	out_filename := in_filename[:len(in_filename)-3]
+	if *OutputPath != "" {
+		out_filename = *OutputPath
+	}
+
+	dir, _ := filepath.Split(in_filename)
+
 	// parse config
-	configPath := filepath.Join(flag.Arg(0), "config.json")
+	configPath := filepath.Join(dir, "config.json")
 	err := ParseJSONWithComments(configPath, &Config)
 	if err != nil {
 		panic(err)
@@ -149,7 +157,6 @@ func main() {
 
 	// setup some of the Sys vars
 	Config.Sys.Package = strings.ToLower(Config.Namespace)
-	Config.Sys.Outdir = filepath.Clean(flag.Arg(0))
 	Config.Sys.Whitelist = MapListToMapMap(Config.Whitelist)
 	Config.Sys.Blacklist = MapListToMapMap(Config.Blacklist)
 	Config.Sys.MethodWhitelist = MapListToMapMap(Config.MethodWhitelist)
@@ -160,16 +167,14 @@ func main() {
 	}
 
 	// prepare main output
-	filename := filepath.Join(Config.Sys.Outdir,
-		strings.ToLower(Config.Namespace)+".go")
-	file, err := os.Create(filename)
+	file, err := os.Create(out_filename)
 	if err != nil {
 		panic(err)
 	}
 	defer file.Close()
 	Config.Sys.Out = bufio.NewWriter(file)
 
-	tpl, err := ioutil.ReadFile(filename + ".in")
+	tpl, err := ioutil.ReadFile(in_filename)
 	if err != nil {
 		panic(err)
 	}

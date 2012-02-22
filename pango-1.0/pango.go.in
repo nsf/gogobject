@@ -10,8 +10,6 @@ package pango
 [<.GObjectRefUnref>]
 [<.GFree>]
 [<.GErrorFree>]
-
-#cgo pkg-config: pango
 */
 import "C"
 import "unsafe"
