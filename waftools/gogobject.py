@@ -2,7 +2,7 @@ from waflib.Task import Task
 from waflib.TaskGen import extension
 
 class gogobject(Task):
-	run_str = '${GGG} ${GGGFLAGS} -o ${TGT} ${SRC}'
+	run_str = '${GGG} ${GGGFLAGS} -o ${TGT[0].parent.abspath()} ${SRC}'
 
 @extension('.go.in')
 def gogobject_hook(self, node):

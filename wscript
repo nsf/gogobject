@@ -59,7 +59,7 @@ def build(bld):
 	bld(
 		features='cgo go gopackage',
 		cgo_source='cairo-1.0/cairo.go',
-		source='cairo-1.0/types_%s.go' % bld.env.GOARCH,
+		source='cairo-1.0/types_%s.go cairo-1.0/cairo.c' % bld.env.GOARCH,
 		target='gobject/cairo-1.0',
 		uselib='CAIRO',
 	)

@@ -10,17 +10,17 @@ import (
 
 var printf func(string, ...interface{})
 
-func PrinterTo(w io.Writer) func(string, ...interface{}) {
+func printer_to(w io.Writer) func(string, ...interface{}) {
 	return func(format string, args ...interface{}) {
 		fmt.Fprintf(w, format, args...)
 	}
 }
 
-func LowerCaseToCamelCase(name string) string {
+func lower_case_to_camel_case(name string) string {
 	var out bytes.Buffer
 	for _, word := range strings.Split(name, "_") {
 		word = strings.ToLower(word)
-		if subst, ok := GConfig.WordSubst[word]; ok {
+		if subst, ok := g_commonconfig.WordSubst[word]; ok {
 			out.WriteString(subst)
 			continue
 		}
@@ -35,7 +35,7 @@ func LowerCaseToCamelCase(name string) string {
 	return out.String()
 }
 
-func MustTemplate(tpl string) *template.Template {
+func must_template(tpl string) *template.Template {
 	tpl = strings.TrimSpace(tpl)
 	return template.Must(
 		template.New("").
@@ -44,20 +44,20 @@ func MustTemplate(tpl string) *template.Template {
 	)
 }
 
-func ExecuteTemplate(tpl *template.Template, args interface{}) string {
+func execute_template(tpl *template.Template, args interface{}) string {
 	var out bytes.Buffer
 	tpl.Execute(&out, args)
 	return out.String()
 }
 
-func CtorSuffix(name string) string {
+func ctor_suffix(name string) string {
 	if len(name) > 4 {
-		return LowerCaseToCamelCase(name[4:])
+		return lower_case_to_camel_case(name[4:])
 	}
 	return ""
 }
 
-func PrintLinesWithIndent(str string) string {
+func print_lines_with_indent(str string) string {
 	var out bytes.Buffer
 	if str == "" {
 		return ""
@@ -69,15 +69,15 @@ func PrintLinesWithIndent(str string) string {
 	return out.String()
 }
 
-func MapListToMapMap(maplist map[string][]string) map[string]map[string]bool {
+func map_list_to_map_map(maplist map[string][]string) map[string]map[string]bool {
 	out := make(map[string]map[string]bool)
 	for section, list := range maplist {
-		out[section] = ListToMap(list)
+		out[section] = list_to_map(list)
 	}
 	return out
 }
 
-func ListToMap(list []string) map[string]bool {
+func list_to_map(list []string) map[string]bool {
 	m := make(map[string]bool)
 	for _, entry := range list {
 		m[entry] = true

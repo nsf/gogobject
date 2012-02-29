@@ -5,20 +5,20 @@ import (
 	"bytes"
 )
 
-func CairoGoTypeForInterface(bi *gi.BaseInfo, flags TypeFlags) string {
+func cairo_go_type_for_interface(bi *gi.BaseInfo, flags type_flags) string {
 	var out bytes.Buffer
-	p := PrinterTo(&out)
+	p := printer_to(&out)
 	name := bi.Name()
 
 	switch name {
 	case "Surface", "Pattern":
-		if flags&(TypeReturn) == 0 {
+		if flags&type_return == 0 {
 			p("cairo.%sLike", name)
 			break
 		}
 		fallthrough
 	default:
-		if flags&TypePointer != 0 {
+		if flags&type_pointer != 0 {
 			p("*")
 		}
 		p("cairo.%s", name)
@@ -27,9 +27,9 @@ func CairoGoTypeForInterface(bi *gi.BaseInfo, flags TypeFlags) string {
 	return out.String()
 }
 
-func CairoGoToCgoForInterface(bi *gi.BaseInfo, arg0, arg1 string, flags ConvFlags) string {
+func cairo_go_to_cgo_for_interface(bi *gi.BaseInfo, arg0, arg1 string, flags conv_flags) string {
 	var out bytes.Buffer
-	p := PrinterTo(&out)
+	p := printer_to(&out)
 	name := bi.Name()
 
 	switch name {
@@ -38,8 +38,8 @@ func CairoGoToCgoForInterface(bi *gi.BaseInfo, arg0, arg1 string, flags ConvFlag
 		p("\t%s = (*C.cairo%s)(%s.InheritedFromCairo%s().C)\n", arg1, name, arg0, name)
 		p("}")
 	case "RectangleInt", "Rectangle", "TextCluster", "Matrix":
-		ctype := CgoTypeForInterface(bi, TypeNone)
-		if flags&ConvPointer != 0 {
+		ctype := cgo_type_for_interface(bi, type_none)
+		if flags&conv_pointer != 0 {
 			p("%s = (*%s)(unsafe.Pointer(%s))",
 				arg1, ctype, arg0)
 		} else {
@@ -55,31 +55,31 @@ func CairoGoToCgoForInterface(bi *gi.BaseInfo, arg0, arg1 string, flags ConvFlag
 	return out.String()
 }
 
-func CairoCgoToGoForInterface(bi *gi.BaseInfo, arg1, arg2 string, flags ConvFlags) string {
+func cairo_cgo_to_go_for_interface(bi *gi.BaseInfo, arg1, arg2 string, flags conv_flags) string {
 	var out bytes.Buffer
-	p := PrinterTo(&out)
+	p := printer_to(&out)
 	name := bi.Name()
 
 	switch name {
 	case "Path", "FontOptions":
-		if flags&ConvPointer == 0 {
+		if flags&conv_pointer == 0 {
 			panic("unexpected non-pointer type")
 		}
 
 		p("%s = (*cairo.%s)(cairo.%sWrap(unsafe.Pointer(%s)))", arg2, name, name, arg1)
 	case "Surface", "Region", "Pattern", "Context", "FontFace", "ScaledFont":
-		if flags&ConvPointer == 0 {
+		if flags&conv_pointer == 0 {
 			panic("unexpected non-pointer type")
 		}
 
 		grab := "true"
-		if flags&ConvOwnEverything != 0 {
+		if flags&conv_own_everything != 0 {
 			grab = "false"
 		}
 		p("%s = (*cairo.%s)(cairo.%sWrap(unsafe.Pointer(%s), %s))", arg2, name, name, arg1, grab)
 	default:
-		gotype := GoTypeForInterface(bi, TypeReturn)
-		if flags&ConvPointer != 0 {
+		gotype := go_type_for_interface(bi, type_return)
+		if flags&conv_pointer != 0 {
 			p("%s = (*%s)(unsafe.Pointer(%s))",
 				arg2, gotype, arg1)
 		} else {

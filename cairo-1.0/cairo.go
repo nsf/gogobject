@@ -9,23 +9,9 @@ package cairo
 #include <cairo-pdf.h>
 #include <cairo-gobject.h>
 
-extern cairo_status_t io_reader_wrapper(void*, unsigned char*, unsigned int);
-extern cairo_status_t io_writer_wrapper(void*, const unsigned char*, unsigned int);
-
-static cairo_surface_t * _cairo_image_surface_create_from_png_stream(void *closure)
-{
-	return cairo_image_surface_create_from_png_stream(io_reader_wrapper, closure);
-}
-
-static cairo_status_t _cairo_surface_write_to_png_stream(cairo_surface_t *surface, void *closure)
-{
-	return cairo_surface_write_to_png_stream(surface, io_writer_wrapper, closure);
-}
-
-static cairo_surface_t *_cairo_pdf_surface_create_for_stream(void *closure, double width_in_points, double height_in_points)
-{
-	return cairo_pdf_surface_create_for_stream(io_writer_wrapper, closure, width_in_points, height_in_points);
-}
+extern cairo_surface_t * _cairo_image_surface_create_from_png_stream(void *closure);
+extern cairo_status_t _cairo_surface_write_to_png_stream(cairo_surface_t *surface, void *closure);
+extern cairo_surface_t *_cairo_pdf_surface_create_for_stream(void *closure, double width_in_points, double height_in_points);
 */
 import "C"
 import "runtime"
@@ -2567,7 +2553,7 @@ func NewImageSurfaceFromPNG(filename string) *ImageSurface {
 //                                                          unsigned int length);
 
 //export io_reader_wrapper
-func io_reader_wrapper(reader_up unsafe.Pointer, data_up unsafe.Pointer, length uint32) uint32 {
+func io_reader_wrapper(reader_up unsafe.Pointer, data_up *C.uchar, length uint32) uint32 {
 	var reader io.Reader
 	var data []byte
 	var data_header reflect.SliceHeader
@@ -2605,12 +2591,12 @@ func (this *ImageSurface) WriteToPNG(filename string) Status {
 //                                                          unsigned int length);
 
 //export io_writer_wrapper
-func io_writer_wrapper(writer_up unsafe.Pointer, data_up unsafe.Pointer, length uint32) uint32 {
+func io_writer_wrapper(writer_up unsafe.Pointer, data *C.uchar, length uint32) uint32 {
 	var writer io.Writer
 	var data []byte
 	var data_header reflect.SliceHeader
 	writer = *(*io.Writer)(writer_up)
-	data_header.Data = uintptr(data_up)
+	data_header.Data = uintptr(unsafe.Pointer(data_up))
 	data_header.Len = int(length)
 	data_header.Cap = int(length)
 	data = *(*[]byte)(unsafe.Pointer(&data_header))

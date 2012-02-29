@@ -12,11 +12,14 @@ import (
 	"strings"
 )
 
-var GConfigPath = flag.String("config", "", "specify global config file")
-var OutputPath = flag.String("o", "", "specify alternative output path")
+var g_commonconfig_path = flag.String("config", "", "specify global config file")
+var g_output_dir = flag.String("o", "", "override output directory")
 
 // per namespace config file
-var Config struct {
+var g_config config
+var g_commonconfig commonconfig
+
+type config struct {
 	Namespace       string              `json:"namespace"`
 	Version         string              `json:"version"`
 	Blacklist       map[string][]string `json:"blacklist"`
@@ -26,47 +29,55 @@ var Config struct {
 	Renames         map[string]string   `json:"renames"`
 
 	// variables that are calculated during the app execution
-	Sys struct {
-		Out             *bufio.Writer
-		Package         string
-		Blacklist       map[string]map[string]bool
-		Whitelist       map[string]map[string]bool
-		MethodBlacklist map[string]map[string]bool
-		MethodWhitelist map[string]map[string]bool
+	sys struct {
+		out             *bufio.Writer
+		pkg             string
+		blacklist       map[string]map[string]bool
+		whitelist       map[string]map[string]bool
+		method_blacklist map[string]map[string]bool
+		method_whitelist map[string]map[string]bool
 
 		// "gobject." if the current namespace is not GObject, "" otherwise
-		GNS string
+		gns string
 	} `json:"-"`
 }
 
-// global config file
-var GConfig struct {
-	DisguisedTypes []string `json:"disguised-types"`
-	WordSubst map[string]string `json:"word-subst"`
+func (this *config) load(path string) {
+	err := parse_json_with_comments(path, this)
+	if err != nil {
+		panic(err)
+	}
 
-	Sys struct {
-		DisguisedTypes map[string]bool
-	} `json:"-"`
+	this.sys.pkg = strings.ToLower(this.Namespace)
+	this.sys.whitelist = map_list_to_map_map(this.Whitelist)
+	this.sys.blacklist = map_list_to_map_map(this.Blacklist)
+	this.sys.method_whitelist = map_list_to_map_map(this.MethodWhitelist)
+	this.sys.method_blacklist = map_list_to_map_map(this.MethodBlacklist)
+
+	if this.Namespace != "GObject" {
+		this.sys.gns = "gobject."
+	}
+
 }
 
-func Rename(path, oldname string) string {
-	if newname, ok := Config.Renames[path]; ok {
+func (this *config) rename(path, oldname string) string {
+	if newname, ok := this.Renames[path]; ok {
 		return newname
 	}
 	return oldname
 }
 
-func IsBlacklisted(section, entry string) bool {
+func (this *config) is_blacklisted(section, entry string) bool {
 	// check if the entry is in the blacklist
-	if sectionMap, ok := Config.Sys.Blacklist[section]; ok {
-		if _, ok := sectionMap[entry]; ok {
+	if section_map, ok := this.sys.blacklist[section]; ok {
+		if _, ok := section_map[entry]; ok {
 			return true
 		}
 	}
 
 	// check if the entry is missing from the whitelist
-	if sectionMap, ok := Config.Sys.Whitelist[section]; ok {
-		if _, ok := sectionMap[entry]; !ok {
+	if section_map, ok := this.sys.whitelist[section]; ok {
+		if _, ok := section_map[entry]; !ok {
 			return true
 		}
 	}
@@ -74,20 +85,20 @@ func IsBlacklisted(section, entry string) bool {
 	return false
 }
 
-func IsMethodBlacklisted(class, method string) bool {
+func (this *config) is_method_blacklisted(class, method string) bool {
 	// don't want to see these
 	if method == "ref" || method == "unref" {
 		return true
 	}
 
-	if classMap, ok := Config.Sys.MethodBlacklist[class]; ok {
-		if _, ok := classMap[method]; ok {
+	if class_map, ok := this.sys.method_blacklist[class]; ok {
+		if _, ok := class_map[method]; ok {
 			return true
 		}
 	}
 
-	if classMap, ok := Config.Sys.MethodWhitelist[class]; ok {
-		if _, ok := classMap[method]; !ok {
+	if class_map, ok := this.sys.method_whitelist[class]; ok {
+		if _, ok := class_map[method]; !ok {
 			return true
 		}
 	}
@@ -95,14 +106,32 @@ func IsMethodBlacklisted(class, method string) bool {
 	return false
 }
 
-func ParseJSONWithComments(filename string, data interface{}) error {
+// global config file
+type commonconfig struct {
+	DisguisedTypes []string `json:"disguised-types"`
+	WordSubst map[string]string `json:"word-subst"`
+
+	sys struct {
+		disguised_types map[string]bool
+	} `json:"-"`
+}
+
+func (this *commonconfig) load(path string) {
+	err := parse_json_with_comments(path, this)
+	if err != nil {
+		panic(err)
+	}
+	this.sys.disguised_types = list_to_map(this.DisguisedTypes)
+}
+
+func parse_json_with_comments(filename string, data interface{}) error {
 	f, err := os.Open(filename)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 
-	d := json.NewDecoder(NewCommentSkipper(f))
+	d := json.NewDecoder(new_comment_skipper(f))
 	err = d.Decode(data)
 	if err != nil {
 		return err
@@ -122,64 +151,48 @@ func main() {
 		return
 	}
 
-	// parse global config
-	if *GConfigPath != "" {
-		err := ParseJSONWithComments(*GConfigPath, &GConfig)
-		if err != nil {
-			panic(err)
-		}
-
-		GConfig.Sys.DisguisedTypes = ListToMap(GConfig.DisguisedTypes)
+	// parse common config file
+	if *g_commonconfig_path != "" {
+		g_commonconfig.load(*g_commonconfig_path)
 	}
 
-	in_filename := flag.Arg(0)
-	out_filename := in_filename[:len(in_filename)-3]
-	if *OutputPath != "" {
-		out_filename = *OutputPath
-	}
+	// figure in/out paths
+	in_dir, in_file := filepath.Split(flag.Arg(0))
+	in_path := flag.Arg(0)
 
-	dir, _ := filepath.Split(in_filename)
-
-	// parse config
-	configPath := filepath.Join(dir, "config.json")
-	err := ParseJSONWithComments(configPath, &Config)
-	if err != nil {
-		panic(err)
+	out_dir := in_dir
+	if *g_output_dir != "" {
+		out_dir = *g_output_dir
 	}
+	out_file := in_file[:len(in_file)-3]
+	out_path := filepath.Join(out_dir, out_file)
+
+	// parse local config
+	g_config.load(filepath.Join(in_dir, "config.json"))
+
 
 	repo := gi.DefaultRepository()
 
 	// load namespace
-	_, err = repo.Require(Config.Namespace, Config.Version, 0)
+	_, err := repo.Require(g_config.Namespace, g_config.Version, 0)
 	if err != nil {
 		panic(err)
 	}
 
-	// setup some of the Sys vars
-	Config.Sys.Package = strings.ToLower(Config.Namespace)
-	Config.Sys.Whitelist = MapListToMapMap(Config.Whitelist)
-	Config.Sys.Blacklist = MapListToMapMap(Config.Blacklist)
-	Config.Sys.MethodWhitelist = MapListToMapMap(Config.MethodWhitelist)
-	Config.Sys.MethodBlacklist = MapListToMapMap(Config.MethodBlacklist)
-
-	if Config.Namespace != "GObject" {
-		Config.Sys.GNS = "gobject."
-	}
-
 	// prepare main output
-	file, err := os.Create(out_filename)
+	file, err := os.Create(out_path)
 	if err != nil {
 		panic(err)
 	}
 	defer file.Close()
-	Config.Sys.Out = bufio.NewWriter(file)
+	g_config.sys.out = bufio.NewWriter(file)
 
-	tpl, err := ioutil.ReadFile(in_filename)
+	tpl, err := ioutil.ReadFile(in_path)
 	if err != nil {
 		panic(err)
 	}
 
-	ProcessTemplate(string(tpl))
+	process_template(string(tpl))
 
-	Config.Sys.Out.Flush()
+	g_config.sys.out.Flush()
 }

@@ -4,20 +4,20 @@ import (
 	"gobject/gi"
 )
 
-type FunctionBuilder struct {
-	Function *gi.FunctionInfo
-	Args     []FunctionBuilderArg
-	Rets     []FunctionBuilderArg
-	OrigArgs []*gi.ArgInfo
+type function_builder struct {
+	function *gi.FunctionInfo
+	args     []function_builder_arg
+	rets     []function_builder_arg
+	orig_args []*gi.ArgInfo
 }
 
-type FunctionBuilderArg struct {
-	Index    int
-	ArgInfo  *gi.ArgInfo
-	TypeInfo *gi.TypeInfo
+type function_builder_arg struct {
+	index    int
+	arg_info  *gi.ArgInfo
+	type_info *gi.TypeInfo
 }
 
-func IntSliceContains(haystack []int, needle int) bool {
+func int_slice_contains(haystack []int, needle int) bool {
 	for _, val := range haystack {
 		if val == needle {
 			return true
@@ -26,20 +26,20 @@ func IntSliceContains(haystack []int, needle int) bool {
 	return false
 }
 
-func NewFunctionBuilder(fi *gi.FunctionInfo) *FunctionBuilder {
-	fb := new(FunctionBuilder)
-	fb.Function = fi
+func new_function_builder(fi *gi.FunctionInfo) *function_builder {
+	fb := new(function_builder)
+	fb.function = fi
 
 
 	// prepare an array of ArgInfos
 	for i, n := 0, fi.NumArg(); i < n; i++ {
 		arg := fi.Arg(i)
-		fb.OrigArgs = append(fb.OrigArgs, arg)
+		fb.orig_args = append(fb.orig_args, arg)
 	}
 
 	// build skip list
 	var skiplist []int
-	for _, arg := range fb.OrigArgs {
+	for _, arg := range fb.orig_args {
 		ti := arg.Type()
 
 		len := ti.ArrayLength()
@@ -59,8 +59,8 @@ func NewFunctionBuilder(fi *gi.FunctionInfo) *FunctionBuilder {
 	}
 
 	// then walk over arguments
-	for i, ai := range fb.OrigArgs {
-		if IntSliceContains(skiplist, i) {
+	for i, ai := range fb.orig_args {
+		if int_slice_contains(skiplist, i) {
 			continue
 		}
 
@@ -68,50 +68,50 @@ func NewFunctionBuilder(fi *gi.FunctionInfo) *FunctionBuilder {
 
 		switch ai.Direction() {
 		case gi.DIRECTION_IN:
-			fb.Args = append(fb.Args, FunctionBuilderArg{i, ai, ti})
+			fb.args = append(fb.args, function_builder_arg{i, ai, ti})
 		case gi.DIRECTION_INOUT:
-			fb.Args = append(fb.Args, FunctionBuilderArg{i, ai, ti})
-			fb.Rets = append(fb.Rets, FunctionBuilderArg{i, ai, ti})
+			fb.args = append(fb.args, function_builder_arg{i, ai, ti})
+			fb.rets = append(fb.rets, function_builder_arg{i, ai, ti})
 		case gi.DIRECTION_OUT:
-			fb.Rets = append(fb.Rets, FunctionBuilderArg{i, ai, ti})
+			fb.rets = append(fb.rets, function_builder_arg{i, ai, ti})
 		}
 	}
 
 	// add return value if it exists to 'rets'
 	if ret := fi.ReturnType(); ret != nil && ret.Tag() != gi.TYPE_TAG_VOID {
-		fb.Rets = append(fb.Rets, FunctionBuilderArg{-1, nil, ret})
+		fb.rets = append(fb.rets, function_builder_arg{-1, nil, ret})
 	}
 
 	// add GError special argument (if any)
 	if fi.Flags()&gi.FUNCTION_THROWS != 0 {
-		fb.Rets = append(fb.Rets, FunctionBuilderArg{-2, nil, nil})
+		fb.rets = append(fb.rets, function_builder_arg{-2, nil, nil})
 	}
 
 	return fb
 }
 
-func (fb *FunctionBuilder) HasReturnValue() bool {
-	return (len(fb.Rets) > 0 && fb.Rets[len(fb.Rets)-1].Index == -1) ||
-		(len(fb.Rets) > 1 && fb.Rets[len(fb.Rets)-2].Index == -1)
+func (fb *function_builder) has_return_value() bool {
+	return (len(fb.rets) > 0 && fb.rets[len(fb.rets)-1].index == -1) ||
+		(len(fb.rets) > 1 && fb.rets[len(fb.rets)-2].index == -1)
 }
 
-func (fb *FunctionBuilder) HasClosureArgument() (int, int, gi.ScopeType) {
-	for _, arg := range fb.Args {
-		userdata := arg.ArgInfo.Closure()
+func (fb *function_builder) has_closure_argument() (int, int, gi.ScopeType) {
+	for _, arg := range fb.args {
+		userdata := arg.arg_info.Closure()
 		if userdata == -1 {
 			continue
 		}
 
-		if arg.TypeInfo.Tag() != gi.TYPE_TAG_INTERFACE {
+		if arg.type_info.Tag() != gi.TYPE_TAG_INTERFACE {
 			continue
 		}
 
-		if arg.TypeInfo.Interface().Type() != gi.INFO_TYPE_CALLBACK {
+		if arg.type_info.Interface().Type() != gi.INFO_TYPE_CALLBACK {
 			continue
 		}
 
-		destroy := arg.ArgInfo.Destroy()
-		scope := arg.ArgInfo.Scope()
+		destroy := arg.arg_info.Destroy()
+		scope := arg.arg_info.Scope()
 		return userdata, destroy, scope
 	}
 	return -1, -1, gi.SCOPE_TYPE_INVALID

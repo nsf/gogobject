@@ -3,16 +3,16 @@ package main
 import "io"
 import "bufio"
 
-type CommentSkipper struct {
+type comment_skipper struct {
 	r *bufio.Reader
 }
 
-func NewCommentSkipper(r io.Reader) *CommentSkipper {
-	return &CommentSkipper{ bufio.NewReader(r) }
+func new_comment_skipper(r io.Reader) *comment_skipper {
+	return &comment_skipper{ bufio.NewReader(r) }
 }
 
 // advance to str and consume it or return error if it's not possible
-func (cs *CommentSkipper) advanceTo(str string) error {
+func (cs *comment_skipper) advance_to(str string) error {
 	if len(str) == 0 {
 		panic("zero-length string is not acceptable")
 	}
@@ -51,8 +51,8 @@ func (cs *CommentSkipper) advanceTo(str string) error {
 }
 
 // advance to str, consume it, read and return the next byte if possible
-func (cs *CommentSkipper) advanceToAndReadByte(str string) (byte, error) {
-	err := cs.advanceTo(str)
+func (cs *comment_skipper) advance_to_and_read_byte(str string) (byte, error) {
+	err := cs.advance_to(str)
 	if err != nil {
 		return 0, err
 	}
@@ -65,7 +65,7 @@ func (cs *CommentSkipper) advanceToAndReadByte(str string) (byte, error) {
 	return b, nil
 }
 
-func (cs *CommentSkipper) Read(data []byte) (int, error) {
+func (cs *comment_skipper) Read(data []byte) (int, error) {
 	read := 0
 	for {
 		// check if we're done here
@@ -88,14 +88,14 @@ func (cs *CommentSkipper) Read(data []byte) (int, error) {
 			switch b {
 			case '/':
 				// C++ comment
-				err = cs.advanceTo("\n")
+				err = cs.advance_to("\n")
 				if err != nil {
 					return read, err
 				}
 				b = '\n'
 			case '*':
 				// C comment
-				b, err = cs.advanceToAndReadByte("*/")
+				b, err = cs.advance_to_and_read_byte("*/")
 				if err != nil {
 					return read, err
 				}

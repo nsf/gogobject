@@ -1,18 +1,18 @@
 package main
 
-const CommonIncludes = `#include <stdlib.h>
+const common_includes = `#include <stdlib.h>
 #include <stdint.h>`
 
-const GType = `typedef size_t GType;`
+const g_type = `typedef size_t GType;`
 
-const GObjectRefUnref = `extern GObject *g_object_ref_sink(GObject*);
+const g_object_ref_unref = `extern GObject *g_object_ref_sink(GObject*);
 extern void g_object_unref(GObject*);`
 
-const GErrorFree = `extern void g_error_free(GError*);`
+const g_error_free = `extern void g_error_free(GError*);`
 
-const GFree = `extern void g_free(void*);`
+const g_free = `extern void g_free(void*);`
 
-var GoUtilsTemplate = MustTemplate(`
+var go_utils_template = must_template(`
 const alot = 999999
 
 type _GSList struct {
@@ -60,7 +60,7 @@ func _[<.namespace>]_go_callback_cleanup(gofunc unsafe.Pointer) {
 [<end>]
 `)
 
-var ObjectTemplate = MustTemplate(`
+var object_template = must_template(`
 type [<.name>]Like interface {
 	[<.parentlike>]
 	InheritedFrom[<.cprefix>][<.name>]() [<.cgotype>]
@@ -102,7 +102,7 @@ func [<.name>]GetType() [<.gobjectns>]Type {
 
 // XXX: uses gc specific hack, expect problems on gccgo and/or ask developers
 // about the address of an empty embedded struct
-var InterfaceTemplate = MustTemplate(`
+var interface_template = must_template(`
 type [<.name>]Like interface {
 	Implements[<.cprefix>][<.name>]() [<.cgotype>]
 }
@@ -138,7 +138,7 @@ func [<.name>]GetType() [<.gobjectns>]Type {
 }
 `)
 
-var CUtilsTemplate = MustTemplate(`
+var c_utils_template = must_template(`
 extern void _[<.namespace>]_go_callback_cleanup(void *gofunc);
 static void _c_callback_cleanup(void *userdata)
 {
