@@ -11,5 +11,8 @@ def gogobject_hook(self, node):
 		ggg = tg.link_task.outputs[0]
 		self.env.GGG = ggg.abspath()
 
-	task = self.create_task('gogobject', node, node.change_ext(''))
+	go_out = node.change_ext('')
+	c_out = go_out.change_ext('.gen.c')
+	h_out = go_out.change_ext('.gen.h')
+	task = self.create_task('gogobject', node, [go_out, c_out, h_out])
 	return task

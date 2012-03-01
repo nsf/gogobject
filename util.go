@@ -8,7 +8,11 @@ import (
 	"text/template"
 )
 
-var printf func(string, ...interface{})
+func panic_if_error(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
 
 func printer_to(w io.Writer) func(string, ...interface{}) {
 	return func(format string, args ...interface{}) {
@@ -20,7 +24,7 @@ func lower_case_to_camel_case(name string) string {
 	var out bytes.Buffer
 	for _, word := range strings.Split(name, "_") {
 		word = strings.ToLower(word)
-		if subst, ok := g_commonconfig.WordSubst[word]; ok {
+		if subst, ok := config.word_subst[word]; ok {
 			out.WriteString(subst)
 			continue
 		}

@@ -67,7 +67,7 @@ func go_to_cgo_for_interface(bi *gi.BaseInfo, arg0, arg1 string, flags conv_flag
 		}
 
 		fullnm := strings.ToLower(ns) + "." + bi.Name()
-		if _, ok := g_commonconfig.sys.disguised_types[fullnm]; ok {
+		if config.is_disguised(fullnm) {
 			flags &^= conv_pointer
 		}
 		ctype := cgo_type_for_interface(bi, type_none)
@@ -181,10 +181,10 @@ func cgo_to_go_for_interface(bi *gi.BaseInfo, arg1, arg2 string, flags conv_flag
 		gotype := go_type_for_interface(bi, type_return)
 		if flags&conv_own_everything != 0 {
 			printf("%s = (*%s)(%sObjectWrap(unsafe.Pointer(%s), false))",
-				arg2, gotype, g_config.sys.gns, arg1)
+				arg2, gotype, config.gns, arg1)
 		} else {
 			printf("%s = (*%s)(%sObjectWrap(unsafe.Pointer(%s), true))",
-				arg2, gotype, g_config.sys.gns, arg1)
+				arg2, gotype, config.gns, arg1)
 		}
 	case gi.INFO_TYPE_ENUM, gi.INFO_TYPE_FLAGS:
 		gotype := go_type_for_interface(bi, type_return)
@@ -205,7 +205,7 @@ func cgo_to_go_for_interface(bi *gi.BaseInfo, arg1, arg2 string, flags conv_flag
 			break
 		}
 
-		if _, ok := g_commonconfig.sys.disguised_types[fullnm]; ok {
+		if config.is_disguised(fullnm) {
 			printf("%s = %s{unsafe.Pointer(%s)}",
 				arg2, gotype, arg1)
 			break
@@ -315,7 +315,7 @@ func cgo_to_go_for_tag(tag gi.TypeTag, arg1, arg2 string, flags conv_flags) stri
 	case gi.TYPE_TAG_DOUBLE:
 		return fmt.Sprintf("%s = float64(%s)", arg2, arg1)
 	case gi.TYPE_TAG_GTYPE:
-		if g_config.Namespace != "GObject" {
+		if config.namespace != "GObject" {
 			return fmt.Sprintf("%s = gobject.Type(%s)", arg2, arg1)
 		}
 		return fmt.Sprintf("%s = Type(%s)", arg2, arg1)

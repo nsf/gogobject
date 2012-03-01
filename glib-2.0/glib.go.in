@@ -1,16 +1,11 @@
 package glib
 
 /*
-[<.CommonIncludes>]
-
-[<.GType>]
-
-[<.CUtils>]
-[<.CForwardDeclarations>]
+#include "glib.gen.h"
 */
 import "C"
 import "unsafe"
 import "errors"
 
-[<.GoUtilsNoCB>]
-[<.GoBindings>]
+[<.go_utils_no_cb>]
+[<.go_bindings>]

@@ -1,16 +1,11 @@
 package pangocairo
 
 /*
-[<.CommonIncludes>]
+#include "pangocairo.gen.h"
 
-[<.GType>]
-
-[<.CUtils>]
-[<.CForwardDeclarations>]
-
-[<.GObjectRefUnref>]
-[<.GFree>]
-[<.GErrorFree>]
+[<.g_object_ref_unref>]
+[<.g_free>]
+[<.g_error_free>]
 */
 import "C"
 import "unsafe"
@@ -22,6 +17,6 @@ import (
 	"gobject/pango-1.0"
 )
 
-[<.GoUtils>]
+[<.go_utils>]
 
-[<.GoBindings>]
+[<.go_bindings>]

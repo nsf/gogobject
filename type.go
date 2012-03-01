@@ -93,8 +93,7 @@ func cgo_type_for_interface(bi *gi.BaseInfo, flags type_flags) string {
 		nm := bi.Name()
 		fullnm := strings.ToLower(ns) + "." + nm
 
-		_, disguised := g_commonconfig.sys.disguised_types[fullnm]
-		if flags&type_pointer != 0 && !disguised {
+		if flags&type_pointer != 0 && !config.is_disguised(fullnm) {
 			out.WriteString("*")
 		}
 
@@ -211,8 +210,7 @@ func c_type_for_interface(bi *gi.BaseInfo, flags type_flags) string {
 	out.WriteString(gi.DefaultRepository().CPrefix(ns))
 	out.WriteString(bi.Name())
 
-	_, disguised := g_commonconfig.sys.disguised_types[fullnm]
-	if flags&type_pointer != 0 && !disguised {
+	if flags&type_pointer != 0 && !config.is_disguised(fullnm) {
 		out.WriteString("*")
 	}
 
@@ -251,7 +249,7 @@ func go_type_for_interface(bi *gi.BaseInfo, flags type_flags) string {
 			// and a pointer most likely
 			printf("*")
 		}
-		if ns != g_config.Namespace {
+		if ns != config.namespace {
 			// prepend foreign types with appropriate namespace
 			printf("%s.", strings.ToLower(ns))
 		}
@@ -283,11 +281,10 @@ func go_type_for_interface(bi *gi.BaseInfo, flags type_flags) string {
 	}
 	return out.String()
 handle_default:
-	_, disguised := g_commonconfig.sys.disguised_types[fullnm]
-	if flags&type_pointer != 0 && !disguised {
+	if flags&type_pointer != 0 && !config.is_disguised(fullnm) {
 		printf("*")
 	}
-	if ns != g_config.Namespace {
+	if ns != config.namespace {
 		printf("%s.", strings.ToLower(ns))
 	}
 	printf(bi.Name())
@@ -396,7 +393,7 @@ func go_type_for_tag(tag gi.TypeTag, flags type_flags) string {
 		case gi.TYPE_TAG_DOUBLE:
 			p("float64")
 		case gi.TYPE_TAG_GTYPE:
-			if g_config.Namespace != "GObject" {
+			if config.namespace != "GObject" {
 				p("gobject.Type")
 			} else {
 				p("Type")
@@ -431,7 +428,7 @@ func go_type_for_tag(tag gi.TypeTag, flags type_flags) string {
 		case gi.TYPE_TAG_DOUBLE:
 			p("float64")
 		case gi.TYPE_TAG_GTYPE:
-			if g_config.Namespace != "GObject" {
+			if config.namespace != "GObject" {
 				p("gobject.Type")
 			} else {
 				p("Type")
@@ -468,7 +465,7 @@ func simple_cgo_type(ti *gi.TypeInfo, flags type_flags) string {
 			ns := bi.Namespace()
 			nm := bi.Name()
 			fullnm := strings.ToLower(ns) + "." + nm
-			if _, ok := g_commonconfig.sys.disguised_types[fullnm]; ok {
+			if config.is_disguised(fullnm) {
 				return "unsafe.Pointer"
 			}
 		}

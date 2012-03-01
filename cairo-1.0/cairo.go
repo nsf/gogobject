@@ -2553,12 +2553,12 @@ func NewImageSurfaceFromPNG(filename string) *ImageSurface {
 //                                                          unsigned int length);
 
 //export io_reader_wrapper
-func io_reader_wrapper(reader_up unsafe.Pointer, data_up *C.uchar, length uint32) uint32 {
+func io_reader_wrapper(reader_up unsafe.Pointer, data_uc *C.uchar, length uint32) uint32 {
 	var reader io.Reader
 	var data []byte
 	var data_header reflect.SliceHeader
 	reader = *(*io.Reader)(reader_up)
-	data_header.Data = uintptr(data_up)
+	data_header.Data = uintptr(unsafe.Pointer(data_uc))
 	data_header.Len = int(length)
 	data_header.Cap = int(length)
 	data = *(*[]byte)(unsafe.Pointer(&data_header))
@@ -2591,12 +2591,12 @@ func (this *ImageSurface) WriteToPNG(filename string) Status {
 //                                                          unsigned int length);
 
 //export io_writer_wrapper
-func io_writer_wrapper(writer_up unsafe.Pointer, data *C.uchar, length uint32) uint32 {
+func io_writer_wrapper(writer_up unsafe.Pointer, data_uc *C.uchar, length uint32) uint32 {
 	var writer io.Writer
 	var data []byte
 	var data_header reflect.SliceHeader
 	writer = *(*io.Writer)(writer_up)
-	data_header.Data = uintptr(unsafe.Pointer(data_up))
+	data_header.Data = uintptr(unsafe.Pointer(data_uc))
 	data_header.Len = int(length)
 	data_header.Cap = int(length)
 	data = *(*[]byte)(unsafe.Pointer(&data_header))

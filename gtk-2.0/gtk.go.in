@@ -1,16 +1,11 @@
 package gtk
 
 /*
-[<.CommonIncludes>]
+#include "gtk.gen.h"
 
-[<.GType>]
-
-[<.CUtils>]
-[<.CForwardDeclarations>]
-
-[<.GObjectRefUnref>]
-[<.GFree>]
-[<.GErrorFree>]
+[<.g_object_ref_unref>]
+[<.g_free>]
+[<.g_error_free>]
 
 extern GtkWidget *gtk_message_dialog_new(GtkWindow*, GtkDialogFlags, GtkMessageType, GtkButtonsType, const char *msg);
 */
@@ -29,9 +24,9 @@ import (
 	"gobject/atk-1.0"
 )
 
-[<.GoUtils>]
+[<.go_utils>]
 
-[<.GoBindings>]
+[<.go_bindings>]
 
 //----------------------------------------------------------------------------
 // Dialog

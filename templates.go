@@ -1,10 +1,5 @@
 package main
 
-const common_includes = `#include <stdlib.h>
-#include <stdint.h>`
-
-const g_type = `typedef size_t GType;`
-
 const g_object_ref_unref = `extern GObject *g_object_ref_sink(GObject*);
 extern void g_object_unref(GObject*);`
 
@@ -138,8 +133,17 @@ func [<.name>]GetType() [<.gobjectns>]Type {
 }
 `)
 
-var c_utils_template = must_template(`
-extern void _[<.namespace>]_go_callback_cleanup(void *gofunc);
+const c_header = `#pragma once
+#include <stdlib.h>
+#include <stdint.h>
+
+typedef size_t GType;
+
+`
+
+var c_template = must_template(`
+#include "[<.package>].gen.h"
+
 static void _c_callback_cleanup(void *userdata)
 {
 	_[<.namespace>]_go_callback_cleanup(userdata);

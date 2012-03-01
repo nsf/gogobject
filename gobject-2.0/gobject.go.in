@@ -1,16 +1,10 @@
 package gobject
 
 /*
-[<.CommonIncludes>]
+#include "gobject.gen.h"
 #include <string.h>
 
-[<.GType>]
-
-
-[<.CUtils>]
-[<.CForwardDeclarations>]
-
-[<.GFree>]
+[<.g_free>]
 
 #include "gobject.h"
 
@@ -37,9 +31,9 @@ import "runtime"
 import "reflect"
 import "sync"
 
-[<.GoUtils>]
+[<.go_utils>]
 
-[<.GoBindings>]
+[<.go_bindings>]
 
 //--------------------------------------------------------------
 // Holder

@@ -78,11 +78,11 @@ def build(bld):
 		# the bindings library itself
 		bld(
 			features='cgo go gopackage',
-			source=dir.get_src().ant_glob('*.c'),
+			source=dir.get_src().ant_glob('*.c') + [tg.tasks[0].outputs[1]],
 			cgo_source=tg.tasks[0].outputs[0],
 			target='gobject/' + dir.name,
 			uselib=dir.name[:-4].upper(),
-			includes=[dir],
+			includes=dir.name,
 		)
 
 	# and finally the demo app

@@ -1,16 +1,11 @@
 package gtk
 
 /*
-[<.CommonIncludes>]
+#include "gtk.gen.h"
 
-[<.GType>]
-
-[<.CUtils>]
-[<.CForwardDeclarations>]
-
-[<.GObjectRefUnref>]
-[<.GFree>]
-[<.GErrorFree>]
+[<.g_object_ref_unref>]
+[<.g_free>]
+[<.g_error_free>]
 
 #include "gtk.h"
 
@@ -34,9 +29,9 @@ import (
 	"gobject/glib-2.0"
 )
 
-[<.GoUtils>]
+[<.go_utils>]
 
-[<.GoBindings>]
+[<.go_bindings>]
 
 //----------------------------------------------------------------------------
 // Custom utils

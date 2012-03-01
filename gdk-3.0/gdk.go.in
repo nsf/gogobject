@@ -1,15 +1,10 @@
 package gdk
 
 /*
-[<.CommonIncludes>]
+#include "gdk.gen.h"
 
-[<.GType>]
-
-[<.CUtils>]
-[<.CForwardDeclarations>]
-
-[<.GObjectRefUnref>]
-[<.GFree>]
+[<.g_object_ref_unref>]
+[<.g_free>]
 */
 import "C"
 import "unsafe"
@@ -21,6 +16,6 @@ import (
 	"gobject/pango-1.0"
 )
 
-[<.GoUtils>]
+[<.go_utils>]
 
-[<.GoBindings>]
+[<.go_bindings>]

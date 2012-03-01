@@ -488,7 +488,11 @@ func (bi *BaseInfo) IterateAttributes(cb func(name, value string)) {
 
 // g_base_info_get_container
 func (bi *BaseInfo) Container() *BaseInfo {
-	return &BaseInfo{C.g_base_info_get_container(bi.c)}
+	c := C.g_base_info_get_container(bi.c)
+	if c == nil {
+		return nil
+	}
+	return &BaseInfo{c}
 }
 
 // g_base_info_get_typelib

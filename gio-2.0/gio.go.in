@@ -1,16 +1,11 @@
 package gio
 
 /*
-[<.CommonIncludes>]
+#include "gio.gen.h"
 
-[<.GType>]
-
-[<.CUtils>]
-[<.CForwardDeclarations>]
-
-[<.GObjectRefUnref>]
-[<.GErrorFree>]
-[<.GFree>]
+[<.g_object_ref_unref>]
+[<.g_error_free>]
+[<.g_free>]
 */
 import "C"
 import "unsafe"
@@ -21,6 +16,6 @@ import (
 	"gobject/glib-2.0"
 )
 
-[<.GoUtils>]
+[<.go_utils>]
 
-[<.GoBindings>]
+[<.go_bindings>]

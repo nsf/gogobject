@@ -1,15 +1,11 @@
 package gdkpixbuf
 
 /*
-[<.CommonIncludes>]
+#include "gdkpixbuf.gen.h"
 
-[<.GType>]
-
-[<.CForwardDeclarations>]
-
-[<.GObjectRefUnref>]
-[<.GErrorFree>]
-[<.GFree>]
+[<.g_object_ref_unref>]
+[<.g_error_free>]
+[<.g_free>]
 */
 import "C"
 import "unsafe"
@@ -21,9 +17,9 @@ import (
 	"gobject/gio-2.0"
 )
 
-[<.GoUtils>]
+[<.go_utils>]
 
-[<.GoBindings>]
+[<.go_bindings>]
 
 func (this *Pixbuf) Save(filename0, type0 string, args ...string) error {
 	if len(args) & 1 != 0 {

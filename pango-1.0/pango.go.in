@@ -1,15 +1,11 @@
 package pango
 
 /*
-[<.CommonIncludes>]
+#include "pango.gen.h"
 
-[<.GType>]
-
-[<.CForwardDeclarations>]
-
-[<.GObjectRefUnref>]
-[<.GFree>]
-[<.GErrorFree>]
+[<.g_object_ref_unref>]
+[<.g_free>]
+[<.g_error_free>]
 */
 import "C"
 import "unsafe"
@@ -20,6 +16,6 @@ import (
 	"gobject/gobject-2.0"
 )
 
-[<.GoUtils>]
+[<.go_utils>]
 
-[<.GoBindings>]
+[<.go_bindings>]
