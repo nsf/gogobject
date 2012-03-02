@@ -50,6 +50,7 @@ def build(bld):
 		features='go goprogram',
 		source=bld.path.ant_glob('*.go'),
 		target='go-gobject-gen',
+		install_path=None, # don't install
 	)
 	gggtg.post()
 
@@ -86,15 +87,4 @@ def build(bld):
 		)
 
 	# and finally the demo app
-	for demoapp in bld.path.ant_glob('gogtk-demo/*.go', excl=['gogtk-demo/demos.go', 'gogtk-demo/main.go']):
-		bld(
-			features='go',
-			source=demoapp,
-			target='gogtk-demo/' + demoapp.name[:-3],
-		)
-
-	bld(
-		features='go goprogram',
-		source='gogtk-demo/main.go gogtk-demo/demos.go',
-		target='gogtk-demo/gogtk-demo',
-	)
+	bld.recurse('gogtk-demo')

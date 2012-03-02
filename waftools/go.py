@@ -59,11 +59,10 @@ class go(Task):
 
 class gopackage(stlink_task):
 	run_str = '${GO_PACK} grc ${TGT} ${SRC}'
-	inst_to = os.path.join('${GOROOT}', 'pkg', '${GOOS}_${GOARCH}')
 
 class goprogram(link_task):
 	run_str = '${GO_6L} ${GLFLAGS} ${GLPATH_ST:INCPATHS} -o ${TGT} ${SRC}'
-	inst_to = '${BINDIR}'
+	inst_to = '${GOBINDIR}'
 	chmod   = Utils.O755
 
 @taskgen_method
@@ -77,6 +76,16 @@ def extract_nodes_with_ext(self, fromattr, ext):
 			no_nodes.append(n)
 	setattr(self, fromattr, no_nodes)
 	return src_nodes
+
+@feature('gopackage')
+@before_method('apply_link')
+def modify_install_path(self):
+	if hasattr(self, 'install_path'):
+		return
+
+	# in go we're using target names as both target dir and the library name
+	# for installation, we need to modify default install path here for that
+	self.install_path = os.path.join(self.env.GOLIBDIR, os.path.split(self.target)[0])
 
 @feature('goprogram')
 @before_method('apply_link')
@@ -154,11 +163,33 @@ def get_go_env(self):
 	vars_to_grab = 'GOROOT GOBIN GOARCH GOOS GOHOSTARCH GOHOSTOS GOTOOLDIR GOCHAR'.split()
 	for v in vars_to_grab:
 		self.start_msg('Checking for %s' % v)
-		if v not in vars:
-			self.end_msg('no', color='YELLOW')
-		else:
+		if v in vars:
 			set_def(v, vars[v])
+
+		if self.env[v]:
 			self.end_msg(self.env[v])
+		else:
+			self.end_msg('no', color='YELLOW')
+			self.bld.fatal('"%s" variable is missing, it is mandatory' % v)
+
+	self.start_msg('Checking for GOPATH')
+	gopath = os.getenv('GOPATH')
+	if gopath:
+		gopath = gopath.split(os.path.pathsep)[0]
+		set_def('GOPATH', gopath)
+		self.end_msg(self.env.GOPATH)
+	else:
+		self.end_msg('no', color='YELLOW')
+
+
+	if self.env.GOPATH:
+		self.env.GOBINDIR = os.path.join(self.env.GOPATH, 'bin')
+		self.env.GOLIBDIR = os.path.join(
+			self.env.GOPATH, 'pkg', '%s_%s' % (self.env.GOOS, self.env.GOARCH))
+	else:
+		self.env.GOBINDIR = self.env.GOBIN
+		self.env.GOLIBDIR = os.path.join(
+			self.env.GOROOT, 'pkg', '%s_%s' % (self.env.GOOS, self.env.GOARCH))
 
 	# pattern for gopackage task output
 	set_def('gopackage_PATTERN', '%s.a')

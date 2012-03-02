@@ -5,11 +5,17 @@ See 'documentation' dir for details.
 
 At the moment build system is capable of building gtk-3.0 set only. Try it that way:
 
+    ./waf configure build install
+
+Or skip the install part:
+
     ./waf configure build
 
-Build system is largely in alpha quality. It cannot install things (don't try
-`./waf install`), it doesn't track all of the dependencies and all that. All is
-a subject of ongoing work.
+Install will install only libraries, it will skip the generator itself and the
+demo app.
+
+Build system is largely in alpha quality. It doesn't track all of the
+dependencies and all that. All is a subject of ongoing work.
 
 
 GObject-introspection is a new project, therefore it requires the set of fairly
