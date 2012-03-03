@@ -37,15 +37,11 @@ def configure(conf):
 	conf.env.append_value('INCLUDES', conf.bldnode.abspath())
 
 def build(bld):
-	def cgopackage(source, target, uselib):
-		bld(
-			features='cgo go gopackage',
-			cgo_source=source,
-			target=target,
-			uselib=uselib,
-		)
+	# build cairo-1.0, it doesn't depend on bindings generator
+	bld.recurse('cairo-1.0')
 
-	cgopackage('gi/gi.go', 'gobject/gi', 'GI')
+	# bindings generator
+	bld.recurse('gi')
 	gggtg = bld(
 		features='go goprogram',
 		source=bld.path.ant_glob('*.go'),
@@ -54,33 +50,37 @@ def build(bld):
 	)
 	gggtg.post()
 
-	bld.add_group()
-
-	# build cairo-1.0, it doesn't depend on bindings generator
-	bld(
-		features='cgo go gopackage',
-		cgo_source='cairo-1.0/cairo.go',
-		source='cairo-1.0/types_%s.go cairo-1.0/cairo.c' % bld.env.GOARCH,
-		target='gobject/cairo-1.0',
-		uselib='CAIRO',
-	)
-
-	# now the set of generated bindings
-	cfg = bld.srcnode.find_node('config.json')
+	# now the set of generated library bindings
+	cfg = bld.path.find_resource('config.json')
 	bld.env.GGGFLAGS = ['-config=' + cfg.bldpath()]
 
-	for dir in bld.path.ant_glob('*-?.?', excl=['gdk-2.0', 'gtk-2.0', 'cairo-1.0'], dir=True):
-		# generator, automatically hooked up by extension
-		tg = bld(
-			source=dir.ant_glob('*.go.in')
-		)
+	libdirs = [
+		"atk-1.0",
+		"gdk-3.0",
+		"gdkpixbuf-2.0",
+		"gio-2.0",
+		"glib-2.0",
+		"gobject-2.0",
+		"gtk-3.0",
+		"gtksource-3.0",
+		"pango-1.0",
+		"pangocairo-1.0",
+	]
+
+	for dir in [bld.path.find_dir(x) for x in libdirs]:
+		# gogobject tasks are created by extension mechanism
+		tg = bld(source=dir.ant_glob('*.go.in'))
 		tg.post()
 
-		# the bindings library itself
+		# get generated source nodes
+		gen_go = tg.tasks[0].outputs[0]
+		gen_c = tg.tasks[0].outputs[1]
+
+		# the bindings library
 		bld(
 			features='cgo go gopackage',
-			source=dir.get_src().ant_glob('*.c') + [tg.tasks[0].outputs[1]],
-			cgo_source=tg.tasks[0].outputs[0],
+			source=dir.get_src().ant_glob('*.c') + [gen_c],
+			cgo_source=gen_go,
 			target='gobject/' + dir.name,
 			uselib=dir.name[:-4].upper(),
 			includes=dir.name,

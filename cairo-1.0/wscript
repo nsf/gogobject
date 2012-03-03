@@ -1,0 +1,10 @@
+# -*- python -*-
+
+def build(bld):
+	bld(
+		features='cgo go gopackage',
+		cgo_source='cairo.go',
+		source='types_%s.go cairo.c' % bld.env.GOARCH,
+		target='gobject/cairo-1.0',
+		uselib='CAIRO',
+	)
