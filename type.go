@@ -108,7 +108,7 @@ func cgo_type_for_tag(tag gi.TypeTag, flags type_flags) string {
 	var out bytes.Buffer
 	p := printer_to(&out)
 
-	if flags & type_pointer != 0 {
+	if flags&type_pointer != 0 {
 		p("*")
 	}
 
@@ -364,7 +364,7 @@ func go_type_for_tag(tag gi.TypeTag, flags type_flags) string {
 	var out bytes.Buffer
 	p := printer_to(&out)
 
-	if flags & type_pointer != 0 {
+	if flags&type_pointer != 0 {
 		p("*")
 	}
 
@@ -460,7 +460,7 @@ func simple_cgo_type(ti *gi.TypeInfo, flags type_flags) string {
 		switch bi.Type() {
 		case gi.INFO_TYPE_ENUM, gi.INFO_TYPE_FLAGS:
 			ei := gi.ToEnumInfo(bi)
-			return go_type_for_tag(ei.StorageType(), flags | type_exact)
+			return go_type_for_tag(ei.StorageType(), flags|type_exact)
 		case gi.INFO_TYPE_STRUCT:
 			ns := bi.Namespace()
 			nm := bi.Name()
@@ -471,7 +471,7 @@ func simple_cgo_type(ti *gi.TypeInfo, flags type_flags) string {
 		}
 	}
 	if !strings.HasPrefix(cgo_type(ti, flags), "*") {
-		return go_type_for_tag(tag, flags | type_exact)
+		return go_type_for_tag(tag, flags|type_exact)
 	}
 	return "unsafe.Pointer"
 }

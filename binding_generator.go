@@ -1,21 +1,21 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"gobject/gi"
-	"strings"
 	"os"
-	"bufio"
+	"strings"
 )
 
 type binding_generator struct {
 	file_go *os.File
-	file_c *os.File
-	file_h *os.File
-	out_go *bufio.Writer
-	out_c *bufio.Writer
-	out_h *bufio.Writer
+	file_c  *os.File
+	file_h  *os.File
+	out_go  *bufio.Writer
+	out_c   *bufio.Writer
+	out_h   *bufio.Writer
 
 	// temporary buffer for 'go_bindings'
 	go_bindings bytes.Buffer
@@ -61,11 +61,11 @@ func (this *binding_generator) generate(go_template string) {
 	t := must_template(go_template)
 	t.Execute(this.out_go, map[string]interface{}{
 		"g_object_ref_unref": g_object_ref_unref,
-		"go_utils": go_utils(true),
-		"go_utils_no_cb": go_utils(false),
-		"go_bindings": this.go_bindings.String(),
-		"g_error_free": g_error_free,
-		"g_free": g_free,
+		"go_utils":           go_utils(true),
+		"go_utils_no_cb":     go_utils(false),
+		"go_bindings":        this.go_bindings.String(),
+		"g_error_free":       g_error_free,
+		"g_free":             g_free,
 	})
 
 	// write source/header preambles
@@ -76,7 +76,7 @@ func (this *binding_generator) generate(go_template string) {
 	// filename
 	c_template.Execute(this.out_c, map[string]interface{}{
 		"namespace": config.namespace,
-		"package": config.pkg,
+		"package":   config.pkg,
 	})
 	p = printer_to(this.out_c)
 	p("\n\n")
@@ -266,7 +266,6 @@ func (this *binding_generator) c_func_forward_declaration(fi *gi.FunctionInfo) {
 	pc("}\n")
 }
 
-
 // generating forward C declarations properly:
 // 10 - various typedefs
 // 20 - functions and methods
@@ -399,8 +398,8 @@ func go_utils(cb bool) string {
 	var out bytes.Buffer
 
 	go_utils_template.Execute(&out, map[string]interface{}{
-		"gobjectns": config.gns,
-		"namespace": config.namespace,
+		"gobjectns":   config.gns,
+		"namespace":   config.namespace,
 		"nocallbacks": !cb,
 	})
 
@@ -511,7 +510,7 @@ func (this *binding_generator) process_struct_info(si *gi.StructInfo) {
 				offset += type_size(ft, type_exact)
 			}
 			if size != offset {
-				p("\t_ [%d]byte\n", size - offset)
+				p("\t_ [%d]byte\n", size-offset)
 			}
 			p("}\n")
 			//printf("type %s struct { data [%d]byte }\n", name, size)
@@ -788,7 +787,9 @@ func (this *binding_generator) process_function_info(fi *gi.FunctionInfo) {
 	name = config.rename(fullnm, name)
 	p("%s(", name)
 	for i, arg := range fb.args {
-		if i != 0 { p(", ") }
+		if i != 0 {
+			p(", ")
+		}
 		p("%s0 %s", arg.arg_info.Name(), go_type(arg.type_info, type_none))
 	}
 	p(")")
@@ -835,7 +836,7 @@ func (this *binding_generator) process_function_info(fi *gi.FunctionInfo) {
 		p("\tvar %s1 %s\n", arg.arg_info.Name(), cgo_type(arg.type_info, type_none))
 		if al := arg.type_info.ArrayLength(); al != -1 {
 			arg := fb.orig_args[al]
-			p("\tvar %s1 %s\n", arg.Name(),	cgo_type(arg.Type(), type_none))
+			p("\tvar %s1 %s\n", arg.Name(), cgo_type(arg.Type(), type_none))
 		}
 	}
 

@@ -155,7 +155,7 @@ func go_to_cgo_for_tag(tag gi.TypeTag, arg0, arg1 string, flags conv_flags) stri
 	case gi.TYPE_TAG_BOOLEAN:
 		return fmt.Sprintf("%s = _GoBoolToCBool(%s)", arg1, arg0)
 	default:
-		if flags & conv_pointer == 0 {
+		if flags&conv_pointer == 0 {
 			return fmt.Sprintf("%s = %s(%s)", arg1,
 				cgo_type_for_tag(tag, type_none), arg0)
 		} else {

@@ -2,8 +2,8 @@ package main
 
 import (
 	"bytes"
-	"io"
 	"fmt"
+	"io"
 	"strings"
 	"text/template"
 )

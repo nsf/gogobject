@@ -1,8 +1,8 @@
 package main
 
 import (
-	"gobject/gi"
 	"bytes"
+	"gobject/gi"
 )
 
 func cairo_go_type_for_interface(bi *gi.BaseInfo, flags type_flags) string {

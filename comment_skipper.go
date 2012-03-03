@@ -8,7 +8,7 @@ type comment_skipper struct {
 }
 
 func new_comment_skipper(r io.Reader) *comment_skipper {
-	return &comment_skipper{ bufio.NewReader(r) }
+	return &comment_skipper{bufio.NewReader(r)}
 }
 
 // advance to str and consume it or return error if it's not possible

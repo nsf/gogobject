@@ -15,20 +15,20 @@ import (
 var config config_type
 
 type config_type struct {
-	out_go *bufio.Writer
-	out_c *bufio.Writer
-	out_h *bufio.Writer
-	namespace string
-	version string
-	pkg string
-	gns string
-	renames map[string]string
-	blacklist map[string]map[string]bool
-	whitelist map[string]map[string]bool
+	out_go           *bufio.Writer
+	out_c            *bufio.Writer
+	out_h            *bufio.Writer
+	namespace        string
+	version          string
+	pkg              string
+	gns              string
+	renames          map[string]string
+	blacklist        map[string]map[string]bool
+	whitelist        map[string]map[string]bool
 	method_blacklist map[string]map[string]bool
 	method_whitelist map[string]map[string]bool
-	disguised_types map[string]bool
-	word_subst map[string]string
+	disguised_types  map[string]bool
+	word_subst       map[string]string
 }
 
 func (this *config_type) load(path string) {
@@ -63,8 +63,8 @@ func (this *config_type) load(path string) {
 
 func (this *config_type) load_sys(path string) {
 	var tmp struct {
-		DisguisedTypes []string `json:"disguised-types"`
-		WordSubst map[string]string `json:"word-subst"`
+		DisguisedTypes []string          `json:"disguised-types"`
+		WordSubst      map[string]string `json:"word-subst"`
 	}
 
 	err := parse_json_with_comments(path, &tmp)
@@ -216,40 +216,4 @@ func main() {
 	bg := new_binding_generator(out_base)
 	defer bg.release()
 	bg.generate(string(go_template))
-
-	/*
-	// prepare Go output
-	file_go, err := os.Create(out_path_go)
-	panic_if_error(err)
-	defer file_go.Close()
-	config.out_go = bufio.NewWriter(file_go)
-
-	// prepare C output
-	file_c, err := os.Create(out_path_c)
-	panic_if_error(err)
-	defer file_c.Close()
-	config.out_c = bufio.NewWriter(file_c)
-	printf_c = printer_to(config.out_c)
-
-	c_template.Execute(config.out_c, map[string]interface{}{
-		"namespace": config.namespace,
-	})
-	printf_c("\n")
-
-	// prepare H output
-	file_h, err := os.Create(out_path_h)
-	panic_if_error(err)
-	defer file_h.Close()
-	config.out_h = bufio.NewWriter(file_h)
-
-	// load the template and process it
-	tpl, err := ioutil.ReadFile(in_path)
-	panic_if_error(err)
-	process_template(string(tpl))
-
-	// flush output
-	config.out_go.Flush()
-	config.out_c.Flush()
-	config.out_h.Flush()
-	*/
 }

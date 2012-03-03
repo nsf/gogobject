@@ -5,14 +5,14 @@ import (
 )
 
 type function_builder struct {
-	function *gi.FunctionInfo
-	args     []function_builder_arg
-	rets     []function_builder_arg
+	function  *gi.FunctionInfo
+	args      []function_builder_arg
+	rets      []function_builder_arg
 	orig_args []*gi.ArgInfo
 }
 
 type function_builder_arg struct {
-	index    int
+	index     int
 	arg_info  *gi.ArgInfo
 	type_info *gi.TypeInfo
 }
@@ -29,7 +29,6 @@ func int_slice_contains(haystack []int, needle int) bool {
 func new_function_builder(fi *gi.FunctionInfo) *function_builder {
 	fb := new(function_builder)
 	fb.function = fi
-
 
 	// prepare an array of ArgInfos
 	for i, n := 0, fi.NumArg(); i < n; i++ {
