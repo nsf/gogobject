@@ -1,9 +1,0 @@
-# -*- python -*-
-
-def build(bld):
-	bld(
-		features='cgo go gopackage',
-		cgo_source='gi.go',
-		target='gobject/gi',
-		uselib='GI',
-	)

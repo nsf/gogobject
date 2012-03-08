@@ -38,10 +38,21 @@ def configure(conf):
 
 def build(bld):
 	# build cairo-1.0, it doesn't depend on bindings generator
-	bld.recurse('cairo-1.0')
+	bld(
+		features='cgo go gopackage',
+		cgo_source='cairo-1.0/cairo.go',
+		source='cairo-1.0/types_%s.go cairo-1.0/cairo.c' % bld.env.GOARCH,
+		target='gobject/cairo-1.0',
+		uselib='CAIRO',
+	)
 
 	# bindings generator
-	bld.recurse('gi')
+	bld(
+		features='cgo go gopackage',
+		cgo_source='gi/gi.go',
+		target='gobject/gi',
+		uselib='GI',
+	)
 	gggtg = bld(
 		features='go goprogram',
 		source=bld.path.ant_glob('*.go'),
