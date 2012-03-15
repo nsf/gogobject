@@ -56,7 +56,7 @@ func go_to_cgo_for_interface(bi *gi.BaseInfo, arg0, arg1 string, flags conv_flag
 	case gi.INFO_TYPE_INTERFACE:
 		prefix := gi.DefaultRepository().CPrefix(bi.Namespace())
 		printf("if %s != nil {\n", arg0)
-		printf("\t%s = %s.Implements%s%s()",
+		printf("\t%s = %s.Implements%s%s()\n",
 			arg1, arg0, prefix, bi.Name())
 		printf("}")
 	case gi.INFO_TYPE_STRUCT:
