@@ -16,5 +16,5 @@ def gogobject_hook(self, node):
 	c_out = go_out.change_ext('.gen.c')
 	h_out = go_out.change_ext('.gen.h')
 	task = self.create_task('gogobject', node, [go_out, c_out, h_out])
-	task.dep_nodes = [ggg]
+	task.dep_nodes = [ggg, node.parent.find_node('config.json')]
 	return task
