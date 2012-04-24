@@ -21,15 +21,15 @@ dependencies and all that. All is a subject of ongoing work.
 GObject-introspection is a new project, therefore it requires the set of fairly
 recent both libraries and tools, here's the list of versions on my machine:
 
-gobject-introspection    1.30.0
-atk                      2.2.0
+gobject-introspection    1.32.1
+atk                      2.4.0
 cairo                    1.10.2
-gdk2/gtk2                2.24.8
-gdk3/gtk3                3.2.3
-gdk-pixbuf2              2.24.1
-glib2                    2.30.2
-gtksourceview3           3.2.3
-pango                    1.29.4
+gdk2/gtk2                2.24.10
+gdk3/gtk3                3.4.1
+gdk-pixbuf2              2.26.1
+glib2                    2.32.1
+gtksourceview3           3.4.1
+pango                    1.30.0
 
 
 Here's the short TODO list:

@@ -12,17 +12,24 @@
 			"Icon",
 			"Permission",
 			"MountOperation",
+			"MenuModel",
+			"MenuAttributeIter",
+			"MenuLinkIter",
 			"EmblemedIcon",
 			"Emblem"
 		],
-		"structs": [],
+		"structs": [
+			"ActionEntry"
+		],
 		"unions": [],
 		"interfaces": [
 			"Icon",
 			"File",
 			"AppInfo",
+			"Action",
 			"ActionGroup",
-			"AsyncResult"
+			"AsyncResult",
+			"ActionMap"
 		]
 	},
 	"method-blacklist": {

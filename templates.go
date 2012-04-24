@@ -138,6 +138,7 @@ const c_header = `#pragma once
 #include <stdint.h>
 
 typedef size_t GType;
+typedef void *GVaClosureMarshal;
 
 `
 

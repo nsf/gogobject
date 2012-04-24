@@ -21,6 +21,7 @@
 			"TextBufferSerializeFunc"
 		],
 		"functions": [
+			"accelerator_parse_with_keycode",
 			"binding_entry_add_signal_from_string",
 			"binding_entry_add_signall",
 			"binding_entry_remove",
