@@ -60,6 +60,7 @@
 			"custom_tag_start" // uses glib.MarkupParser
 		],
 		"ListStore": [
+			"reorder", // buggy
 			"insert_with_valuesv", // to be implemented manually
 			"set" // implemented manually
 		],
@@ -69,7 +70,8 @@
 			"set" // implemented manually
 		],
 		"Menu": [
-			"attach_to_widget" // it uses callback which has no userdata
+			"attach_to_widget", // it uses callback which has no userdata
+			"popup" // implemented manually
 		],
 		"MenuItem": [
 			"toggle_size_request"
