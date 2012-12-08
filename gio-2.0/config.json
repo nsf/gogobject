@@ -35,6 +35,9 @@
 	"method-blacklist": {
 		"Cancellable": [
 			"connect"
+		],
+		"Application": [
+			"get_dbus_connection"
 		]
 	},
 	"method-whitelist": {
