@@ -153,14 +153,14 @@ def get_go_env(self):
 
 	vars = {}
 	try:
-		out = self.cmd_and_log([self.env.GO, 'tool', 'dist', 'env'])
+		out = self.cmd_and_log([self.env.GO, 'env'])
 		for line in out.splitlines():
 			eq = line.index('=')
 			vars[line[:eq]] = line[eq+2:-1]
 	except (WafError, ValueError):
 		pass
 
-	vars_to_grab = 'GOROOT GOBIN GOARCH GOOS GOHOSTARCH GOHOSTOS GOTOOLDIR GOCHAR'.split()
+	vars_to_grab = 'GOROOT GOARCH GOOS GOHOSTARCH GOHOSTOS GOTOOLDIR GOCHAR'.split()
 	for v in vars_to_grab:
 		self.start_msg('Checking for %s' % v)
 		if v in vars:
@@ -170,7 +170,14 @@ def get_go_env(self):
 			self.end_msg(self.env[v])
 		else:
 			self.end_msg('no', color='YELLOW')
-			self.bld.fatal('"%s" variable is missing, it is mandatory' % v)
+			self.fatal('"%s" variable is missing, it is mandatory' % v)
+
+	self.start_msg('Checking for GOBIN')
+	set_def('GOBIN', os.getenv('GOBIN'))
+	if self.env['GOBIN']:
+		self.end_msg(self.env['GOBIN'])
+	else:
+		self.end_msg('no', color='YELLOW')
 
 	self.start_msg('Checking for GOPATH')
 	gopath = os.getenv('GOPATH')
@@ -187,7 +194,10 @@ def get_go_env(self):
 		self.env.GOLIBDIR = os.path.join(
 			self.env.GOPATH, 'pkg', '%s_%s' % (self.env.GOOS, self.env.GOARCH))
 	else:
-		self.env.GOBINDIR = self.env.GOBIN
+		if self.env.GOBIN:
+			self.env.GOBINDIR = self.env.GOBIN
+		else:
+			self.env.GOBINDIR = os.path.join(self.env.GOROOT, 'bin')
 		self.env.GOLIBDIR = os.path.join(
 			self.env.GOROOT, 'pkg', '%s_%s' % (self.env.GOOS, self.env.GOARCH))
 
@@ -228,4 +238,3 @@ def configure(conf):
 	conf.get_go_env()
 	conf.find_go_tools()
 	conf.get_go_version()
-
