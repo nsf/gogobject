@@ -205,8 +205,8 @@ def get_go_env(self):
 	set_def('gopackage_PATTERN', '%s.a')
 
 	# misc flags/patterns
-	set_def('GCPATH_ST', '-I%s')
-	set_def('GLPATH_ST', '-L%s')
+	set_def('GCPATH_ST', ['-I'])
+	set_def('GLPATH_ST', ['-L'])
 
 
 @conf

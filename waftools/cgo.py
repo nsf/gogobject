@@ -21,7 +21,7 @@ class cgo(Task):
 
 # limited task for using plan9 C compiler (required for cgo)
 class plan9c(Task):
-	run_str = '${GO_6C} -FVw ${GCPATH_ST:INCPATHS} ${GOCFLAGS} -o ${TGT} ${SRC}'
+	run_str = '${GO_6C} -F -V -w ${GCPATH_ST:INCPATHS} ${GOCFLAGS} -o ${TGT} ${SRC}'
 
 @feature('cgo')
 @before_method('apply_go')
@@ -81,7 +81,7 @@ def apply_cgo(self):
 	def create_plan9c_task(input):
 		task = self.create_task('plan9c', input,
 			input.change_ext('.' + self.env.GOCHAR))
-		task.env.GOCFLAGS = ['-DGOOS_' + self.env.GOOS, '-DGOARCH_' + self.env.GOARCH]
+		task.env.GOCFLAGS = ['-D', 'GOOS_' + self.env.GOOS, '-D', 'GOARCH_' + self.env.GOARCH]
 		task.env.INCPATHS = [
 			os.path.join(self.env.GOROOT, 'pkg', '%s_%s' % (self.env.GOOS, self.env.GOARCH)),
 			obj_dir.abspath(),
