@@ -1,3 +1,5 @@
+**WARNING**: This project is no longer maintained. Probably won't even compiles.
+
 GObject-introspection based bindings generator for Go. Work in progress.
 
 See 'documentation' dir for details.
