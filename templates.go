@@ -7,6 +7,8 @@ const g_error_free = `extern void g_error_free(GError*);`
 
 const g_free = `extern void g_free(void*);`
 
+const _array_length = `unsigned int _array_length(void* _array) { void** array = _array; unsigned int i = 0; while(array && array[i] != 0) i++; return i;}`
+
 var go_utils_template = must_template(`
 const alot = 999999
 

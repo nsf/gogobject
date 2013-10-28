@@ -2,6 +2,7 @@ package glib
 
 /*
 #include "glib.gen.h"
+[<._array_length>]
 */
 import "C"
 import "unsafe"
