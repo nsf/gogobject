@@ -18,10 +18,6 @@ import (
 	"fmt"
 )
 
-func init() {
-	C.g_type_init()
-}
-
 // utils
 
 // Convert GSList containing strings to []string
