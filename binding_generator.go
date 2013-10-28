@@ -66,6 +66,7 @@ func (this *binding_generator) generate(go_template string) {
 		"go_bindings":        this.go_bindings.String(),
 		"g_error_free":       g_error_free,
 		"g_free":             g_free,
+		"_array_length":      _array_length,
 	})
 
 	// write source/header preambles
@@ -974,6 +975,8 @@ func (this *binding_generator) process_function_info(fi *gi.FunctionInfo) {
 			p("\t%s2 = make(%s, %s)\n",
 				nm, go_type(ret.type_info, type_return),
 				lenarg.Name()+"1")
+		} else if ret.type_info.IsZeroTerminated() {
+			p("\t%s2 = make(%s, uint(C._array_length(unsafe.Pointer(%s1))))\n", nm, go_type(ret.type_info, type_return), nm)
 		}
 
 		var ownership gi.Transfer
